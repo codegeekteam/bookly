@@ -1,0 +1,22 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "8P8VC86T6N.com.rizme.bookly",
+        "paths": ["/share/provider/*"],
+        "components": [
+          {
+            "/": "/share/provider/*"
+          }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["8P8VC86T6N.com.rizme.bookly"]
+  },
+  "appclips": {
+    "apps": []
+  }
+}
