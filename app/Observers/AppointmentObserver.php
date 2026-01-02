@@ -73,10 +73,10 @@ class AppointmentObserver
      */
     protected function sendConfirmationEmail(Appointment $appointment): void
     {
-        // if ($appointment->customer && $appointment->customer->email) {
-        //     Mail::to($appointment->customer->email)
-        //         ->send(new AppointmentConfirmedMail($appointment));
-        // }
+        if ($appointment->customer && $appointment->customer->email) {
+            Mail::to($appointment->customer->email)
+                ->send(new AppointmentConfirmedMail($appointment));
+        }
     }
 
     /**
