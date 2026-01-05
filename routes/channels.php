@@ -25,8 +25,8 @@ Broadcast::channel('chat.conversation.{conversationId}', function ($user, $conve
         return false;
     }
 
-    // Handle Customer model directly (from API authentication)
-  /*  if ($user instanceof \App\Models\Customer) {
+   /* // Handle Customer model directly (from API authentication)
+    if ($user instanceof \App\Models\Customer) {
         return $conversation->customer_id === $user->id;
     }
 
@@ -46,11 +46,15 @@ Broadcast::channel('chat.conversation.{conversationId}', function ($user, $conve
         }
     } */
 
-       //By sreeja
+      //By sreeja
+    //     $customerId = optional($user->customer)->id;
+    // $providerId = optional($user->serviceProvider)->id;
+    //   return $conversation->customer_id === $customerId
+    //     || $conversation->service_provider_id === $providerId;
         return
         ($user->customer && $conversation->customer_id === $user->customer->id)
         || ($user->serviceProvider && $conversation->service_provider_id === $user->serviceProvider->id);
-    // ends here
+    // ends here  
 
     return false;
 });
