@@ -2,21 +2,22 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\PayoutResource\Pages;
-use App\Filament\Resources\PayoutResource\RelationManagers;
+use Filament\Forms;
+use Filament\Tables;
 use App\Models\Payout;
+use Filament\Forms\Form;
+use Filament\Tables\Table;
 use App\Models\ServiceProvider;
 use App\Services\PayoutService;
-use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Tables;
-use Filament\Tables\Table;
-use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Actions\ExportAction;
 use Filament\Tables\Filters\Filter;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Notifications\Notification;
+use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Resources\PayoutResource\Pages;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Resources\PayoutResource\RelationManagers;
 
 class PayoutResource extends Resource
 {
@@ -187,6 +188,14 @@ class PayoutResource extends Resource
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->form([
+                        Forms\Components\DatePicker::make('transfer_date')
+                            ->label('Transfer Date')
+                            ->required()
+                            ->maxDate(now()),
+                        Forms\Components\TextInput::make('transaction_id')
+                            ->label('Transaction ID')
+                            ->required()
+                            ->maxLength(255),
                         Forms\Components\FileUpload::make('receipt')
                             ->label('Transfer Receipt (Optional)')
                             ->directory('payout-receipts')
@@ -197,8 +206,10 @@ class PayoutResource extends Resource
                     ->action(function (Payout $record, array $data) {
                         $payoutService = app(PayoutService::class);
                         $receipt = $data['receipt'] ?? null;
+                        $transferDate = $data['transfer_date'];
+                        $transactionId = $data['transaction_id'];
 
-                        $payoutService->markAsTransferred($record, $receipt);
+                        $payoutService->markAsTransferred($record, $transferDate, $transactionId, $receipt);
 
                         Notification::make()
                             ->title('Payout Transferred')
@@ -239,7 +250,22 @@ class PayoutResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     // No bulk actions for now
                 ]),
-            ]);
+            ])
+            ->headerActions([
+                Tables\Actions\Action::make('export_excel')
+                    ->label('Export Excel')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->action(function ($livewire) {
+                        $records = $livewire->getFilteredTableQuery()->get();
+
+                        return \Maatwebsite\Excel\Facades\Excel::download(
+                            new \App\Exports\PayoutExport($records),
+                            'payouts.xlsx'
+                        );
+                    })
+                ]);
+
+
     }
     
     public static function getRelations(): array

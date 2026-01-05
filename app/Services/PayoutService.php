@@ -153,9 +153,9 @@ class PayoutService
     /**
      * Mark a payout as transferred
      */
-    public function markAsTransferred(Payout $payout, $receipt = null): void
+    public function markAsTransferred(Payout $payout, $transferDate, $transactionId, $receipt = null, ): void
     {
-        DB::transaction(function () use ($payout, $receipt) {
+        DB::transaction(function () use ($payout, $transferDate, $transactionId, $receipt) {
             $receiptPath = null;
 
             if ($receipt) {
@@ -164,13 +164,15 @@ class PayoutService
                     $receiptPath = $receipt->store('payout-receipts', 'public');
                 } else {
                     $receiptPath = $receipt; // Already stored by Filament
-                }
+                }        
             }
 
             $payout->update([
                 'status' => 'transferred',
                 'transferred_at' => now(),
                 'receipt_path' => $receiptPath,
+                'payment_transferred_date' => $transferDate, 
+                'transaction_id' => $transactionId
             ]);
 
             // Send email notification to service provider
