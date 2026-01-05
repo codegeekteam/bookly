@@ -2,40 +2,41 @@
 
 namespace App\Services;
 
-use App\Actions\LoyaltyPoints\Mutations\CheckLoyaltyDiscountUsageMutation;
-use App\Actions\LoyaltyPoints\Mutations\LoyaltyDiscountCalculationsMutation;
-use App\Actions\PromoCode\Mutations\CheckPromoCodeMutation;
-use App\Actions\PromoCode\Mutations\PromoCodeCalculationsMutation;
-use App\Actions\LoyaltyPoints\Mutations\CreatePointTransactionMutation;
-use App\Actions\Wallet\Mutations\CreateWalletTransactionMutation;
-use App\Enums\AppointmentStatus;
-use App\Helpers\PayfortHelper;
-use App\Http\Resources\AppointmentCollection;
-use App\Http\Resources\AppointmentResource;
-use App\Models\Appointment;
-use App\Models\AttachedService;
-use App\Models\Customer;
-use App\Models\Enums\TransactionType;
-use App\Models\GiftCard;
-use App\Models\HeldTimeSlot;
-use App\Models\PaymentMethod;
-use App\Models\PromoCode;
-use App\Models\ServiceProvider;
-use App\Models\Subscription;
+use Exception;
+use Carbon\Carbon;
 use App\Models\User;
-use App\Notifications\AcceptRescheduleAppointmentNotification;
-use App\Notifications\AppointmentNotification;
-use App\Notifications\NewAppointmentNotification;
-use App\Notifications\RejectRescheduleAppointmentNotification;
+use App\Models\Customer;
+use App\Models\GiftCard;
+use App\Models\PromoCode;
+use App\Models\Appointment;
+use App\Models\HeldTimeSlot;
+use App\Models\Subscription;
+use Illuminate\Http\Request;
+use App\Models\PaymentMethod;
+use App\Helpers\PayfortHelper;
+use App\Models\AttachedService;
+use App\Models\ServiceProvider;
+use App\Enums\AppointmentStatus;
 use App\Services\InvoiceService;
 use App\Settings\RewardsSettings;
-use Carbon\Carbon;
-use Exception;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\Enums\TransactionType;
+use App\Http\Resources\AppointmentResource;
+use App\Http\Resources\AppointmentCollection;
+use App\Notifications\AppointmentNotification;
 use Illuminate\Validation\ValidationException;
+use App\Notifications\NewAppointmentNotification;
+use App\Notifications\RequestPaymentNotification;
+use App\Actions\PromoCode\Mutations\CheckPromoCodeMutation;
+use App\Notifications\AcceptRescheduleAppointmentNotification;
+use App\Notifications\RejectRescheduleAppointmentNotification;
+use App\Actions\Wallet\Mutations\CreateWalletTransactionMutation;
+use App\Actions\PromoCode\Mutations\PromoCodeCalculationsMutation;
+use App\Actions\LoyaltyPoints\Mutations\CreatePointTransactionMutation;
+use App\Actions\LoyaltyPoints\Mutations\CheckLoyaltyDiscountUsageMutation;
+use App\Actions\LoyaltyPoints\Mutations\LoyaltyDiscountCalculationsMutation;
 
 class AppointmentService
 {
@@ -1155,14 +1156,14 @@ public function getAvailableDates(int $provider_id, int $service_id, ?string $da
 
         $last_service_end_datetime = Carbon::parse($last_appointment_service->date)->setTimeFromTimeString($last_appointment_service->end_time);
 
-        if (Carbon::parse($last_appointment_service->date)->isAfter(today())) {
-            throw new Exception(__('Appointment is not yet completed'));
-        }
+        // if (Carbon::parse($last_appointment_service->date)->isAfter(today())) {
+        //     throw new Exception(__('Appointment is not yet completed'));
+        // }
 
 
-        if ($last_service_end_datetime->greaterThan(Carbon::now())) {
-            throw new Exception(__('Appointment is not yet completed'));
-        }
+        // if ($last_service_end_datetime->greaterThan(Carbon::now())) {
+        //     throw new Exception(__('Appointment is not yet completed'));
+        // }
 
         $appointment->state()->complete();
         // Check for the referral code if this is the customer's first appointment
@@ -1179,6 +1180,15 @@ public function getAvailableDates(int $provider_id, int $service_id, ?string $da
             //increment customer loyalty points
             $this->incrementCustomerPoints($appointment->customer,$appointment->total);
         }
+
+        //requestForpayment to customer
+
+         //notification
+            try {
+                $appointment->serviceProvider->user->notify(new RequestPaymentNotification($appointment));
+            } catch (\Exception $e) {
+                Log::info($e);
+            }
 
         return response()->json([
             'message' => __('Appointment marked as complete'),
