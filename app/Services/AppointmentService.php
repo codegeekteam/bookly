@@ -1185,7 +1185,7 @@ public function getAvailableDates(int $provider_id, int $service_id, ?string $da
 
          //notification
             try {
-                $appointment->serviceProvider->user->notify(new RequestPaymentNotification($appointment));
+                 $appointment->customer->user->notify(new RequestPaymentNotification($appointment));
             } catch (\Exception $e) {
                 Log::info($e);
             }
