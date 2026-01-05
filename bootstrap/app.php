@@ -1,5 +1,8 @@
 <?php
 
+error_log("LIVEWIRE UPLOAD DEBUG: " . json_encode($_FILES));
+
+
 /*
 |--------------------------------------------------------------------------
 | Create The Application

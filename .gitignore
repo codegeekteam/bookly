@@ -76,3 +76,5 @@ yarn-error.log
 /public/docs/css/theme-elements.style.css
 /public/docs/js/tryitout-4.37.2.js
 /.scribe
+composer.json
+composer.lock

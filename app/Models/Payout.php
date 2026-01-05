@@ -20,6 +20,8 @@ class Payout extends Model
         'receipt_path',
         'cancellation_note',
         'transferred_at',
+        'payment_transferred_date',
+        'transaction_id'
     ];
 
     protected $casts = [

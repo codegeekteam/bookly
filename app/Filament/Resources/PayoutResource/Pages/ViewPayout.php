@@ -14,25 +14,35 @@ class ViewPayout extends ViewRecord
     protected static string $resource = PayoutResource::class;
 
     protected function getHeaderActions(): array
-    {
+    { 
         return [
             Actions\Action::make('markAsTransferred')
                 ->label('Mark as Transferred')
                 ->icon('heroicon-o-check-circle')
                 ->color('success')
                 ->form([
+                     Forms\Components\DatePicker::make('transfer_date')
+                        ->label('Transfer Date')
+                        ->required()
+                        ->maxDate(now()),
+                    Forms\Components\TextInput::make('transaction_id')
+                        ->label('Transaction ID')
+                        ->required()
+                        ->maxLength(255),
                     Forms\Components\FileUpload::make('receipt')
                         ->label('Transfer Receipt (Optional)')
                         ->directory('payout-receipts')
                         ->disk('public')
                         ->image()
-                        ->maxSize(5120),
+                        ->maxSize(5120),                      
                 ])
-                ->action(function (array $data) {
+                ->action(function (array $data) {                
                     $payoutService = app(PayoutService::class);
                     $receipt = $data['receipt'] ?? null;
+                    $transferDate = $data['transfer_date'];
+                    $transactionId = $data['transaction_id'];
 
-                    $payoutService->markAsTransferred($this->record, $receipt);
+                    $payoutService->markAsTransferred($this->record, $transferDate, $transactionId, $receipt);
 
                     Notification::make()
                         ->title('Payout Transferred')
@@ -40,7 +50,8 @@ class ViewPayout extends ViewRecord
                         ->body('The payout has been marked as transferred and email sent to provider.')
                         ->send();
 
-                    $this->redirect(static::getResource()::getUrl('index'));
+                     $this->redirect(static::getResource()::getUrl('index'));
+
                 })
                 ->requiresConfirmation()
                 ->visible(fn () => $this->record->status === 'pending'),
