@@ -29,6 +29,7 @@ use App\Notifications\AppointmentNotification;
 use Illuminate\Validation\ValidationException;
 use App\Notifications\NewAppointmentNotification;
 use App\Notifications\RequestPaymentNotification;
+use App\Notifications\AppointmentCompleteNotification;
 use App\Actions\PromoCode\Mutations\CheckPromoCodeMutation;
 use App\Notifications\AcceptRescheduleAppointmentNotification;
 use App\Notifications\RejectRescheduleAppointmentNotification;
@@ -46,7 +47,7 @@ class AppointmentService
     public function getAvailableSlots(int $provider_id, int $service_id, ?string $date = null, ?int $employee_id = null): array
     {
         // 1. Fetch provider and service details, or throw an exception if not found
-        $provider = ServiceProvider::with('operationalHours','operationalOffHours')->find($provider_id);
+        $provider = ServiceProvider::with('operationalHours', 'operationalOffHours')->find($provider_id);
         $service = \App\Models\Service::find($service_id);
 
 
@@ -140,9 +141,11 @@ class AppointmentService
                     $booked_start = Carbon::parse($appointment->start_time);
                     $booked_end = Carbon::parse($appointment->end_time);
 
-                    if ($slot_start->between($booked_start, $booked_end) ||
+                    if (
+                        $slot_start->between($booked_start, $booked_end) ||
                         $slot_end->between($booked_start, $booked_end) ||
-                        ($slot_start <= $booked_start && $slot_end >= $booked_end)) {
+                        ($slot_start <= $booked_start && $slot_end >= $booked_end)
+                    ) {
                         return false;
                     }
                 }
@@ -188,7 +191,6 @@ class AppointmentService
 
         // 12. Return the final list of available slots
         return ['slots' => $slots];
-
     }
 
 
@@ -252,7 +254,6 @@ class AppointmentService
         ]);
 
         return $heldTimeSlot;
-
     }
 
     public
@@ -262,7 +263,7 @@ class AppointmentService
         if ($user->serviceProvider) {
             $appointments = $user->serviceProvider->appointments;
             if ($appointments->count() > 0) {
-                return new AppointmentCollection($appointments->load('serviceProvider','services','appointmentServices','customer','PromoCode','paymentMethod','invoice')->sortByDesc('id'));
+                return new AppointmentCollection($appointments->load('serviceProvider', 'services', 'appointmentServices', 'customer', 'PromoCode', 'paymentMethod', 'invoice')->sortByDesc('id'));
             }
 
             return response()->json([]);
@@ -270,7 +271,7 @@ class AppointmentService
         if ($user->customer) {
             $appointments = $user->customer->appointments;
             if ($appointments->count() > 0) {
-                return new AppointmentCollection($appointments->load('serviceProvider','services','appointmentServices','customer','PromoCode','paymentMethod','invoice')->sortByDesc('id'));
+                return new AppointmentCollection($appointments->load('serviceProvider', 'services', 'appointmentServices', 'customer', 'PromoCode', 'paymentMethod', 'invoice')->sortByDesc('id'));
             }
 
             return response()->json([]);
@@ -280,19 +281,19 @@ class AppointmentService
 
     public
     function getById(
-        User $user
-        ,$request
+        User $user,
+        $request
     ) {
         if ($user->serviceProvider) {
             $appointment = $user->serviceProvider->appointments->where('id', $request->id)->first();
             if ($appointment) {
-                return AppointmentResource::make($appointment->load('serviceProvider','services','appointmentServices','customer','PromoCode','paymentMethod','invoice'));
+                return AppointmentResource::make($appointment->load('serviceProvider', 'services', 'appointmentServices', 'customer', 'PromoCode', 'paymentMethod', 'invoice'));
             }
         }
         if ($user->customer) {
             $appointment = $user->customer->appointments->where('id', $request->id)->first();
             if ($appointment) {
-                return AppointmentResource::make($appointment->load('serviceProvider','services','appointmentServices','customer','PromoCode','paymentMethod','invoice'));
+                return AppointmentResource::make($appointment->load('serviceProvider', 'services', 'appointmentServices', 'customer', 'PromoCode', 'paymentMethod', 'invoice'));
             }
         }
         throw new Exception(__('Appointment not found'));
@@ -313,7 +314,6 @@ class AppointmentService
         ]);
 
         return AppointmentResource::make($appointment);
-
     }
 
     /**
@@ -327,7 +327,7 @@ class AppointmentService
         ?int $payment_method_id,
         ?int $loyalty_discount_customer_id
     ) {
-        $loyalty_discount=null;
+        $loyalty_discount = null;
         $serviceProviderId = array_reduce($services, static function ($carry, $service) {
             return $carry === $service['provider_id'] ? $carry : false;
         }, $services[0]['provider_id']);
@@ -379,10 +379,8 @@ class AppointmentService
 
             $services[$i]['start_time'] = Carbon::parse($dateOnly . ' ' . $service['time_slot']);
             $services[$i]['end_time'] = Carbon::parse($dateOnly . ' ' . $service['time_slot'])->addMinutes($duration);
-
         }
-        if($promo_code && $loyalty_discount_customer_id)
-        {
+        if ($promo_code && $loyalty_discount_customer_id) {
             throw ValidationException::withMessages([
                 'promo_code' => __('You can only use either a promo code or a loyalty discount, not both.'),
             ]);
@@ -395,7 +393,7 @@ class AppointmentService
 
         //check loyalty discount
         if ($loyalty_discount_customer_id) {
-            $loyalty_discount=(new CheckLoyaltyDiscountUsageMutation())->handle($loyalty_discount_customer_id, $customer);
+            $loyalty_discount = (new CheckLoyaltyDiscountUsageMutation())->handle($loyalty_discount_customer_id, $customer);
         }
 
 
@@ -412,8 +410,8 @@ class AppointmentService
         }*/
 
 
-        $sum_of_services=0;
-        $amount_due=0;
+        $sum_of_services = 0;
+        $amount_due = 0;
         $total_deposit_amount = 0;
         $has_any_deposit = false;
 
@@ -433,6 +431,29 @@ class AppointmentService
             'promo_code_id' => $promo_code ? $promo_code->id : null,
             'loyalty_discount_customer_id' => $loyalty_discount ? $loyalty_discount->id : null,
         ]);
+
+        // 🔹 Auto complete appointment if Card payment
+
+        if ($payment_method_id) {
+            $paymentMethod = PaymentMethod::find($payment_method_id);
+
+            if ($paymentMethod && strtolower($paymentMethod->name) === 'Card') {
+                app(AppointmentService::class)->markAsComplete($appointment);
+            }
+        }
+        // 🔹 Notify provider to mark booking complete if Cash payment
+        if ($payment_method_id) {
+            $paymentMethod = PaymentMethod::find($payment_method_id);
+
+            if ($paymentMethod && strtolower($paymentMethod->name) === 'Cash') {
+                try {
+                    $appointment->serviceProvider->user
+                        ->notify(new AppointmentCompleteNotification($appointment));
+                } catch (Exception $e) {
+                    Log::info($e);
+                }
+            }
+        }
 
         //save services and calculate the total
         foreach ($services as $service) {
@@ -469,24 +490,23 @@ class AppointmentService
             }
         }
 
-        $discount=0;
+        $discount = 0;
         //calculate promo code
         if ($promo_code) {
-           $discount=(new PromoCodeCalculationsMutation())->handle($promo_code,$sum_of_services);
-           $promo_code->increment('count_of_redeems');
+            $discount = (new PromoCodeCalculationsMutation())->handle($promo_code, $sum_of_services);
+            $promo_code->increment('count_of_redeems');
         }
 
         //calculate loyalty discount
         if ($loyalty_discount) {
-            if($sum_of_services < $loyalty_discount->minimum_amount)
-            {
-                throw new \Exception(__("this discount not applicable , minimum amount to use this discount is")." $loyalty_discount->minimum_amount ]");
+            if ($sum_of_services < $loyalty_discount->minimum_amount) {
+                throw new \Exception(__("this discount not applicable , minimum amount to use this discount is") . " $loyalty_discount->minimum_amount ]");
             }
-            $discount=(new LoyaltyDiscountCalculationsMutation())->handle($loyalty_discount,$sum_of_services);
-            $loyalty_discount->update(['is_used'=>1]);
+            $discount = (new LoyaltyDiscountCalculationsMutation())->handle($loyalty_discount, $sum_of_services);
+            $loyalty_discount->update(['is_used' => 1]);
         }
 
-        $appointment->total = $sum_of_services-$discount;
+        $appointment->total = $sum_of_services - $discount;
         $appointment->amount_due = max(0, $amount_due - $discount);
         $appointment->discount = $discount;
 
@@ -528,7 +548,7 @@ class AppointmentService
         $appointment->save();
 
         //customer wallet check
-        $this->customerWalletActions($customer,$appointment);
+        $this->customerWalletActions($customer, $appointment);
 
         //add total to provider wallet
         (new CreateWalletTransactionMutation())
@@ -558,33 +578,30 @@ class AppointmentService
         return new AppointmentResource($appointment);
     }
 
-    public function customerWalletActions($customer,$appointment)
+    public function customerWalletActions($customer, $appointment)
     {
         //check customer wallet
-        $wallet=$customer->user->wallet;
-        if($wallet)
-        {
-            if($wallet->balance>0)
-            {
-                $payed_amount=0;
+        $wallet = $customer->user->wallet;
+        if ($wallet) {
+            if ($wallet->balance > 0) {
+                $payed_amount = 0;
                 //the balance cover the total
-                if($wallet->balance>=$appointment->amount_due)
-                {
-                    $appointment->wallet_amount=$appointment->amount_due;
-                    $appointment->payment_status='paid';
-                    $appointment->total_payed=$appointment->amount_due;
-                    $appointment->payment_method_id=2;//wallet
+                if ($wallet->balance >= $appointment->amount_due) {
+                    $appointment->wallet_amount = $appointment->amount_due;
+                    $appointment->payment_status = 'paid';
+                    $appointment->total_payed = $appointment->amount_due;
+                    $appointment->payment_method_id = 2; //wallet
                     $appointment->save();
-                    $payed_amount=$appointment->wallet_amount;
+                    $payed_amount = $appointment->wallet_amount;
                 }
                 //total greater than balance
-                else{
-                    $appointment->wallet_amount=$wallet->balance;
-                    $appointment->payment_status='partially_paid';
-                    $appointment->total_payed=$wallet->balance;
-                    $appointment->payment_method_id=3;//wallet and card
+                else {
+                    $appointment->wallet_amount = $wallet->balance;
+                    $appointment->payment_status = 'partially_paid';
+                    $appointment->total_payed = $wallet->balance;
+                    $appointment->payment_method_id = 3; //wallet and card
                     $appointment->save();
-                    $payed_amount=$appointment->wallet_amount;
+                    $payed_amount = $appointment->wallet_amount;
                 }
 
                 //add wallet transaction
@@ -597,10 +614,8 @@ class AppointmentService
                         false,
                         " حجز موعد رقم : $appointment->id"
                     );
-
             }
         }
-
     }
     /**
      * @throws Exception
@@ -625,7 +640,7 @@ class AppointmentService
             throw new Exception(__('Appointment not found'));
         }
 
-        Log::critical('customer_id '.$provider->id);
+        Log::critical('customer_id ' . $provider->id);
 
         if ($appointment->service_provider_id != $provider->id) {
             throw new Exception(__('Appointment not found'));
@@ -636,13 +651,13 @@ class AppointmentService
         }
         //check if appointment have one service or many
         $serviceCount = $appointment->services()->count();
-        if($serviceCount!=1){
+        if ($serviceCount != 1) {
             throw new Exception(__('cant reschedule this appointment because has many services not only one'));
         }
 
         $booked_service = $appointment->services()->where('service_id', $service_id)->first();
 
-        Log::critical('booked_service '.$booked_service->service_id);
+        Log::critical('booked_service ' . $booked_service->service_id);
 
         if (!$booked_service) {
             throw new Exception(__('Service not found'));
@@ -658,8 +673,10 @@ class AppointmentService
         }
 
 
-        $date_in_ops_hours = $booked_service->operationalHours()->where('day_of_week',
-            $rescheduleDate->format('l'))->exists();
+        $date_in_ops_hours = $booked_service->operationalHours()->where(
+            'day_of_week',
+            $rescheduleDate->format('l')
+        )->exists();
 
         if (!$date_in_ops_hours) {
             throw new Exception(__('The selected date is not available for this service.'));
@@ -671,8 +688,11 @@ class AppointmentService
             throw new Exception(__('The rescheduled time slot is the same as the original time.'));
         }
 
-        $available_timeslots = $this->getAvailableSlots($appointment->service_provider_id, $booked_service->id,
-            $rescheduleDate)['slots'];
+        $available_timeslots = $this->getAvailableSlots(
+            $appointment->service_provider_id,
+            $booked_service->id,
+            $rescheduleDate
+        )['slots'];
 
         if (!in_array($timeslot, $available_timeslots)) {
             throw new Exception(__('The selected time slot is not available.'));
@@ -695,10 +715,10 @@ class AppointmentService
 
         try {
             $title = 'Appointment Reschedule Request';
-            $body = 'Your appointment #'.$appointment->id.' has been requested to be rescheduled to '.$rescheduleTime->format('H:i').' on '.$rescheduleDate->format('Y-m-d');
+            $body = 'Your appointment #' . $appointment->id . ' has been requested to be rescheduled to ' . $rescheduleTime->format('H:i') . ' on ' . $rescheduleDate->format('Y-m-d');
             $title_ar = 'طلب تعديل موعد';
-            $body_ar = 'تم طلب تعديل موعد رقم :  ' . $appointment->id . 'الى : ' .$rescheduleTime->format('H:i').'  '.$rescheduleDate->format('Y-m-d');
-            $appointment->customer->user->notify(new AppointmentNotification($title, $body,$title_ar, $body_ar));
+            $body_ar = 'تم طلب تعديل موعد رقم :  ' . $appointment->id . 'الى : ' . $rescheduleTime->format('H:i') . '  ' . $rescheduleDate->format('Y-m-d');
+            $appointment->customer->user->notify(new AppointmentNotification($title, $body, $title_ar, $body_ar));
         } catch (\Exception $e) {
             Log::info($e);
         }
@@ -733,8 +753,10 @@ class AppointmentService
 
         if ($customer_response === 'accept') {
             $appointment->services()->where('service_id', $service_id)->update([
-                'start_time' => $appointment->services()->where('service_id',
-                    $service_id)->first()->pivot->new_start_time,
+                'start_time' => $appointment->services()->where(
+                    'service_id',
+                    $service_id
+                )->first()->pivot->new_start_time,
                 'end_time' => $appointment->services()->where('service_id', $service_id)->first()->pivot->new_end_time,
                 'date' => $appointment->services()->where('service_id', $service_id)->first()->pivot->new_date,
                 'new_start_time' => null,
@@ -755,7 +777,6 @@ class AppointmentService
             return response()->json([
                 'message' => __('appointment rescheduled successfully'),
             ], 200);
-
         } elseif ($customer_response === 'reject') {
             $appointment->services()->where('service_id', $service_id)->update([
                 'new_start_time' => null,
@@ -777,12 +798,9 @@ class AppointmentService
             return response()->json([
                 'message' => __('appointment reschedule rejected the appointment is still in the original time'),
             ], 200);
-
         } else {
             throw new Exception(__('Invalid response'));
         }
-
-
     }
 
     public
@@ -808,7 +826,7 @@ class AppointmentService
         ];
     }
 
-   /* public
+    /* public
     function getPayfortFeedback(
         $response_code,
         $appointment_id,
@@ -886,7 +904,7 @@ class AppointmentService
         $model = match ($type) {
             'appointment' => Appointment::find($identifier),
             'giftCard'    => GiftCard::find($identifier),
-            'subscription'=> Subscription::find($identifier),
+            'subscription' => Subscription::find($identifier),
             default       => null,
         };
 
@@ -988,123 +1006,125 @@ class AppointmentService
         return response()->json(['message' => 'success'], 200);
     }
 
-public function getAvailableDates(int $provider_id, int $service_id, ?string $date = null): array
-{
-    // Fetch provider and service details
-    $provider = ServiceProvider::with('operationalHours', 'operationalOffHours')->find($provider_id);
-    $service = \App\Models\Service::with('heldTimeSlots')->find($service_id);
+    public function getAvailableDates(int $provider_id, int $service_id, ?string $date = null): array
+    {
+        // Fetch provider and service details
+        $provider = ServiceProvider::with('operationalHours', 'operationalOffHours')->find($provider_id);
+        $service = \App\Models\Service::with('heldTimeSlots')->find($service_id);
 
-    if (!$provider || !$service) {
-        throw new Exception(__('Provider or service not found'));
-    }
-
-    // Parse the date or set it to now
-    $date = $date ? Carbon::parse($date) : Carbon::now();
-    if ($date->isPast()) {
-        $date = Carbon::now();
-    }
-
-    $start_date = $date->copy();
-
-    // Apply minimum booking lead time if set
-    if ($provider->minimum_booking_lead_time_hours !== null) {
-        $minimumStartDate = Carbon::now()->addHours($provider->minimum_booking_lead_time_hours)->startOfDay();
-        if ($start_date->lessThan($minimumStartDate)) {
-            $start_date = $minimumStartDate;
+        if (!$provider || !$service) {
+            throw new Exception(__('Provider or service not found'));
         }
-    }
 
-    // Apply maximum booking lead time if set, otherwise use default 60 days
-    if ($provider->maximum_booking_lead_time_months !== null) {
-        $end_of_two_month = Carbon::now()->addMonths($provider->maximum_booking_lead_time_months);
-    } else {
-        $end_of_two_month = $date->copy()->addDays(60);
-    }
+        // Parse the date or set it to now
+        $date = $date ? Carbon::parse($date) : Carbon::now();
+        if ($date->isPast()) {
+            $date = Carbon::now();
+        }
 
-    $available_dates = [];
+        $start_date = $date->copy();
 
-    // Loop through each day within the range
-    for ($day = $start_date->copy(); $day->lte($end_of_two_month); $day->addDay()) {
-        $day_of_week = $day->format('l');
+        // Apply minimum booking lead time if set
+        if ($provider->minimum_booking_lead_time_hours !== null) {
+            $minimumStartDate = Carbon::now()->addHours($provider->minimum_booking_lead_time_hours)->startOfDay();
+            if ($start_date->lessThan($minimumStartDate)) {
+                $start_date = $minimumStartDate;
+            }
+        }
 
-        // Fetch operational hours
-        $ops_hours = $provider->operationalHours()
-            ->where('service_id', $service_id)
-            ->where('day_of_week', $day_of_week)
-            ->first();
+        // Apply maximum booking lead time if set, otherwise use default 60 days
+        if ($provider->maximum_booking_lead_time_months !== null) {
+            $end_of_two_month = Carbon::now()->addMonths($provider->maximum_booking_lead_time_months);
+        } else {
+            $end_of_two_month = $date->copy()->addDays(60);
+        }
 
-        if (!$ops_hours) continue;  // No operational hours for this day
+        $available_dates = [];
 
-        // Calculate time slots and booked appointments
-        $duration = $ops_hours->duration_in_minutes;
-        $time_from = (int) Carbon::parse($ops_hours->start_time)->format('Hi'); // HHMM as integer
-        $time_to = (int) Carbon::parse($ops_hours->end_time)->format('Hi');
+        // Loop through each day within the range
+        for ($day = $start_date->copy(); $day->lte($end_of_two_month); $day->addDay()) {
+            $day_of_week = $day->format('l');
 
-        // Create an array for availability
-        $slots = [];
+            // Fetch operational hours
+            $ops_hours = $provider->operationalHours()
+                ->where('service_id', $service_id)
+                ->where('day_of_week', $day_of_week)
+                ->first();
 
-        // Create slots and check for booked appointments
-        while ($time_from < $time_to) {
-            $is_in_off_hours = false;
+            if (!$ops_hours) continue;  // No operational hours for this day
 
-            // Check for off hours
-            foreach ($provider->operationalOffHours()
-                         ->where('service_id', $service_id)
-                         ->where('day_of_week', $day_of_week)
-                         ->get() as $off_hour) {
-                $off_start = (int) Carbon::parse($off_hour->start_time)->format('Hi');
-                $off_end = (int) Carbon::parse($off_hour->end_time)->format('Hi');
-                if ($time_from >= $off_start && $time_from < $off_end) {
-                    $is_in_off_hours = true;
-                    break;
+            // Calculate time slots and booked appointments
+            $duration = $ops_hours->duration_in_minutes;
+            $time_from = (int) Carbon::parse($ops_hours->start_time)->format('Hi'); // HHMM as integer
+            $time_to = (int) Carbon::parse($ops_hours->end_time)->format('Hi');
+
+            // Create an array for availability
+            $slots = [];
+
+            // Create slots and check for booked appointments
+            while ($time_from < $time_to) {
+                $is_in_off_hours = false;
+
+                // Check for off hours
+                foreach (
+                    $provider->operationalOffHours()
+                        ->where('service_id', $service_id)
+                        ->where('day_of_week', $day_of_week)
+                        ->get() as $off_hour
+                ) {
+                    $off_start = (int) Carbon::parse($off_hour->start_time)->format('Hi');
+                    $off_end = (int) Carbon::parse($off_hour->end_time)->format('Hi');
+                    if ($time_from >= $off_start && $time_from < $off_end) {
+                        $is_in_off_hours = true;
+                        break;
+                    }
+                }
+
+                if (!$is_in_off_hours) {
+                    $slots[] = $time_from;  // Store available slot
+                }
+
+                $time_from += $duration;  // Move to next slot
+            }
+
+            // Fetch booked appointments only if slots exist
+            if (!empty($slots)) {
+                $current_date = $day->format('Y-m-d');
+                $booked_count = \App\Models\AppointmentService::where('date', $current_date)
+                    ->whereHas('appointment', function ($query) use ($provider) {
+                        $query->where('service_provider_id', $provider->id)
+                            ->whereIn('status_id', [1, 2, 6]);
+                    })
+                    ->count();  // Get count of booked appointments
+
+                // If booked count matches expected slots, skip this date
+                if ($booked_count >= count($slots)) {
+                    continue;
+                }
+
+                // Check held time slots for the day
+                $heldTimeSlots = $service->heldTimeSlots()
+                    ->where('service_provider_id', $provider_id)
+                    ->whereDate('date', $current_date)
+                    ->where('expires_at', '>', Carbon::now())
+                    ->pluck('timeSlot')  // Get held time slots
+                    ->map(fn($timeSlot) => (int) Carbon::parse($timeSlot)->format('Hi')) // Convert to integer format
+                    ->toArray();
+
+                // Remove held time slots from available slots
+                $slots = array_diff($slots, $heldTimeSlots);
+
+                // If there are available slots for the day, add the date to available_dates
+                if (!empty($slots)) {
+                    $available_dates[] = $current_date;
                 }
             }
-
-            if (!$is_in_off_hours) {
-                $slots[] = $time_from;  // Store available slot
-            }
-
-            $time_from += $duration;  // Move to next slot
         }
 
-        // Fetch booked appointments only if slots exist
-        if (!empty($slots)) {
-            $current_date = $day->format('Y-m-d');
-            $booked_count = \App\Models\AppointmentService::where('date', $current_date)
-                ->whereHas('appointment', function ($query) use ($provider) {
-                    $query->where('service_provider_id', $provider->id)
-                        ->whereIn('status_id', [1, 2, 6]);
-                })
-                ->count();  // Get count of booked appointments
-
-            // If booked count matches expected slots, skip this date
-            if ($booked_count >= count($slots)) {
-                continue;
-            }
-
-            // Check held time slots for the day
-            $heldTimeSlots = $service->heldTimeSlots()
-                ->where('service_provider_id', $provider_id)
-                ->whereDate('date', $current_date)
-                ->where('expires_at', '>', Carbon::now())
-                ->pluck('timeSlot')  // Get held time slots
-                ->map(fn($timeSlot) => (int) Carbon::parse($timeSlot)->format('Hi')) // Convert to integer format
-                ->toArray();
-
-            // Remove held time slots from available slots
-            $slots = array_diff($slots, $heldTimeSlots);
-
-            // If there are available slots for the day, add the date to available_dates
-            if (!empty($slots)) {
-                $available_dates[] = $current_date;
-            }
-        }
+        return [
+            'available_dates' => $available_dates,
+        ];
     }
-
-    return [
-        'available_dates' => $available_dates,
-    ];
-}
 
 
     protected
@@ -1171,31 +1191,37 @@ public function getAvailableDates(int $provider_id, int $service_id, ?string $da
             $referralId = $appointment->customer->referral_id; // Assuming 'referral_code' field in Customer
 
             if ($referralId) {
-                $this->checkReferId($referralId,$appointment->customer);
+                $this->checkReferId($referralId, $appointment->customer);
             }
         }
 
-        if($appointment->customer)
-        {
+        if ($appointment->customer) {
             //increment customer loyalty points
-            $this->incrementCustomerPoints($appointment->customer,$appointment->total);
+            $this->incrementCustomerPoints($appointment->customer, $appointment->total);
         }
 
         //requestForpayment to customer
+        // notification (only for Cash payment)
+try {
+    if ($appointment->payment_method_id) {
+        $paymentMethod = PaymentMethod::find($appointment->payment_method_id);
 
-         //notification
-            try {
-                 $appointment->customer->user->notify(new RequestPaymentNotification($appointment));
-            } catch (\Exception $e) {
-                Log::info($e);
-            }
+        if ($paymentMethod && strtolower($paymentMethod->name) === 'cash') {
+            $appointment->customer->user
+                ->notify(new RequestPaymentNotification($appointment));
+        }
+    }
+} catch (\Exception $e) {
+    Log::info($e);
+}
+
 
         return response()->json([
             'message' => __('Appointment marked as complete'),
         ], 200);
     }
 
-    public function checkReferId($referralId,$customer)
+    public function checkReferId($referralId, $customer)
     {
         $referral = Customer::where('id', $referralId)->first();
         //not found code
@@ -1205,34 +1231,33 @@ public function getAvailableDates(int $provider_id, int $service_id, ?string $da
             if ($referral_bonus) {
                 //charge referral wallet
                 if ($referral_bonus > 0) {
-                    $this->chargeReferralWallet($referral, $referral_bonus,$customer);
+                    $this->chargeReferralWallet($referral, $referral_bonus, $customer);
                 }
             }
         }
     }
 
-    public function chargeReferralWallet($referral, $amount,$customer)
+    public function chargeReferralWallet($referral, $amount, $customer)
     {
-        $description = 'Congrats! Your referral was a success! 🎉 You\'ve earned [ '.$amount.' ] in your wallet. Check it out and keep sharing for more rewards!';
-        $description_ar = 'تهانينا! لقد نجح الإحالة الخاصة بك! 🎉 لقد حصلت على [ '.$amount.' ] في محفظتك. تحقق منها واستمر في المشاركة للحصول على المزيد من المكافآت!';
+        $description = 'Congrats! Your referral was a success! 🎉 You\'ve earned [ ' . $amount . ' ] in your wallet. Check it out and keep sharing for more rewards!';
+        $description_ar = 'تهانينا! لقد نجح الإحالة الخاصة بك! 🎉 لقد حصلت على [ ' . $amount . ' ] في محفظتك. تحقق منها واستمر في المشاركة للحصول على المزيد من المكافآت!';
         $wallet = $referral->user->wallet;
-        (new CreateWalletTransactionMutation())->handle($wallet, $amount, TransactionType::IN, $description,true,$description_ar);
+        (new CreateWalletTransactionMutation())->handle($wallet, $amount, TransactionType::IN, $description, true, $description_ar);
     }
 
-    public function incrementCustomerPoints($customer,$total)
+    public function incrementCustomerPoints($customer, $total)
     {
         //find setting
         $riyals_per_point = app(RewardsSettings::class)->riyals_per_point;
         if ($riyals_per_point) {
             //charge referral wallet
             if ($riyals_per_point > 0) {
-                $points=(int)$total/$riyals_per_point;
-                $description = 'Congrats! Your appointment is complete! 🎉 You\'ve earned [ '.$points.' ] in your loyalty points!';
-                $description_ar = 'تهانينا! تم اكتمال موعدك! 🎉 لقد حصلت على [ '.$points.' ] من نقاط الولاء!';
-                (new CreatePointTransactionMutation())->handle($customer, $points, TransactionType::IN, $description,true,$description_ar);
+                $points = (int)$total / $riyals_per_point;
+                $description = 'Congrats! Your appointment is complete! 🎉 You\'ve earned [ ' . $points . ' ] in your loyalty points!';
+                $description_ar = 'تهانينا! تم اكتمال موعدك! 🎉 لقد حصلت على [ ' . $points . ' ] من نقاط الولاء!';
+                (new CreatePointTransactionMutation())->handle($customer, $points, TransactionType::IN, $description, true, $description_ar);
             }
         }
-
     }
 
     /**
