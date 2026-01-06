@@ -437,7 +437,7 @@ class AppointmentService
         if ($payment_method_id) {
             $paymentMethod = PaymentMethod::find($payment_method_id);
 
-            if ($paymentMethod && strtolower($paymentMethod->name) === 'Card') {
+            if ($paymentMethod && strtolower($paymentMethod->title) === 'Card') {
                 app(AppointmentService::class)->markAsComplete($appointment);
             }
         }
@@ -445,7 +445,7 @@ class AppointmentService
         if ($payment_method_id) {
             $paymentMethod = PaymentMethod::find($payment_method_id);
 
-            if ($paymentMethod && strtolower($paymentMethod->name) === 'Cash') {
+            if ($paymentMethod && strtolower($paymentMethod->title) === 'Cash') {
                 try {
                     $appointment->serviceProvider->user
                         ->notify(new AppointmentCompleteNotification($appointment));
@@ -1206,7 +1206,7 @@ try {
     if ($appointment->payment_method_id) {
         $paymentMethod = PaymentMethod::find($appointment->payment_method_id);
 
-        if ($paymentMethod && strtolower($paymentMethod->name) === 'cash') {
+        if ($paymentMethod && strtolower($paymentMethod->title) === 'cash') {
             $appointment->customer->user
                 ->notify(new RequestPaymentNotification($appointment));
         }
