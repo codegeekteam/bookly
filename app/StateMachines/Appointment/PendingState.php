@@ -17,9 +17,16 @@ class PendingState extends BaseAppointmentState
 {
     public function confirm(): void
     {
+       $paymentMethod = $this->appointment->paymentMethod;
+
+       if (
+        $paymentMethod &&
+        strtolower($paymentMethod->name) === 'cash'
+    ) {
         if ($this->appointment->serviceProvider->user_id !== auth()->id()) {
             throw new \Exception('Only the appointment service provider can confirm the appointment');
         }
+    }
         $this->appointment->update([
             'status_id' => AppointmentStatus::Confirmed->value,
             'changed_status_at' => now(),
