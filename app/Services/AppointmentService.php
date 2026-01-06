@@ -536,17 +536,21 @@ class AppointmentService
                 $appointment->state()->confirm();
                 $this->markAsComplete($appointment);
             }
-        }
-        // 🔹 Notify provider to mark booking complete if Cash payment
-        if ($payment_method_id) {
-            $paymentMethod = PaymentMethod::find($payment_method_id);
 
-            if ($paymentMethod && strtolower($paymentMethod->name) === 'cash') {
+            // 🔹 Notify provider to mark booking complete if Cash payment
+            else if ($paymentMethod && strtolower($paymentMethod->name) === 'cash') {
                 try {
                     $appointment->serviceProvider->user
                         ->notify(new AppointmentCompleteNotification($appointment));
                 } catch (Exception $e) {
-                    Log::info($e);
+                    Log::error('Failed to send AppointmentCompleteNotification', [
+                        'appointment_id'      => $appointment->id,
+                        'provider_user_id'     => $appointment->serviceProvider->user_id ?? null,
+                        'payment_method_id'   => $payment_method_id,
+                        'payment_method_name' => $paymentMethod->name ?? null,
+                        'exception'            => $e->getMessage(),
+                        'trace'                => $e->getTraceAsString(),
+                    ]);
                 }
             }
         }
@@ -1206,18 +1210,27 @@ class AppointmentService
 
         //requestForpayment to customer
         // notification (only for Cash payment)
-        try {
-            if ($appointment->payment_method_id) {
+        if ($appointment->payment_method_id) {
+            try {
+
                 $paymentMethod = PaymentMethod::find($appointment->payment_method_id);
 
                 if ($paymentMethod && strtolower($paymentMethod->name) === 'cash') {
                     $appointment->customer->user
                         ->notify(new RequestPaymentNotification($appointment));
                 }
+            } catch (\Exception $e) {
+                Log::error('Failed to send AppointmentCompleteNotification', [
+                    'appointment_id'      => $appointment->id,
+                    'provider_user_id'     => $appointment->serviceProvider->user_id ?? null,
+                    'payment_method_name' => $paymentMethod->name ?? null,
+                    'exception'            => $e->getMessage(),
+                    'trace'                => $e->getTraceAsString(),
+                ]);
             }
-        } catch (\Exception $e) {
-            Log::info($e);
         }
+
+
 
 
         return response()->json([
