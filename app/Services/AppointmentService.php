@@ -438,7 +438,7 @@ class AppointmentService
             $paymentMethod = PaymentMethod::find($payment_method_id);
 
             if ($paymentMethod && strtolower($paymentMethod->title) === 'Card') {
-                app(AppointmentService::class)->markAsComplete($appointment);
+                $this->markAsComplete($appointment);
             }
         }
         // 🔹 Notify provider to mark booking complete if Cash payment
