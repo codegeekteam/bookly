@@ -432,28 +432,7 @@ class AppointmentService
             'loyalty_discount_customer_id' => $loyalty_discount ? $loyalty_discount->id : null,
         ]);
 
-        // 🔹 Auto complete appointment if Card payment
 
-        if ($payment_method_id) {
-            $paymentMethod = PaymentMethod::find($payment_method_id);
-
-            if ($paymentMethod && strtolower($paymentMethod->title) === 'Card') {
-                $this->markAsComplete($appointment);
-            }
-        }
-        // 🔹 Notify provider to mark booking complete if Cash payment
-        if ($payment_method_id) {
-            $paymentMethod = PaymentMethod::find($payment_method_id);
-
-            if ($paymentMethod && strtolower($paymentMethod->title) === 'Cash') {
-                try {
-                    $appointment->serviceProvider->user
-                        ->notify(new AppointmentCompleteNotification($appointment));
-                } catch (Exception $e) {
-                    Log::info($e);
-                }
-            }
-        }
 
         //save services and calculate the total
         foreach ($services as $service) {
@@ -546,6 +525,31 @@ class AppointmentService
         }
 
         $appointment->save();
+
+
+        // 🔹 Auto complete appointment if Card payment
+
+        if ($payment_method_id) {
+            $paymentMethod = PaymentMethod::find($payment_method_id);
+
+            if ($paymentMethod && strtolower($paymentMethod->name) == 'card') {
+                $appointment->state()->confirm();
+                $this->markAsComplete($appointment);
+            }
+        }
+        // 🔹 Notify provider to mark booking complete if Cash payment
+        if ($payment_method_id) {
+            $paymentMethod = PaymentMethod::find($payment_method_id);
+
+            if ($paymentMethod && strtolower($paymentMethod->name) === 'cash') {
+                try {
+                    $appointment->serviceProvider->user
+                        ->notify(new AppointmentCompleteNotification($appointment));
+                } catch (Exception $e) {
+                    Log::info($e);
+                }
+            }
+        }
 
         //customer wallet check
         $this->customerWalletActions($customer, $appointment);
@@ -1202,18 +1206,18 @@ class AppointmentService
 
         //requestForpayment to customer
         // notification (only for Cash payment)
-try {
-    if ($appointment->payment_method_id) {
-        $paymentMethod = PaymentMethod::find($appointment->payment_method_id);
+        try {
+            if ($appointment->payment_method_id) {
+                $paymentMethod = PaymentMethod::find($appointment->payment_method_id);
 
-        if ($paymentMethod && strtolower($paymentMethod->title) === 'cash') {
-            $appointment->customer->user
-                ->notify(new RequestPaymentNotification($appointment));
+                if ($paymentMethod && strtolower($paymentMethod->name) === 'cash') {
+                    $appointment->customer->user
+                        ->notify(new RequestPaymentNotification($appointment));
+                }
+            }
+        } catch (\Exception $e) {
+            Log::info($e);
         }
-    }
-} catch (\Exception $e) {
-    Log::info($e);
-}
 
 
         return response()->json([
