@@ -17,9 +17,16 @@ class ConfirmedState extends BaseAppointmentState
 {
     public function complete(): void
     {
+        $paymentMethod = $this->appointment->paymentMethod;
+
+       if (
+        $paymentMethod &&
+        strtolower($paymentMethod->name) === 'cash'
+    ) {
         if ($this->appointment->serviceProvider->user_id !== auth()->id()) {
             throw new Exception('Only the appointment service provider can complete the appointment');
         }
+    }
 
         $this->appointment->update([
             'status_id' => AppointmentStatus::Completed->value,
