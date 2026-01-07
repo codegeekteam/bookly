@@ -26,6 +26,7 @@
         "laravel/tinker": "^2.8",
         "livewire/livewire": "3.0",
         "pxlrbt/filament-excel": "^2.1",
+        "resend/resend-laravel": "^1.0@dev",
         "resend/resend-php": "^1.1",
         "solution-forest/filament-translate-field": "*",
         "spatie/laravel-medialibrary": "^10.11",
@@ -88,7 +89,10 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true
-        }
+        },
+	"audit": {
+        	"block-insecure": false
+    	}
     },
     "minimum-stability": "dev",
     "prefer-stable": false

@@ -19,10 +19,7 @@ class ConfirmedState extends BaseAppointmentState
     {
         $paymentMethod = $this->appointment->paymentMethod;
 
-       if (
-        $paymentMethod &&
-        strtolower($paymentMethod->name) === 'cash'
-    ) {
+       if ($paymentMethod && strtolower($paymentMethod->name) === 'cash') {
         if ($this->appointment->serviceProvider->user_id !== auth()->id()) {
             throw new Exception('Only the appointment service provider can complete the appointment');
         }

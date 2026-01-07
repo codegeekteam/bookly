@@ -532,7 +532,7 @@ class AppointmentService
         if ($payment_method_id) {
             $paymentMethod = PaymentMethod::find($payment_method_id);
 
-            if ($paymentMethod && strtolower($paymentMethod->name) == 'card') {
+            if (($paymentMethod && strtolower($paymentMethod->name) == 'card') && ($appointment->payment_status == 'paid')) {
                 $appointment->state()->confirm();
                 $this->markAsComplete($appointment);
             }
@@ -1173,9 +1173,7 @@ class AppointmentService
      * @throws Exception
      */
     public
-    function markAsComplete(
-        $appointment
-    ): JsonResponse {
+    function markAsComplete($appointment): JsonResponse {
         $last_appointment_service = $appointment->appointmentServices
             ->sortByDesc(function ($service) {
                 return Carbon::parse($service->date)->format('Y-m-d') . ' ' . $service->end_time;
