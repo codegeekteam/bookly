@@ -101,7 +101,7 @@ class AddressService
     public function providerAddress($provider_id)
     {
         $address = Address::where('addressable_id', $provider_id)->where('addressable_type', ServiceProvider::class)->first();
-        if ($address) {
+        if ($address) {           
             return new AddressResource($address);
         }
 

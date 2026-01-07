@@ -575,13 +575,13 @@ class AppointmentService
         (new CartService())->clearCart($customer);
 
         //send notification if no deposit required
-        if ($appointment->deposit_amount === null) {
-            try {
-                $appointment->serviceProvider->user->notify(new NewAppointmentNotification($appointment));
-            } catch (Exception $e) {
+       /* if ($appointment->deposit_amount === null) {
+            try { */
+                $appointment->serviceProvider->user->notify(new NewAppointmentNotification($appointment)); //send notification for all new bookings
+         /*   } catch (Exception $e) {
                 Log::info($e);
-            }
-        }
+            } 
+        } */
 
         return new AppointmentResource($appointment);
     }
