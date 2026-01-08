@@ -228,7 +228,6 @@ class AuthService extends Service
 
         $account->load('user.activeSubscription');
         return [
-
             'provider' => new ServiceProviderResource($account),
             'access_token' => $account->user->createToken('authToken')->plainTextToken,
         ];
