@@ -53,6 +53,7 @@ class NewAppointmentNotification extends Notification implements ShouldQueue {
     public function toFirebase($notifiable)
     {
         $fcm_token = $notifiable->firebase_token;
+        \Log::info('FCM Token: ' . $notifiable->firebase_token);
         return (new FirebaseNotification)
             ->withTitle($this->getTitle())
             ->withBody($this->getBody())

@@ -157,8 +157,19 @@ class FirebaseNotification
         $apiURL = str_replace(':projectId', config('larafirebase.project_id'), self::API_URI);
 
         $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->getBearerToken()
+            'Authorization' => 'Bearer ' . $this->getBearerToken(),
+            'Content-Type' => 'application/json'
         ])->post($apiURL, $fields);
+
+        if ($response->failed()) {
+            \Log::error('FCM Error', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+        }
+        //dd($response->json());
+
+       // \Log::info('Response', $response->body());
 
         return $response;
     }
