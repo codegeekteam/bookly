@@ -12,7 +12,10 @@ class AppointmentStatusSeeder extends Seeder
         $statuses = ['pending', 'confirmed', 'rejected', 'cancelled', 'completed'];
 
         foreach ($statuses as $status) {
-            AppointmentStatus::factory()->create([
+            // AppointmentStatus::factory()->create([
+            //     'title' => $status,
+            // ]);
+            AppointmentStatus::firstOrCreate([
                 'title' => $status,
             ]);
         }

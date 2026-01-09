@@ -817,9 +817,8 @@ class AppointmentService
 
         $payment_gateway_response = $payfort_helper->generateSDKToken($device_id);
 
-                \Log::info('response',  ['response' =>$payment_gateway_response]);
-
-                if($payment_gateway_response){
+        \Log::info('response',  ['response' =>$payment_gateway_response]);
+              
 
         if ($payment_gateway_response['response_code'] !== '22000') {
 
@@ -834,9 +833,7 @@ class AppointmentService
             ],
 
         ];
-    }else{
-        throw ValidationException::withMessages(['error' => 'done']);
-    }
+  
     }
 
     /* public

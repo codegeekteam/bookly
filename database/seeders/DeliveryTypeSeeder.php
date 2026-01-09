@@ -15,7 +15,7 @@ class DeliveryTypeSeeder extends Seeder
             "Customer's Place",
         ];
         foreach ($delivery_types as $delivery_type) {
-            \App\Models\DeliveryType::create([
+            \App\Models\DeliveryType::firstOrCreate([
                 'title' => $delivery_type,
             ]);
         }

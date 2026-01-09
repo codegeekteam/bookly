@@ -10,7 +10,10 @@ class ProviderTypeSeeder extends Seeder
     {
         $providers = ['freelancer', 'enterprise'];
         foreach ($providers as $provider) {
-            \App\Models\ProviderType::factory()->create([
+            // \App\Models\ProviderType::factory()->create([
+            //     'title' => $provider,
+            // ]);
+            \App\Models\ProviderType::firstOrCreate([
                 'title' => $provider,
             ]);
         }

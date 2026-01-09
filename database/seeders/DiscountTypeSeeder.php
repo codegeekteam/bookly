@@ -15,7 +15,7 @@ class DiscountTypeSeeder extends Seeder
         $discount_types = ['fixed', 'percentage'];
 
         foreach ($discount_types as $type) {
-            DiscountType::create([
+            DiscountType::firstOrCreate([
                 'title' => $type,
             ]);
         }
