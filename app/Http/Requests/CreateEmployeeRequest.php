@@ -24,7 +24,7 @@ class CreateEmployeeRequest extends FormRequest
             'name' => ['required'],
             'email' => ['required', 'email', 'unique:users,email', 'unique:employees,email', 'max:254'],
             'phone_number' => ['required', 'max:15', 'unique:employees,phone_number'],
-            'profile_picture' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
+            'profile_picture' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg'], //, 'max:2048'],
             'service_ids' => ['nullable'],
             'service_ids.*' => ['exists:services,id'],
         ];
