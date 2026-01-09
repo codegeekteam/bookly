@@ -21,15 +21,15 @@ class PayfortHelper
 
          \Log::info('request data',  ['data' =>$data]);
 
-        // $response = Http::withHeaders([
-        //     'Content-Type' => 'application/json',
-        // ])->post($url, $data);
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+        ])->post($url, $data);
 
        // $response = Http::timeout(10)->asForm()->post($url, $data);
 
-        $response = Http::withOptions([
-            'headers' => ['Content-Type' => 'application/x-www-form-urlencoded']
-        ])->post($url, $data);
+        // $response = Http::withOptions([
+        //     'headers' => ['Content-Type' => 'application/x-www-form-urlencoded']
+        // ])->post($url, $data);
 
         \Log::info('PAYFORT RESPONSE',  ['response' =>$response->json()]);
         return $response->json();
