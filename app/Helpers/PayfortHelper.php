@@ -2,7 +2,7 @@
 
 namespace App\Helpers;
 
-use Http;
+use Illuminate\Support\Facades\Http;
 
 class PayfortHelper
 {
@@ -19,10 +19,17 @@ class PayfortHelper
 
         $data['signature'] = self::generateSignature($data);
 
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/json',
-        ])->post($url, $data);
+        // $response = Http::withHeaders([
+        //     'Content-Type' => 'application/json',
+        // ])->post($url, $data);
 
+        $response = Http::timeout(10)->asForm()->post($url, $data);
+
+        // $response = Http::withOptions([
+        //     'headers' => ['Content-Type' => 'application/x-www-form-urlencoded']
+        // ])->post($url, $data);
+
+        \Log::info('PAYFORT RESPONSE', $response->json());
         return $response->json();
 
     }
