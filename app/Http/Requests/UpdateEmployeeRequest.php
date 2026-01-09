@@ -24,7 +24,7 @@ class UpdateEmployeeRequest extends FormRequest
             'name' => ['nullable'],
             'email' => ['nullable', 'email', 'max:254', 'unique:employees,email,'.$this->route('employee_id')],
             'phone_number' => ['nullable'],
-            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg', //|max:2048',
             'service_ids' => ['nullable'],
             'service_ids.*' => ['exists:services,id'],
         ];
