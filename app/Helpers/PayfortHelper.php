@@ -25,17 +25,17 @@ class PayfortHelper
             'service_command'    => 'SDK_TOKEN',
         ];
 
-        $data = array_filter($data);
+        // $data = array_filter($data);
 
         $data['signature'] = self::generateSignature($data);
 
          \Log::info('request data',  ['data' =>$data]);
 
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/json',
-        ])->post($url, $data);
+        // $response = Http::withHeaders([
+        //     'Content-Type' => 'application/json',
+        // ])->post($url, $data);
 
-      //  $response = Http::timeout(10)->asForm()->post($url, $data);
+        $response = Http::timeout(20)->asForm()->post($url, $data);
 
         // $response = Http::withOptions([
         //     'headers' => ['Content-Type' => 'application/x-www-form-urlencoded']
