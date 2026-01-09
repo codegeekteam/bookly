@@ -19,9 +19,11 @@ class PayfortHelper
 
         $data['signature'] = self::generateSignature($data);
 
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/json',
-        ])->post($url, $data);
+         \Log::info('request data',  ['data' =>$data]);
+
+        // $response = Http::withHeaders([
+        //     'Content-Type' => 'application/json',
+        // ])->post($url, $data);
 
         $response = Http::timeout(10)->asForm()->post($url, $data);
 
