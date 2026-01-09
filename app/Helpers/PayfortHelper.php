@@ -32,7 +32,7 @@ class PayfortHelper
         // ])->post($url, $data);
 
       //  \Log::info('PAYFORT RESPONSE',  ['response' =>$response->json()]);
-        Log::info('PAYFORT SDK TOKEN RESPONSE', [
+        \Log::info('PAYFORT SDK TOKEN RESPONSE', [
             'status' => $response->status(),
             'body'   => $response->body(),
         ]);
