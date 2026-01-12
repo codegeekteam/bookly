@@ -13,8 +13,9 @@ class ServiceProviderResource extends JsonResource
         $data = [
             'id' => $this->id,
             'name' => $this->name,
+            'provider_rating' => $this->average_rating,
             'is_blocked' => $this->is_blocked,
-            'is_active' => $this->is_active,
+            'is_active' => $this->is_active,           
             'email' => $this->email,
             'phone_number' => $this->phone_number,
             'biography' => $this->biography,
@@ -46,7 +47,7 @@ class ServiceProviderResource extends JsonResource
             'cancellation_enabled' => $this->cancellation_enabled ?? false,
             'cancellation_hours_before' => $this->cancellation_hours_before,
             'minimum_booking_lead_time_hours' => $this->minimum_booking_lead_time_hours,
-            'maximum_booking_lead_time_months' => $this->maximum_booking_lead_time_months,
+            'maximum_booking_lead_time_months' => $this->maximum_booking_lead_time_months,           
         ];
 
         return $data;

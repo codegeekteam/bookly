@@ -23,8 +23,8 @@ class ServiceProviderService
                 $keyword = '%'.$request->keyword.'%';
                 $query->where('name', 'LIKE', $keyword);
             })
-            ->where('is_active', true)
-            ->where('published', true);
+           ->where('is_active', true)
+           ->where('published', true);
 
 
         // If latitude and longitude are provided, sort by distance
