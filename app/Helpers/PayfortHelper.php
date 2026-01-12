@@ -9,21 +9,21 @@ class PayfortHelper
     public function generateSDKToken($device_id)
     {
         $url = config('services.payfort.sandbox_mode') ? 'https://sbpaymentservices.payfort.com/FortAPI/paymentApi' : 'https://paymentservices.payfort.com/FortAPI/paymentApi';
-        // $data = [
-        //     'service_command' => 'SDK_TOKEN',
-        //     'access_code' => config('services.payfort.access_code'),
-        //     'merchant_identifier' => config('services.payfort.merchant_identifier'),
-        //     'language' => 'en',
-        //     'device_id' => $device_id,
-        // ];
-
         $data = [
-            'access_code'        => config('services.payfort.access_code'),
-            'device_id'          => $device_id,
-            'language'           => 'en',
-            'merchant_identifier'=> config('services.payfort.merchant_identifier'),
-            'service_command'    => 'SDK_TOKEN',
+            'service_command' => 'SDK_TOKEN',
+            'access_code' => config('services.payfort.access_code'),
+            'merchant_identifier' => config('services.payfort.merchant_identifier'),
+            'language' => 'en',
+            'device_id' => $device_id,
         ];
+
+        // $data = [
+        //     'access_code'        => config('services.payfort.access_code'),
+        //     'device_id'          => $device_id,
+        //     'language'           => 'en',
+        //     'merchant_identifier'=> config('services.payfort.merchant_identifier'),
+        //     'service_command'    => 'SDK_TOKEN',
+        // ];
 
         // $data = array_filter($data);
 
@@ -31,11 +31,11 @@ class PayfortHelper
 
          \Log::info('request data',  ['data' =>$data]);
 
-        // $response = Http::withHeaders([
-        //     'Content-Type' => 'application/json',
-        // ])->post($url, $data);
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+        ])->post($url, $data);
 
-        $response = Http::timeout(20)->asForm()->post($url, $data);
+       // $response = Http::timeout(20)->asForm()->post($url, $data);
 
         // $response = Http::withOptions([
         //     'headers' => ['Content-Type' => 'application/x-www-form-urlencoded']
