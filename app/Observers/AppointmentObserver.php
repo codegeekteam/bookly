@@ -26,8 +26,15 @@ class AppointmentObserver
      */
     public function updated(Appointment $appointment): void
     {
+          \Log::info('Appointment observer reached');
         // Check if appointment status changed
         if ($appointment->isDirty('status_id')) {
+            \Log::info('Appointment updated fired', [
+                'id' => $appointment->id,
+                'old' => $appointment->getOriginal('status_id'),
+                'new' => $appointment->status_id,
+            ]);
+
             // Send email when status changes to confirmed
             if ($appointment->status_id === AppointmentStatus::Confirmed->value) {
                 $this->sendConfirmationEmail($appointment);
