@@ -988,11 +988,13 @@ class AppointmentService
                     \Log::error('Failed to generate invoice for appointment ' . $appointment->id . ': ' . $e->getMessage());
                 }
             }
+            \Log::info('isDepositPayment: ', $isDepositPayment);
+            \Log::info('deposit_payment_status: ', $appointment->deposit_payment_status);
 
             // Send notification to provider when deposit is paid
             if ($isDepositPayment && $appointment->deposit_payment_status === 'paid') {
                 try {
-                    $model->serviceProvider->user->notify(new NewAppointmentNotification($model));
+                    $appointment->serviceProvider->user->notify(new NewAppointmentNotification($appointment));
                 } catch (\Exception $e) {
                     Log::info($e);
                 }
