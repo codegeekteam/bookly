@@ -3,7 +3,7 @@
     "apps": [],
     "details": [
       {
-        "appID": "8P8VC86T6N.com.rizme.bookly",
+        "appID": "TMZ4GMQ8XW.com.bookly.user.app",
         "paths": ["/share/provider/*"],
         "components": [
           {
@@ -14,7 +14,7 @@
     ]
   },
   "webcredentials": {
-    "apps": ["8P8VC86T6N.com.rizme.bookly"]
+    "apps": ["TMZ4GMQ8XW.com.bookly.user.app"]
   },
   "appclips": {
     "apps": []

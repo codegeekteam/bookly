@@ -26,6 +26,7 @@ class ServiceProviderService
             ->where('is_active', true)
             ->where('published', true);
 
+
         // If latitude and longitude are provided, sort by distance
         if ($latitude && $longitude) {
             $providers = $query->get()->map(function ($provider) use ($latitude, $longitude) {
