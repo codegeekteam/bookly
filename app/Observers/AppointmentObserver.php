@@ -67,12 +67,6 @@ class AppointmentObserver
                 $this->payoutService->createDeferredPayoutsForAppointment($appointment);
             }
         }
-        if ($appointment->isDirty('remaining_payment_status')) {
-             if (($appointment->status_id === AppointmentStatus::Completed->value) && ($appointment->remaining_payment_status == 'paid')) {
-                   \Log::info('create DeferredPayouts For Appointment reached');
-                $this->payoutService->createDeferredPayoutsForAppointment($appointment);
-            }
-        }
     }
 
     /**
