@@ -980,8 +980,9 @@ class AppointmentService
 
             $appointment->refresh();
 
-            if ($appointment->payment_status == 'paid') {  //By Sreeja
+            if ($appointment->payment_status === 'paid') {  //By Sreeja
                // $appointment->state()->confirm();
+                \Log::info('inside if loop');
                 $this->markAsComplete($appointment);
                 \Log::info('executed in feedback api');
             }
@@ -1187,6 +1188,7 @@ class AppointmentService
      */
     public
     function markAsComplete($appointment): JsonResponse {
+        \Log::info('reached markAsComplete');
         $last_appointment_service = $appointment->appointmentServices
             ->sortByDesc(function ($service) {
                 return Carbon::parse($service->date)->format('Y-m-d') . ' ' . $service->end_time;
