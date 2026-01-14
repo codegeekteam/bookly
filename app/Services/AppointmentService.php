@@ -527,7 +527,7 @@ class AppointmentService
         $appointment->save();
 
 
-        // 🔹 Auto complete appointment if Card payment
+        // Auto complete appointment if Card payment
 
         if ($payment_method_id) {
             $paymentMethod = PaymentMethod::find($payment_method_id);
@@ -572,9 +572,8 @@ class AppointmentService
         DB::commit();
 
         //clear cart
-        (new CartService())->clearCart($customer);
-
-        //send notification if no deposit required
+        (new CartService())->clearCart($customer); 
+           //send notification if no deposit required
       //  if ($appointment->deposit_amount === null) {
             try { 
                 $appointment->serviceProvider->user->notify(new NewAppointmentNotification($appointment)); 
@@ -979,11 +978,14 @@ class AppointmentService
 
             $appointment->save();
 
+            $appointment->refresh();
+
             if ($appointment->payment_status == 'paid') {  //By Sreeja
-                $appointment->state()->confirm();
+               // $appointment->state()->confirm();
                 $this->markAsComplete($appointment);
+                \Log::info('executed in feedback api');
             }
-            \Log::info('executed in feedback api');
+    
             //By Sreeja ends here
 
             // Generate invoice if payment is complete
