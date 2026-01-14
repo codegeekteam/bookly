@@ -34,4 +34,5 @@ abstract class BaseAppointmentState
     {
         throw new \Exception('Invalid state transition');
     }
+ 
 }

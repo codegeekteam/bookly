@@ -246,5 +246,16 @@ class ConfirmedState extends BaseAppointmentState
 
     }
 
+    public function PaymentRequest(): void
+    {
+        $paymentMethod = $this->appointment->paymentMethod; 
+
+        $this->appointment->update([
+            'status_id' => AppointmentStatus::PaymentRequest->value,
+            'changed_status_at' => now(),
+        ]);
+    
+    }
+
 
 }
