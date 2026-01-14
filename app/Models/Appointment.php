@@ -2,20 +2,21 @@
 
 namespace App\Models;
 
-use App\Enums\AppointmentStatus as AppointmentState;
-use App\StateMachines\Appointment\BaseAppointmentState;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use App\StateMachines\Appointment\PendingState;
 use App\StateMachines\Appointment\CanceledState;
+use App\StateMachines\Appointment\RejectedState;
 use App\StateMachines\Appointment\CompletedState;
 use App\StateMachines\Appointment\ConfirmedState;
-use App\StateMachines\Appointment\PendingState;
-use App\StateMachines\Appointment\RejectedState;
-use App\StateMachines\Appointment\RescheduleRequestState;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Enums\AppointmentStatus as AppointmentState;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\StateMachines\Appointment\BaseAppointmentState;
+use App\StateMachines\Appointment\PaymentRequestedState;
+use App\StateMachines\Appointment\RescheduleRequestState;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Appointment extends Model
 {
@@ -75,6 +76,7 @@ class Appointment extends Model
             AppointmentState::RescheduleRequest->value => new RescheduleRequestState($this),
             AppointmentState::Rejected->value => new RejectedState($this),
             AppointmentState::Completed->value => new CompletedState($this),
+            AppointmentState::PaymentRequest->value => new PaymentRequestedState($this),
             default => new PendingState($this),
         };
     }

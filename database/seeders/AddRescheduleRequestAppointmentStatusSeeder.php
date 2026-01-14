@@ -10,9 +10,9 @@ class AddRescheduleRequestAppointmentStatusSeeder extends Seeder
     public function run(): void
     {
 
-        AppointmentStatus::create([
-            'title' => 'reschedule_request',
-        ]);
+        // AppointmentStatus::create([
+        //     'title' => 'reschedule_request',
+        // ]);
 
     }
 }

@@ -117,6 +117,7 @@ Route::group(['middleware' => ['auth:sanctum',CheckBlockedMiddleware::class]], f
         Route::post('/{appointment}/complete', [AppointmentController::class, 'complete']);
         Route::post('/{appointment}/confirm', [AppointmentController::class, 'confirm']);
         Route::post('/{appointment}/reject', [AppointmentController::class, 'reject']);
+        Route::post('/{appointment}/payment-request', [AppointmentController::class, 'paymentRequest']);
         Route::post('/{appointment}/change-remaining-payment-method', [AppointmentController::class, 'changeRemainingPaymentMethod']);
         Route::get('/sdk-token', [AppointmentController::class, 'getSDKToken']);
 

@@ -1202,8 +1202,9 @@ class AppointmentService
         //     throw new Exception(__('Appointment is not yet completed'));
         // }
 
-        $appointment->state()->complete();
-        // Check for the referral code if this is the customer's first appointment
+            $appointment->state()->complete();
+
+         // Check for the referral code if this is the customer's first appointment
         if ($appointment->customer && $appointment->customer->appointments()->where('status_id', AppointmentStatus::Completed->value)->count() === 1) {
             $referralId = $appointment->customer->referral_id; // Assuming 'referral_code' field in Customer
 
@@ -1299,5 +1300,62 @@ class AppointmentService
         $appointment->save();
 
         return AppointmentResource::make($appointment->load('serviceProvider', 'services', 'appointmentServices', 'customer', 'promoCode', 'paymentMethod', 'depositPaymentMethod', 'remainingPaymentMethod', 'invoice'));
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function requestForPayment($appointment){//: JsonResponse {
+        $last_appointment_service = $appointment->appointmentServices
+            ->sortByDesc(function ($service) {
+                return Carbon::parse($service->date)->format('Y-m-d') . ' ' . $service->end_time;
+            })
+            ->first();
+//return json_encode($last_appointment_service);
+        $last_service_end_datetime = Carbon::parse($last_appointment_service->date)->setTimeFromTimeString($last_appointment_service->end_time);
+
+        $appointment->state()->paymentRequest();
+        // Check for the referral code if this is the customer's first appointment
+      /*  if ($appointment->customer && $appointment->customer->appointments()->where('status_id', AppointmentStatus::PaymentRequest->value)->count() === 1) {
+            $referralId = $appointment->customer->referral_id; // Assuming 'referral_code' field in Customer
+
+            if ($referralId) {
+                $this->checkReferId($referralId, $appointment->customer);
+            }
+        }
+
+        if ($appointment->customer) {
+            //increment customer loyalty points
+            $this->incrementCustomerPoints($appointment->customer, $appointment->total);
+        }*/
+
+        //requestForpayment to customer
+        // notification (only for Cash payment)
+       /* if ($appointment->payment_method_id) {
+            try {
+
+                $paymentMethod = PaymentMethod::find($appointment->payment_method_id);
+
+                if ($paymentMethod && strtolower($paymentMethod->name) === 'cash') {
+                    $appointment->customer->user
+                        ->notify(new RequestPaymentNotification($appointment));
+                }
+            } catch (\Exception $e) {
+                Log::error('Failed to send AppointmentCompleteNotification', [
+                    'appointment_id'      => $appointment->id,
+                    'provider_user_id'     => $appointment->serviceProvider->user_id ?? null,
+                    'payment_method_name' => $paymentMethod->name ?? null,
+                    'exception'            => $e->getMessage(),
+                    'trace'                => $e->getTraceAsString(),
+                ]);
+            }
+        }*/
+
+
+
+
+        return response()->json([
+            'message' => __('Appointment payment  requested'),
+        ], 200);
     }
 }

@@ -538,6 +538,34 @@ class AppointmentController extends Controller
         } catch (\Exception $exception) {
             return $this->error($exception->getMessage());
         }
+    } 
+
+     /**
+     * Request for payment for an appointment in case of card 
+     *
+     *
+     * endpoint to Request for payment for an appointment
+     *
+     * @type POST
+     *
+     * @group appointments
+     *
+     * @authenticated
+     *
+     * @url api/appointments/{appointment}/payment-request
+     *
+     * @response 200 { "message": "Payment requested successfully" }
+     * @response 400 { "message": "Invalid state transition" }
+     */
+    public function paymentRequest(Appointment $appointment, AppointmentService $appointmentService)
+    {
+        try {
+
+            return $appointmentService->requestForPayment($appointment);
+
+        } catch (\Exception $exception) {
+            return $this->error($exception->getMessage());
+        }
     }
 
 }
