@@ -321,14 +321,14 @@ class AppointmentController extends Controller
     {
         try {
             PaymentLog::create([
-                $request->input('response_code'),
-                $request->input('status'),
-                $request->input('merchant_reference'),
-                $request->input('amount'),
-                $request->input('currency'),
-                $request->input('appointment_id'),
-                $request->input('fort_id'),
-                json_encode($request->input())
+               'response_code' => $request->input('response_code'),
+               'status' => $request->input('status'),
+               'merchant_reference' => $request->input('merchant_reference'),
+               'amount' => $request->input('amount'),
+               'currency' => $request->input('currency'),
+               'appointment_id' => $request->input('appointment_id'),
+               'fort_id' => $request->input('fort_id'),
+               'response' => json_encode($request->input())
             ]);
             return $appointmentService->getPayfortFeedback(
                 response_code: $request->input('response_code'),

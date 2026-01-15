@@ -328,12 +328,12 @@ class ConfirmedState extends BaseAppointmentState
         ]);
 if($response['response_code'] == '06000') {
         RefundLog::create([
-            $response['response_code'],
-            $response['response_message'],
-            $response['amount'],
-            $response['status'],
-            $response['merchant_reference'],          
-            json_encode($response)
+           'response_code' => $response['response_code'],
+           'response_message' => $response['response_message'],
+           'amount' => $response['amount'],
+           'status' => $response['status'],
+           'merchant_reference' => $response['merchant_reference'],          
+           'response' => json_encode($response)
         ]);
 }else {
     \Log::info('Refund Failed');
