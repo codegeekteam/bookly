@@ -66,7 +66,8 @@ class ConfirmedState extends BaseAppointmentState
             'changed_status_at' => now(),
         ]);
         DB::commit(); 
-        if($appointment->paymentMethod->name == 'card') {
+        $paymentMethod = $appointment->paymentMethod;
+        if ($paymentMethod && strtolower($paymentMethod->name) === 'card') { 
             $response = $this->initiateRefund($appointment, 'reject');
         }
  
@@ -157,9 +158,10 @@ class ConfirmedState extends BaseAppointmentState
         ]);
 
          DB::commit();
-      if($appointment->paymentMethod->name == 'card') {
-        $response = $this->initiateRefund($appointment, 'cancel');
-      }
+        $paymentMethod = $appointment->paymentMethod;
+        if ($paymentMethod && strtolower($paymentMethod->name) === 'card') {      
+            $response = $this->initiateRefund($appointment, 'cancel');
+        }
  DB::beginTransaction();
         // Handle refund based on policy
         if ($appointment->payment_status == 'paid' || $appointment->payment_status == 'partially_paid') {
