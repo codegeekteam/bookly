@@ -18,12 +18,12 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
         $schedule->job(new RejectExpiredPendingAppointmentsJob())->hourly();
-        $schedule->job(new RejectUnpaidAppointmentsJob())->everyMinute();
+      //  $schedule->job(new RejectUnpaidAppointmentsJob())->everyMinute();
         $schedule->job(new RejectExpiredPendingAppointmentsServicesJob())->everyFiveMinutes();
         $schedule->job(new DeleteExpiredCartItemsJob())->everyFiveMinutes();
 
         // Group eligible payouts on scheduled payout days (runs daily at 6 AM)
-        $schedule->command('app:group-payouts')->everyMinute();//->hourly(); //->dailyAt('06:00');      
+        $schedule->command('app:group-payouts')->hourly(); //->everyMinute(); //->dailyAt('06:00');      
     }
 
     /**
