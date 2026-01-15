@@ -2,12 +2,14 @@
 
 namespace App\Services;
 
-use GGInnovative\Larafirebase\Services\Larafirebase;
 use Google\Client;
-use Google\Service\FirebaseCloudMessaging;
+use App\Models\User;
 use Illuminate\Http\Client\Response;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
+use Google\Service\FirebaseCloudMessaging;
+use GGInnovative\Larafirebase\Services\Larafirebase;
 
 class FirebaseNotification
 {
@@ -170,13 +172,13 @@ class FirebaseNotification
             // --- DELETE UNREGISTERED TOKEN ---
             $body = json_decode($response->body(), true);
 
-            if (
-                isset($body['error']['details'][0]['errorCode']) &&
-                $body['error']['details'][0]['errorCode'] === 'UNREGISTERED'
-            ) {
+            if (isset($body['error']['details'][0]['errorCode']) && $body['error']['details'][0]['errorCode'] === 'UNREGISTERED')
+            {
+                $user =  User::find(Auth::user()->id);         
                 // Remove from DB
-                \App\Models\UserDevice::where('fcm_token', $this->token)->delete();
-
+                $user->update([
+                    'firebase_token' => null,
+                ]);
                 \Log::warning("Deleted invalid FCM token (UNREGISTERED): " . $this->token);
             }
         }
