@@ -1,31 +1,32 @@
 <?php
 
-use App\Http\Controllers\Api\AddressController;
-use App\Http\Controllers\Api\AppointmentController;
-use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\PayfortSimulatorController;
-use App\Http\Controllers\Api\BankDetailsController;
-use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\Api\ChatController;
-use App\Http\Controllers\Api\CustomerCampaignController;
-use App\Http\Controllers\Api\EmployeeController;
-use App\Http\Controllers\Api\FAQController;
-use App\Http\Controllers\Api\FavouriteController;
-use App\Http\Controllers\Api\GiftCardController;
-use App\Http\Controllers\Api\InvoiceController;
-use App\Http\Controllers\Api\LoyaltyPointsController;
-use App\Http\Controllers\Api\NotificationController;
-use App\Http\Controllers\Api\PaymentMethodController;
-use App\Http\Controllers\Api\PlanController;
-use App\Http\Controllers\Api\ProviderTypeController;
-use App\Http\Controllers\Api\ReviewController;
-use App\Http\Controllers\Api\ServiceController;
-use App\Http\Controllers\Api\ServiceProviderController;
-use App\Http\Controllers\Api\SubscriptionController;
-use App\Http\Controllers\Api\SupportController;
-use App\Http\Controllers\Api\HomeSectionController;
-use App\Http\Middleware\CheckBlockedMiddleware;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\FAQController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ChatController;
+use App\Http\Controllers\Api\PlanController;
+use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\AddressController;
+use App\Http\Controllers\Api\InvoiceController;
+use App\Http\Controllers\Api\PayfortController;
+use App\Http\Controllers\Api\ServiceController;
+use App\Http\Controllers\Api\SupportController;
+use App\Http\Middleware\CheckBlockedMiddleware;
+use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\EmployeeController;
+use App\Http\Controllers\Api\GiftCardController;
+use App\Http\Controllers\Api\FavouriteController;
+use App\Http\Controllers\Api\AppointmentController;
+use App\Http\Controllers\Api\BankDetailsController;
+use App\Http\Controllers\Api\HomeSectionController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\ProviderTypeController;
+use App\Http\Controllers\Api\SubscriptionController;
+use App\Http\Controllers\Api\LoyaltyPointsController;
+use App\Http\Controllers\Api\PaymentMethodController;
+use App\Http\Controllers\Api\ServiceProviderController;
+use App\Http\Controllers\Api\CustomerCampaignController;
+use App\Http\Controllers\Api\PayfortSimulatorController;
 
 /*
 |--------------------------------------------------------------------------
@@ -234,3 +235,8 @@ Route::group(['middleware' => ['auth:sanctum',CheckBlockedMiddleware::class]], f
         Route::get('/conversations', [ChatController::class, 'getConversations']);
     });
 });
+
+// Route::post('/refund', [PayfortController::class, 'refund']);
+// Route::get('/callback-cancel', [PayfortController::class, 'callbackCancel']);
+// Route::get('/callback-reject', [PayfortController::class, 'callbackReject']);
+

@@ -574,13 +574,13 @@ class AppointmentService
         //clear cart
         (new CartService())->clearCart($customer); 
            //send notification if no deposit required
-      //  if ($appointment->deposit_amount === null) {
+        if ($appointment->deposit_amount === null) {
             try { 
                 $appointment->serviceProvider->user->notify(new NewAppointmentNotification($appointment)); 
            } catch (Exception $e) {
                 Log::info($e);
            } 
-     //   }
+        }
 
         return new AppointmentResource($appointment);
     }
@@ -980,9 +980,7 @@ class AppointmentService
 
             $appointment->refresh();
 
-            if ($appointment->payment_status === 'paid') {  //By Sreeja
-               // $appointment->state()->confirm();
-                \Log::info('inside if loop');
+            if ($appointment->payment_status === 'paid') {  //By Sreeja             
                 $this->markAsComplete($appointment);
                 \Log::info('executed in feedback api');
             }
@@ -1002,13 +1000,13 @@ class AppointmentService
             \Log::info('deposit_payment_status: ', ['deposit_status' => $appointment->deposit_payment_status]);
 
             // Send notification to provider when deposit is paid
-          /*  if ($isDepositPayment && $appointment->deposit_payment_status === 'paid') {  //By Sreeja
+            if ($isDepositPayment && $appointment->deposit_payment_status === 'paid') {  //By Sreeja
                 try {
                     $appointment->serviceProvider->user->notify(new NewAppointmentNotification($appointment));
                 } catch (\Exception $e) {
                     Log::info($e);
                 }
-            } */
+            }
         }
 
         // GiftCard logic
@@ -1187,8 +1185,7 @@ class AppointmentService
      * @throws Exception
      */
     public
-    function markAsComplete($appointment): JsonResponse {
-        \Log::info('reached markAsComplete');
+    function markAsComplete($appointment): JsonResponse {     
         $last_appointment_service = $appointment->appointmentServices
             ->sortByDesc(function ($service) {
                 return Carbon::parse($service->date)->format('Y-m-d') . ' ' . $service->end_time;
