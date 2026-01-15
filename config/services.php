@@ -37,6 +37,8 @@ return [
         'merchant_identifier' => env('PAYFORT_MERCHANT_IDENTIFIER'),
         'request_sha_phrase' => env('PAYFORT_REQUEST_SHA_PHRASE'),
         'response_sha_phrase' => env('PAYFORT_RESPONSE_SHA_PHRASE'),
+
+        'refund_url' => env('REFUND_URL', 'https://sbpaymentservices.payfort.com'),
     ],
 
 ];

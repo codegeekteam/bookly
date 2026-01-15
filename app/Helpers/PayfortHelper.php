@@ -2,6 +2,8 @@
 
 namespace App\Helpers;
 
+use App\Models\PaymentLog;
+use App\Models\Appointment;
 use Illuminate\Support\Facades\Http;
 
 class PayfortHelper
@@ -35,7 +37,8 @@ class PayfortHelper
 
     }
 
-    private static function generateSignature(array $data): string
+   //  private static function generateSignature(array $data): string
+     public static function generateSignature(array $data): string
     {
         ksort($data);
 
@@ -48,6 +51,6 @@ class PayfortHelper
         $shaString .= config('services.payfort.request_sha_phrase');
 
         return hash('sha256', $shaString);
-    }
+    }   
 
 }

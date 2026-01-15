@@ -2,16 +2,19 @@
 
 namespace App\StateMachines\Appointment;
 
-use App\Actions\Wallet\Mutations\CreateWalletTransactionMutation;
-use App\Enums\AppointmentStatus;
+use Exception;
+use Carbon\Carbon;
+use App\Models\PaymentLog;
+use App\Helpers\PayfortHelper;
 use App\Models\AttachedService;
+use App\Enums\AppointmentStatus;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 use App\Models\Enums\TransactionType;
 use App\Notifications\AppointmentNotification;
 use App\Notifications\RejectAppointmentNotification;
-use Carbon\Carbon;
-use Exception;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use App\Actions\Wallet\Mutations\CreateWalletTransactionMutation;
 
 class ConfirmedState extends BaseAppointmentState
 {
@@ -62,7 +65,12 @@ class ConfirmedState extends BaseAppointmentState
             'status_id' => AppointmentStatus::Rejected->value,
             'changed_status_at' => now(),
         ]);
-
+        DB::commit(); 
+        if($appointment->paymentMethod->name == 'card') {
+            $response = $this->initiateRefund($appointment, 'reject');
+        }
+ 
+        DB::beginTransaction();
         //return money to user wallet
           if ($appointment->payment_status == 'paid' || $appointment->payment_status == 'partially_paid') {
               $wallet = $appointment->customer->user->wallet;
@@ -113,6 +121,7 @@ class ConfirmedState extends BaseAppointmentState
         }
 
           DB::commit();
+    
         //notification
            try {
                $appointment->customer->user->notify(new RejectAppointmentNotification($appointment));
@@ -147,6 +156,11 @@ class ConfirmedState extends BaseAppointmentState
             'changed_status_at' => now(),
         ]);
 
+         DB::commit();
+      if($appointment->paymentMethod->name == 'card') {
+        $response = $this->initiateRefund($appointment, 'cancel');
+      }
+ DB::beginTransaction();
         // Handle refund based on policy
         if ($appointment->payment_status == 'paid' || $appointment->payment_status == 'partially_paid') {
             $refundAmount = $refundInfo['refund_amount'];
@@ -257,5 +271,69 @@ class ConfirmedState extends BaseAppointmentState
     
     }
 
+    public function initiateRefund(Appointment $appointment, $type)
+    {
+        $paymentLog = PaymentLog::where('appointment_id', $appointment->id)->first();
+         $description = json_decode($appointment->service?->title, true);
+
+         if($type == 'reject') {
+         $total = $appointment->total_payed;
+         }
+         if($type == 'cancel') {
+             // Determine who is cancelling
+        $isProviderCancelling = ($appointment->serviceProvider->user_id === auth()->id());
+
+        // Calculate refund based on cancellation policy
+        $cancellationPolicyService = new \App\Services\CancellationPolicyService();
+        $refundInfo = $cancellationPolicyService->calculateRefund($appointment, $isProviderCancelling);
+            if ($appointment->payment_status == 'paid' || $appointment->payment_status == 'partially_paid') {
+            $refundAmount = $refundInfo['refund_amount'];
+            if ($refundInfo['refund_percentage'] == 100 && $refundAmount > 0) {        
+                $total = $refundAmount;
+            }
+        }
+         }
+
+         $amount = round($total) * 100; //converted to sub unit
+
+        $base_url = config('services.payfort.refund_url').'/FortAPI/paymentApi';
+        $refund_data = [            
+                        'command' => 'REFUND',
+                        'access_code' =>  config('services.payfort.access_code'),
+                        'merchant_identifier' =>  config('services.payfort.merchant_identifier'),
+                        'merchant_reference' => $paymentLog->merchant_reference,
+                        'amount' =>  $amount,
+                        'currency' =>  'SAR',
+                        'language' => 'en',
+                        'fort_id' =>  $paymentLog->transaction_id, //"149295435400084008",
+                    //    'signature' =>  $paymentLog->signature, //"7cad05f0212ed933c9a5d5dffa31661acf2c827a",
+                       // 'maintenance_reference' =>  "REF-2024-001",
+                    //    'order_description' =>  $description['en'] . '- Refund', //"Premium Wireless Headphones - Full Refund"
+                    ];
+         $refund_data['signature'] = PayfortHelper::generateSignature($refund_data);
+         $refund_data['order_description'] =  $description['en'] . '- Refund'; //"Premium Wireless Headphones - Full Refund"
+         $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+        ])->post($base_url, $refund_data); 
+
+        //    $response = Http::asForm()->post(config('payfort.endpoint'), $params);
+
+        \Log::info('REFUND PROCESSED RESPONSE STATUS', [
+            'status' => $response->status(),
+           // 'body'   => $response->body(),
+        ]);
+if($response['response_code'] == '06000') {
+        RefundLog::create([
+            $request->input('response_code'),
+            $request->input('response_message'),
+            $request->input('amount'),
+            $request->input('status'),
+            $request->input('merchant_reference'),          
+            json_encode($request->input())
+        ]);
+}else {
+    \Log::info('Refund Failed');
+}
+       //  return $response->json();
 
 }

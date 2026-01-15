@@ -2,21 +2,22 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\AppointmentRescheduleRequest;
-use App\Http\Requests\BookAppointmentRequest;
-use App\Http\Requests\ChangeRemainingPaymentMethodRequest;
-use App\Http\Requests\RescheduleAppointmentRequest;
-use App\Http\Resources\AppointmentResource;
+use App\Models\PaymentLog;
 use App\Models\Appointment;
-use App\Notifications\AppointmentNotification;
-use App\Notifications\CancelAppointmentNotification;
-use App\Services\AppointmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Knuckles\Scribe\Attributes\Authenticated;
+use App\Http\Controllers\Controller;
+use App\Services\AppointmentService;
 use Knuckles\Scribe\Attributes\Endpoint;
+use App\Http\Resources\AppointmentResource;
+use App\Http\Requests\BookAppointmentRequest;
+use Knuckles\Scribe\Attributes\Authenticated;
+use App\Notifications\AppointmentNotification;
+use App\Http\Requests\AppointmentRescheduleRequest;
+use App\Http\Requests\RescheduleAppointmentRequest;
+use App\Notifications\CancelAppointmentNotification;
 use Knuckles\Scribe\Attributes\ResponseFromApiResource;
+use App\Http\Requests\ChangeRemainingPaymentMethodRequest;
 
 class AppointmentController extends Controller
 {
@@ -319,6 +320,16 @@ class AppointmentController extends Controller
     public function getPayfortFeedback(AppointmentService $appointmentService, Request $request)
     {
         try {
+            PaymentLog::create([
+                $request->input('response_code'),
+                $request->input('status'),
+                $request->input('merchant_reference'),
+                $request->input('amount'),
+                $request->input('currency'),
+                $request->input('appointment_id'),
+                $request->input('fort_id'),
+                json_encode($request->input())
+            ]);
             return $appointmentService->getPayfortFeedback(
                 response_code: $request->input('response_code'),
                 id: $request->input('merchant_reference'),
