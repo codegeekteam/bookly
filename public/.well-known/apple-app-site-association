@@ -1,0 +1,22 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TMZ4GMQ8XW.com.bookly.user.app",
+        "paths": ["/share/provider/*"],
+        "components": [
+          {
+            "/": "/share/provider/*"
+          }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["TMZ4GMQ8XW.com.bookly.user.app"]
+  },
+  "appclips": {
+    "apps": []
+  }
+}
