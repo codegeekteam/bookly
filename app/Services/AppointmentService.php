@@ -526,19 +526,20 @@ class AppointmentService
 
         $appointment->save();
 
+        DB::commit();
 
         // Auto complete appointment if Card payment
 
         if ($payment_method_id) {
             $paymentMethod = PaymentMethod::find($payment_method_id);
 
-            if (($paymentMethod && strtolower($paymentMethod->name) == 'card') && ($appointment->payment_status == 'paid')) {
-                $appointment->state()->confirm();
-                $this->markAsComplete($appointment);
-            }
+            // if (($paymentMethod && strtolower($paymentMethod->name) == 'card') && ($appointment->payment_status == 'paid')) {
+            //     $appointment->state()->confirm();
+            //     $this->markAsComplete($appointment);
+            // }
 
             // 🔹 Notify provider to mark booking complete if Cash payment
-            else if ($paymentMethod && strtolower($paymentMethod->name) === 'cash') {
+           /* else*/ if ($paymentMethod && strtolower($paymentMethod->name) === 'cash') {
                 try {
                     $appointment->serviceProvider->user
                         ->notify(new AppointmentCompleteNotification($appointment));
@@ -557,7 +558,7 @@ class AppointmentService
 
         //customer wallet check
         $this->customerWalletActions($customer, $appointment);
-
+ DB::beginTransaction();
         //add total to provider wallet
         (new CreateWalletTransactionMutation())
             ->handle(
@@ -570,7 +571,7 @@ class AppointmentService
             );
         //commit changes
         DB::commit();
-
+$appointment->refresh();
         //clear cart
         (new CartService())->clearCart($customer); 
            //send notification if no deposit required

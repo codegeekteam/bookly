@@ -4,7 +4,9 @@ namespace App\StateMachines\Appointment;
 
 use Exception;
 use Carbon\Carbon;
+use App\Models\RefundLog;
 use App\Models\PaymentLog;
+use App\Models\Appointment;
 use App\Helpers\PayfortHelper;
 use App\Models\AttachedService;
 use App\Enums\AppointmentStatus;
@@ -326,12 +328,12 @@ class ConfirmedState extends BaseAppointmentState
         ]);
 if($response['response_code'] == '06000') {
         RefundLog::create([
-            $request->input('response_code'),
-            $request->input('response_message'),
-            $request->input('amount'),
-            $request->input('status'),
-            $request->input('merchant_reference'),          
-            json_encode($request->input())
+            $response['response_code'],
+            $response['response_message'],
+            $response['amount'],
+            $response['status'],
+            $response['merchant_reference'],          
+            json_encode($response)
         ]);
 }else {
     \Log::info('Refund Failed');
