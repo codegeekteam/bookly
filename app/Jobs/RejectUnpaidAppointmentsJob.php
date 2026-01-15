@@ -26,7 +26,6 @@ class RejectUnpaidAppointmentsJob implements ShouldQueue
 
     public function handle(): void
     {
-        \Log::info('Scheduler is running...');
         $now = Carbon::now();
         $fiveMinutesFromNow = $now->subMinutes(10);
         try {
