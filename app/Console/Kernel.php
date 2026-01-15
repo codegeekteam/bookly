@@ -23,7 +23,7 @@ class Kernel extends ConsoleKernel
         $schedule->job(new DeleteExpiredCartItemsJob())->everyFiveMinutes();
 
         // Group eligible payouts on scheduled payout days (runs daily at 6 AM)
-        $schedule->command('app:group-payouts')->hourly(); //->dailyAt('06:00');
+        $schedule->command('app:group-payouts')->everyMinute();//->hourly(); //->dailyAt('06:00');      
     }
 
     /**
@@ -35,4 +35,7 @@ class Kernel extends ConsoleKernel
 
         require base_path('routes/console.php');
     }
+
+
+
 }
