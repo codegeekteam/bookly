@@ -166,11 +166,20 @@ class FirebaseNotification
                 'status' => $response->status(),
                 'body' => $response->body(),
             ]);
+
+            // --- DELETE UNREGISTERED TOKEN ---
+            $body = json_decode($response->body(), true);
+
+            if (
+                isset($body['error']['details'][0]['errorCode']) &&
+                $body['error']['details'][0]['errorCode'] === 'UNREGISTERED'
+            ) {
+                // Remove from DB
+                \App\Models\UserDevice::where('fcm_token', $this->token)->delete();
+
+                \Log::warning("Deleted invalid FCM token (UNREGISTERED): " . $this->token);
+            }
         }
-        //dd($response->json());
-
-       // \Log::info('Response', $response->body());
-
         return $response;
     }
 }
