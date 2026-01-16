@@ -993,10 +993,10 @@ class AppointmentService
                 $isPaid = $newTotal >= $appointment->amount_due;
 
                 if ($appointment->remaining_amount) {
-                    $appointment->remaining_payment_status = $isPaid ? 'paid' : 'pending';
+                    $appointment->remaining_payment_status = 'paid'; //$isPaid ? 'paid' : 'pending';
                 }
 
-                $appointment->payment_status = $isPaid ? 'paid' : 'partially_paid';
+                $appointment->payment_status = 'paid'; //$isPaid ? 'paid' : 'partially_paid';
                 $appointment->card_amount = ($appointment->card_amount ?? 0) + $normalizedAmount;
                 $appointment->total_payed = $newTotal;
                 \Log::info('Process remaining Payment', ['appintment_payment_remaoning_status' => $appointment->remaining_payment_status]);

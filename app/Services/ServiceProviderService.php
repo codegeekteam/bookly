@@ -16,14 +16,14 @@ class ServiceProviderService
 
         $query = ServiceProvider::query()
             ->with('addresses')
-            ->when($request->filled('rating'), function ($query) use ($request) {
-                $query->where('average_rating', '>=', $request->rating);
+            ->when($request->filled('rating'), function($query) use ($request) {
+                $query->where('average_rating', '>=', (int)$request->rating);
             })
             ->when($request->has('keyword'), function ($query) use ($request) {
                 $keyword = '%'.$request->keyword.'%';
                 $query->where('name', 'LIKE', $keyword);
             })
-           ->where('is_active', true)
+          // ->where('is_active', true)
            ->where('published', true);
 
 

@@ -19,6 +19,7 @@ class PaymentRequestedState extends BaseAppointmentState
             'remaining_payment_status' => 'paid',
             'payment_status' => 'paid',
             'remaining_amount' => 0,
+            'total_payed' => $this->appointment->total,
         ]);
         $wallet = $this->appointment->serviceProvider->user->wallet;
         $amount=$this->appointment->amount_due;
