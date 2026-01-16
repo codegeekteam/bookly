@@ -4,6 +4,7 @@ namespace App\StateMachines\Appointment;
 
 use Exception;
 use App\Enums\AppointmentStatus;
+use App\Notifications\CompletedAppoitmentNotification;
 
 class PaymentRequestedState extends BaseAppointmentState
 {
@@ -21,6 +22,14 @@ class PaymentRequestedState extends BaseAppointmentState
             'balance' => $wallet->balance + $amount,
             'pending_balance' => $wallet->pending_balance - $amount,
         ]);
+
+             \Log::info('CompletedAppoitmentNotification reached in payment requested state omplete method');  
+        //notification
+           try {
+               $this->appointment->customer->user->notify(new CompletedAppoitmentNotification($this->appointment));
+           } catch (\Exception $e) {
+               Log::info($e);
+           }
     }
   
 }

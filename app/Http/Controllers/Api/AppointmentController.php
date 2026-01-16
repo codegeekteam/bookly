@@ -330,6 +330,7 @@ class AppointmentController extends Controller
                'fort_id' => $request->input('fort_id'),
                'response' => json_encode($request->input())
             ]);
+            \Log::info('Payment log created');
             return $appointmentService->getPayfortFeedback(
                 response_code: $request->input('response_code'),
                 id: $request->input('merchant_reference'),
@@ -430,7 +431,7 @@ class AppointmentController extends Controller
     public function reject(Appointment $appointment)
     {
         try {
-            $appointment->state()->reject();
+             $appointment->state()->reject();
 
             return response()->json(['message' => __('Appointment rejected successfully')]);
         } catch (\Exception $exception) {
