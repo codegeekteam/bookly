@@ -38,6 +38,7 @@ class ConfirmedState extends BaseAppointmentState
             'changed_status_at' => now(),
             'remaining_amount' => 0,
             'payment_status' => 'paid',
+            'total_payed' => $this->appointment->total,
         ]);
         $wallet = $this->appointment->serviceProvider->user->wallet;
         $amount=$this->appointment->amount_due;
