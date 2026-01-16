@@ -450,8 +450,14 @@ class AppointmentService
             $attachedService = AttachedService::where('service_provider_id', $provider->id)
                 ->where('service_id', $service['service_id'])
                 ->first();
+/*$attachedService = AttachedService::where('id', $service['attached_service_id'])
+    ->where('service_provider_id', $provider->id)
+    ->first();*/
 
+
+\Log::info('attached service', ['attachedService' => $attachedService]);
             if ($attachedService) {
+       \Log::info('iside if attached  service block');         
                 $price = $attachedService->price;
                 $beneficiaries = $service['number_of_beneficiaries'];
 
@@ -489,7 +495,8 @@ class AppointmentService
         $appointment->total = $sum_of_services - $discount;
         $appointment->amount_due = max(0, $amount_due - $discount);
         $appointment->discount = $discount;
-
+\Log::info('has any deposit', ['has_any_deposit' => $has_any_deposit]);
+\Log::info('total deposit amount', ['total_deposit_amount' => $total_deposit_amount]);
         // Handle deposit and remaining payment tracking
         if ($has_any_deposit && $total_deposit_amount > 0) {
             // Apply discount proportionally
@@ -1020,14 +1027,14 @@ class AppointmentService
             \Log::info('deposit_payment_status: ', ['deposit_status' => $appointment->deposit_payment_status]);
 
             // Send notification to provider when deposit is paid
-            if ($isDepositPayment && $appointment->deposit_payment_status === 'paid') {  //By Sreeja
+          /*  if ($isDepositPayment && $appointment->deposit_payment_status === 'paid') {  //By Sreeja
             \Log::info('reached new aotification deposit payment case - feedback api');
                 try {
                     $appointment->serviceProvider->user->notify(new NewAppointmentNotification($appointment));
                 } catch (\Exception $e) {
                     Log::info($e);
                 }
-            }
+            } */
         }
 
         // GiftCard logic
