@@ -15,6 +15,10 @@ class PaymentRequestedState extends BaseAppointmentState
         $this->appointment->update([
             'status_id' => AppointmentStatus::Completed->value,
             'changed_status_at' => now(),
+            'deposit_payment_status' => 'paid',
+            'remaining_payment_status' => 'paid',
+            'payment_status' => 'paid',
+            'remaining_amount' => 0,
         ]);
         $wallet = $this->appointment->serviceProvider->user->wallet;
         $amount=$this->appointment->amount_due;
