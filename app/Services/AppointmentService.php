@@ -502,7 +502,7 @@ class AppointmentService
             $remaining_after_discount = max(0, ($sum_of_services - $total_deposit_amount) - ($discount * (($sum_of_services - $total_deposit_amount) / $sum_of_services)));
 
             $appointment->deposit_amount = $deposit_after_discount;
-            $appointment->deposit_payment_status = 'paid';// $deposit_after_discount > 0 ? 'pending' : 'paid';
+            $appointment->deposit_payment_status = $deposit_after_discount > 0 ? 'pending' : 'paid';
             $appointment->deposit_payment_method_id = $cardPaymentMethod ? $cardPaymentMethod->id : null;
 
             $appointment->remaining_amount = $remaining_after_discount;
@@ -577,10 +577,10 @@ class AppointmentService
             );
         //commit changes
         DB::commit();
-      //  $appointment->refresh();
-                    \Log::info('Appointment refresh ran commented');
+        $appointment->refresh();
+                    \Log::info('Appointment refresh ran');
         //clear cart
-     //   (new CartService())->clearCart($customer); 
+        (new CartService())->clearCart($customer); 
            //send notification if no deposit required
         if ($appointment->deposit_amount === null) {
                         \Log::info('Notify NewAppointmentNotification');
@@ -590,8 +590,9 @@ class AppointmentService
                 Log::info($e);
            } 
         }else{
-            if ($appointment->deposit_payment_status === 'paid') {  //By Sreeja
-                \Log::info('reached new aotification deposit payment case');
+            $paymentMethod = PaymentMethod::find($payment_method_id);
+            if($paymentMethod && strtolower($paymentMethod->name) === 'card') {  //By Sreeja           
+                \Log::info('reached new notification deposit payment case');
                 try {
                     $appointment->serviceProvider->user->notify(new NewAppointmentNotification($appointment));
                 } catch (\Exception $e) {
