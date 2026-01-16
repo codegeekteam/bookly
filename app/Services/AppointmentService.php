@@ -450,9 +450,7 @@ class AppointmentService
             $attachedService = AttachedService::where('service_provider_id', $provider->id)
                 ->where('service_id', $service['service_id'])
                 ->first();
-/*$attachedService = AttachedService::where('id', $service['attached_service_id'])
-    ->where('service_provider_id', $provider->id)
-    ->first();*/
+
 
 
 \Log::info('attached service', ['attachedService' => $attachedService]);
@@ -504,7 +502,7 @@ class AppointmentService
             $remaining_after_discount = max(0, ($sum_of_services - $total_deposit_amount) - ($discount * (($sum_of_services - $total_deposit_amount) / $sum_of_services)));
 
             $appointment->deposit_amount = $deposit_after_discount;
-            $appointment->deposit_payment_status = $deposit_after_discount > 0 ? 'pending' : 'paid';
+            $appointment->deposit_payment_status = 'paid';// $deposit_after_discount > 0 ? 'pending' : 'paid';
             $appointment->deposit_payment_method_id = $cardPaymentMethod ? $cardPaymentMethod->id : null;
 
             $appointment->remaining_amount = $remaining_after_discount;
@@ -579,10 +577,10 @@ class AppointmentService
             );
         //commit changes
         DB::commit();
-        $appointment->refresh();
-                    \Log::info('Appointment refresh ran');
+      //  $appointment->refresh();
+                    \Log::info('Appointment refresh ran commented');
         //clear cart
-        (new CartService())->clearCart($customer); 
+     //   (new CartService())->clearCart($customer); 
            //send notification if no deposit required
         if ($appointment->deposit_amount === null) {
                         \Log::info('Notify NewAppointmentNotification');
