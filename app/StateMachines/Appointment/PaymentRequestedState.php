@@ -28,12 +28,12 @@ class PaymentRequestedState extends BaseAppointmentState
             'pending_balance' => $wallet->pending_balance - $amount,
         ]);
 
-             \Log::info('CompletedAppoitmentNotification reached in payment requested state omplete method');  
+             \Log::info('CompletedAppoitmentNotification reached in payment requested state complete method');  
         //notification
            try {
                $this->appointment->customer->user->notify(new CompletedAppoitmentNotification($this->appointment));
            } catch (\Exception $e) {
-               Log::info($e);
+               \Log::info($e);
            }
     }
   
