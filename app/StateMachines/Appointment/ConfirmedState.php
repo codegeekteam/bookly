@@ -15,7 +15,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use App\Models\Enums\TransactionType;
 use App\Notifications\AppointmentNotification;
+use App\Notifications\RequestPaymentNotification;
 use App\Notifications\RejectAppointmentNotification;
+use App\Notifications\CompletedAppoitmentNotification;
 use App\Actions\Wallet\Mutations\CreateWalletTransactionMutation;
 
 class ConfirmedState extends BaseAppointmentState
@@ -28,11 +30,14 @@ class ConfirmedState extends BaseAppointmentState
         if ($this->appointment->serviceProvider->user_id !== auth()->id()) {
             throw new Exception('Only the appointment service provider can complete the appointment');
         }
+
     }
 
         $this->appointment->update([
             'status_id' => AppointmentStatus::Completed->value,
             'changed_status_at' => now(),
+            'remaining_amount' => 0,
+            'payment_status' => 'paid',
         ]);
         $wallet = $this->appointment->serviceProvider->user->wallet;
         $amount=$this->appointment->amount_due;
@@ -40,6 +45,14 @@ class ConfirmedState extends BaseAppointmentState
             'balance' => $wallet->balance + $amount,
             'pending_balance' => $wallet->pending_balance - $amount,
         ]);
+
+            \Log::info('CompletedAppoitmentNotification reached in confirm state complete method');  
+        //notification
+           try {
+               $this->appointment->customer->user->notify(new CompletedAppoitmentNotification($this->appointment));
+           } catch (\Exception $e) {
+               Log::info($e);
+           }
     }
 
     /**
@@ -124,7 +137,7 @@ class ConfirmedState extends BaseAppointmentState
         }
 
           DB::commit();
-    
+  \Log::info('RejectAppointmentNotification reached in confirm state reject method');  
         //notification
            try {
                $appointment->customer->user->notify(new RejectAppointmentNotification($appointment));
@@ -235,6 +248,7 @@ class ConfirmedState extends BaseAppointmentState
 
         DB::commit();
         //notification
+        \Log::info('RejectAppointmentNotification reached in confirm state -cancel method');  
         try {
             $appointment->serviceProvider->user->notify(new RejectAppointmentNotification($appointment));
         } catch (\Exception $e) {
@@ -272,12 +286,22 @@ class ConfirmedState extends BaseAppointmentState
             'status_id' => AppointmentStatus::PaymentRequest->value,
             'changed_status_at' => now(),
         ]);
+          \Log::info('RequestPaymentNotification reached in confirm state request payment method');  
+        //notification
+           try {
+               $this->appointment->customer->user->notify(new RequestPaymentNotification($this->appointment));
+           } catch (\Exception $e) {
+               Log::info($e);
+           }
     
     }
 
     public function initiateRefund(Appointment $appointment, $type)
     {
         $paymentLog = PaymentLog::where('appointment_id', $appointment->id)->first();
+        if(!$paymentLog || $paymentLog->mechant_reference == null) {
+              \Log::info('paymentLog data insufficient');
+        }
          $description = json_decode($appointment->service?->title, true);
 
          if($type == 'reject') {

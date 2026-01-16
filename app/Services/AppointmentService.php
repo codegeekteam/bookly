@@ -432,7 +432,7 @@ class AppointmentService
             'loyalty_discount_customer_id' => $loyalty_discount ? $loyalty_discount->id : null,
         ]);
 
-
+        \Log::info('Appointment create in DB');
 
         //save services and calculate the total
         foreach ($services as $service) {
@@ -445,6 +445,7 @@ class AppointmentService
                 'address_id' => isset($service['address_id']) ? $service['address_id'] : null,
                 'employee_id' => isset($service['employee_id']) ? $service['employee_id'] : null,
             ]);
+
             // Calculate the price for this service and add to total
             $attachedService = AttachedService::where('service_provider_id', $provider->id)
                 ->where('service_id', $service['service_id'])
@@ -468,7 +469,7 @@ class AppointmentService
                 }
             }
         }
-
+            \Log::info('AttachedServices to appointment');
         $discount = 0;
         //calculate promo code
         if ($promo_code) {
@@ -525,21 +526,21 @@ class AppointmentService
         }
 
         $appointment->save();
+            \Log::info('Appointment save reached');
+      //  DB::commit();
 
-        DB::commit();
-
-        // Auto complete appointment if Card payment
+       // Auto complete appointment if Card payment
 
         if ($payment_method_id) {
             $paymentMethod = PaymentMethod::find($payment_method_id);
 
-            // if (($paymentMethod && strtolower($paymentMethod->name) == 'card') && ($appointment->payment_status == 'paid')) {
+             // if (($paymentMethod && strtolower($paymentMethod->name) == 'card') && ($appointment->payment_status == 'paid')) {
             //     $appointment->state()->confirm();
             //     $this->markAsComplete($appointment);
             // }
 
             // 🔹 Notify provider to mark booking complete if Cash payment
-           /* else*/ if ($paymentMethod && strtolower($paymentMethod->name) === 'cash') {
+          /*  else*/ if ($paymentMethod && strtolower($paymentMethod->name) === 'cash') {
                 try {
                     $appointment->serviceProvider->user
                         ->notify(new AppointmentCompleteNotification($appointment));
@@ -554,11 +555,11 @@ class AppointmentService
                     ]);
                 }
             }
-        }
+        } 
 
         //customer wallet check
         $this->customerWalletActions($customer, $appointment);
- DB::beginTransaction();
+ //DB::beginTransaction();
         //add total to provider wallet
         (new CreateWalletTransactionMutation())
             ->handle(
@@ -571,11 +572,13 @@ class AppointmentService
             );
         //commit changes
         DB::commit();
-$appointment->refresh();
+        $appointment->refresh();
+                    \Log::info('Appointment refresh ran');
         //clear cart
         (new CartService())->clearCart($customer); 
            //send notification if no deposit required
         if ($appointment->deposit_amount === null) {
+                        \Log::info('Notify NewAppointmentNotification');
             try { 
                 $appointment->serviceProvider->user->notify(new NewAppointmentNotification($appointment)); 
            } catch (Exception $e) {
@@ -873,6 +876,7 @@ $appointment->refresh();
 
     public function getPayfortFeedback($response_code, $id, $amount)
     {
+        \Log::info('ID: '. $id);
         // normalize amount (Payfort sends multiplied by 100)
         $normalizedAmount = $amount / 100;
 
@@ -909,6 +913,7 @@ $appointment->refresh();
             $type = $parts[0];
             $identifier = $parts[1];
         }
+        \Log::info('Parts:', $parts);
 
         // Resolve model
         $model = match ($type) {
@@ -926,7 +931,7 @@ $appointment->refresh();
         if (substr($response_code, 2) !== '000') {
             return response()->json(['message' => 'Invalid response code'], 200);
         }
-
+\Log::info('Model', ['model' => $model]);
         // Appointment logic with deposit/remaining tracking
         if ($type === 'appointment') {
             $appointment = $model;
@@ -947,7 +952,9 @@ $appointment->refresh();
                     $isRemainingPayment = true;
                 }
             }
-
+\Log::info('paymentType', ['paymentType' => $paymentType]);
+\Log::info('isDepositPayment', ['isDepositPayment' => $isDepositPayment]);
+\Log::info('isRemainingPayment', ['isRemainingPayment' => $isRemainingPayment]);
             // Process deposit payment
             if ($isDepositPayment && $appointment->deposit_amount) {
                 if ($normalizedAmount >= $appointment->deposit_amount) {
@@ -962,7 +969,9 @@ $appointment->refresh();
                         $appointment->payment_status = 'partially_paid';
                     }
                 }
+                \Log::info('Process deposit Payment', ['appintment_payment_status' => $appointment->payment_status]);
             }
+            
             // Process remaining payment or full payment
             else {
                 $newTotal = $normalizedAmount + ($appointment->total_payed ?? 0);
@@ -975,6 +984,7 @@ $appointment->refresh();
                 $appointment->payment_status = $isPaid ? 'paid' : 'partially_paid';
                 $appointment->card_amount = ($appointment->card_amount ?? 0) + $normalizedAmount;
                 $appointment->total_payed = $newTotal;
+                \Log::info('Process remaining Payment', ['appintment_payment_remaoning_status' => $appointment->remaining_payment_status]);
             }
 
             $appointment->save();
@@ -1002,6 +1012,7 @@ $appointment->refresh();
 
             // Send notification to provider when deposit is paid
             if ($isDepositPayment && $appointment->deposit_payment_status === 'paid') {  //By Sreeja
+            \Log::info('reached new aotificatio deposit payment case');
                 try {
                     $appointment->serviceProvider->user->notify(new NewAppointmentNotification($appointment));
                 } catch (\Exception $e) {
@@ -1307,13 +1318,13 @@ $appointment->refresh();
     /**
      * @throws Exception
      */
-    public function requestForPayment($appointment){//: JsonResponse {
+    public function requestForPayment($appointment): JsonResponse {
         $last_appointment_service = $appointment->appointmentServices
             ->sortByDesc(function ($service) {
                 return Carbon::parse($service->date)->format('Y-m-d') . ' ' . $service->end_time;
             })
             ->first();
-//return json_encode($last_appointment_service);
+
         $last_service_end_datetime = Carbon::parse($last_appointment_service->date)->setTimeFromTimeString($last_appointment_service->end_time);
 
         $appointment->state()->paymentRequest();
