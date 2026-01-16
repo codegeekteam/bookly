@@ -898,9 +898,11 @@ class AppointmentService
         // Split the ID into type and identifier
         $parts = explode('_', $id);
 
-        if (count($parts) < 2) {
-            return response()->json(['message' => 'Invalid ID format'], 200);
-        }
+        // if (count($parts) < 2) {
+        //   //  return response()->json(['message' => 'Invalid ID format'], 200);
+        // return response()->json(['message' => 'success'], 200);
+
+        // }
 
         // Handle different merchant reference formats:
         // - appointment_203 (original format - 2 parts)
@@ -911,7 +913,7 @@ class AppointmentService
         $identifier = null;
         $paymentType = 'auto'; // auto-detect by default
 
-        if ($parts[0] === 'remaining' && count($parts) >= 3 && $parts[1] === 'payment') {
+      /*  if ($parts[0] === 'remaining' && count($parts) >= 3 && $parts[1] === 'payment') {
             // Format: remaining_payment_203 or remaining_payment_203_timestamp
             $type = 'appointment';
             $identifier = $parts[2];
@@ -928,7 +930,42 @@ class AppointmentService
             $type = $parts[0];
             $identifier = $parts[1];
         }
-        \Log::info('Parts:', $parts);
+        \Log::info('Parts:', $parts);*/
+
+      /*  if(count($parts) == 3) {
+            $type = 'appointment'; 
+            $identifier = $parts[2];
+            $paymentType = 'remaining';
+        }elseif(count($parts) == 2) {
+             $type = $parts[0];
+            $identifier = $parts[1];
+        }
+        // Case 1: ID only contains a number → first callback
+if (count($parts) === 1 && is_numeric($parts[0])) {
+    $type = 'appointment';
+    $identifier = $parts[0];
+}*/
+// Case 1: ID only contains a number → first callback
+if (count($parts) === 1 && is_numeric($parts[0])) {
+    $type = 'appointment';
+    $identifier = $parts[0];
+}
+// Case 2: appointment_203
+elseif (count($parts) === 2) {
+    $type = $parts[0];
+    $identifier = $parts[1];
+}
+// Case 3: appointment_203_timestamp (remaining payment)
+elseif (count($parts) === 3) {
+    $type = 'appointment';
+    $identifier = $parts[2];
+    $paymentType = 'remaining';
+}
+else {
+    // Unknown format → but return success so PayFort stops retrying
+    \Log::warning("Unexpected merchant_reference format", ['id' => $id]);
+    return response()->json(['message' => 'success'], 200);
+}
 
         // Resolve model
         $model = match ($type) {
@@ -939,12 +976,16 @@ class AppointmentService
         };
 
         if (!$model) {
-            return response()->json(['message' => 'Resource not found'], 200);
+           // return response()->json(['message' => 'Resource not found'], 200);
+           return response()->json(['message' => 'success'], 200);
+
         }
 
         // Check success response_code
         if (substr($response_code, 2) !== '000') {
-            return response()->json(['message' => 'Invalid response code'], 200);
+           // return response()->json(['message' => 'Invalid response code'], 200);
+           return response()->json(['message' => 'success'], 200);
+
         }
 \Log::info('Model', ['model' => $model]);
         // Appointment logic with deposit/remaining tracking
