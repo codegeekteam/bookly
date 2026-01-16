@@ -218,6 +218,8 @@ class AppointmentController extends Controller
      */
     public function book(AppointmentService $appointmentService, BookAppointmentRequest $request)
     {
+        Log::info('appointmentService',['appointmentService' => $appointmentService]);
+        Log::info('request',['request' => $request]);
         try {
             return $appointmentService->book(
                 customer: auth()->user()->customer,
