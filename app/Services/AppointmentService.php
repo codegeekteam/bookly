@@ -584,6 +584,15 @@ class AppointmentService
            } catch (Exception $e) {
                 Log::info($e);
            } 
+        }else{
+            if ($appointment->deposit_payment_status === 'paid') {  //By Sreeja
+                \Log::info('reached new aotification deposit payment case');
+                try {
+                    $appointment->serviceProvider->user->notify(new NewAppointmentNotification($appointment));
+                } catch (\Exception $e) {
+                    Log::info($e);
+                }
+            }
         }
 
         return new AppointmentResource($appointment);
@@ -1012,7 +1021,7 @@ class AppointmentService
 
             // Send notification to provider when deposit is paid
             if ($isDepositPayment && $appointment->deposit_payment_status === 'paid') {  //By Sreeja
-            \Log::info('reached new aotificatio deposit payment case');
+            \Log::info('reached new aotification deposit payment case - feedback api');
                 try {
                     $appointment->serviceProvider->user->notify(new NewAppointmentNotification($appointment));
                 } catch (\Exception $e) {
