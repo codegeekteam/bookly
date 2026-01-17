@@ -10,16 +10,21 @@ class PaymentRequestedState extends BaseAppointmentState
 {
     public function complete(): void
     {
+        if ($this->appointment->status_id == AppointmentStatus::Completed->value) {
+            \Log::info('Already completed, skipping state transition');
+            return;
+        }
+
         $paymentMethod = $this->appointment->paymentMethod;
 
         $this->appointment->update([
             'status_id' => AppointmentStatus::Completed->value,
             'changed_status_at' => now(),
-            'deposit_payment_status' => 'paid',
-            'remaining_payment_status' => 'paid',
-            'payment_status' => 'paid',
-            'remaining_amount' => 0,
-            'total_payed' => $this->appointment->total,
+           // 'deposit_payment_status' => 'paid',
+          //  'remaining_payment_status' => 'paid',
+           // 'payment_status' => 'paid',
+           // 'remaining_amount' => 0,
+           // 'total_payed' => $this->appointment->total,
         ]);
         $wallet = $this->appointment->serviceProvider->user->wallet;
         $amount=$this->appointment->amount_due;
