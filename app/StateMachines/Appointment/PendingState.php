@@ -117,7 +117,7 @@ class PendingState extends BaseAppointmentState
         DB::commit();
         //notification
            try {
-               $appointment->customer->user->notify(new RejectAppointmentNotification($appointment));
+               $appointment->customer->user->notify(new RejectAppointmentNotification($appointment, 'customer'));
            } catch (\Exception $e) {
                Log::info($e);
            }
@@ -214,7 +214,7 @@ class PendingState extends BaseAppointmentState
          DB::commit();
         //notification
          try {
-             $appointment->serviceProvider->user->notify(new RejectAppointmentNotification($appointment));
+             $appointment->serviceProvider->user->notify(new RejectAppointmentNotification($appointment, 'provider'));
          } catch (\Exception $e) {
              Log::info($e);
          }

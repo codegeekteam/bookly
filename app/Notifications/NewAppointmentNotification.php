@@ -50,7 +50,7 @@ class NewAppointmentNotification extends Notification implements ShouldQueue {
         return 'تم حجز موعد جديد رقم : ' . $this->appointment->id;
     }
 
-    // Method to set the body ar dynamically
+    // Method to get token
     private function getToken()
     {
         return $this->appointment->serviceProvider->user->firebase_token;

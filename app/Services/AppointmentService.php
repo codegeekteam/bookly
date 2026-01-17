@@ -1347,7 +1347,7 @@ class AppointmentService
                     //     'appointment_id' => $appointment->id,
                     //     'exception' => $e->getMessage()
                     // ]);
-                     Log::error('Failed to send AppointmentCompleteNotification', [
+                     Log::error('Failed to send RequestPaymentNotification', [
                         'appointment_id'      => $appointment->id,
                         'provider_user_id'     => $appointment->serviceProvider->user_id ?? null,
                         'payment_method_name' => $paymentMethod->name ?? null,

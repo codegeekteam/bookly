@@ -141,7 +141,7 @@ class ConfirmedState extends BaseAppointmentState
   \Log::info('RejectAppointmentNotification reached in confirm state reject method');  
         //notification
            try {
-               $appointment->customer->user->notify(new RejectAppointmentNotification($appointment));
+               $appointment->customer->user->notify(new RejectAppointmentNotification($appointment, 'customer'));
            } catch (\Exception $e) {
                Log::info($e);
            }
@@ -251,7 +251,7 @@ class ConfirmedState extends BaseAppointmentState
         //notification
         \Log::info('RejectAppointmentNotification reached in confirm state -cancel method');  
         try {
-            $appointment->serviceProvider->user->notify(new RejectAppointmentNotification($appointment));
+            $appointment->serviceProvider->user->notify(new RejectAppointmentNotification($appointment, 'provider'));
         } catch (\Exception $e) {
             Log::info($e);
         }
