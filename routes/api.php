@@ -49,14 +49,14 @@ Route::group(['middleware' => 'guest'], function () {
 });
 
 // Payfort Payment Simulator (Testing Only - Disable in Production)
-/*if (!app()->environment('production')) {
+if (!app()->environment('production')) {
     Route::prefix('simulator/payfort')->group(function () {
         Route::post('success', [PayfortSimulatorController::class, 'simulateSuccess']);
         Route::post('failure', [PayfortSimulatorController::class, 'simulateFailure']);
         Route::post('callback', [PayfortSimulatorController::class, 'simulateCallback']);
         Route::get('status/{type}/{id}', [PayfortSimulatorController::class, 'getPaymentStatus']);
     });
-}*/
+}
 
 Route::get('/reviews', [ReviewController::class, 'index']);
 

@@ -321,10 +321,18 @@ class AppointmentController extends Controller
      */
     public function getPayfortFeedback(AppointmentService $appointmentService, Request $request)
     {
-        \Log::info('Payfort callback raw:', $request->all());
+        \Log::info('Payfort callback raw:', $request->all());    
 
         try {
-            PaymentLog::create([
+            $fortId = $request->input('fort_id');
+            if ($fortId) {
+                $existing = PaymentLog::where('fort_id', $fortId)->first();
+                if ($existing) {
+                    Log::warning("Duplicate Payfort callback ignored", ['fort_id' => $fortId]);
+                    return response()->json(['message' => 'success'], 200);
+                }
+            }
+             $paymentLog = PaymentLog::create([
                'response_code' => $request->input('response_code'),
                'status' => $request->input('status'),
                'merchant_reference' => $request->input('merchant_reference'),
@@ -334,7 +342,7 @@ class AppointmentController extends Controller
                'fort_id' => $request->input('fort_id'),
                'response' => json_encode($request->input())
             ]);
-            \Log::info('Payment log created');
+            \Log::info('Payment log created', ['id' => $paymentLog->id]);
             return $appointmentService->getPayfortFeedback(
                 response_code: $request->input('response_code'),
                 id: $request->input('merchant_reference'),
