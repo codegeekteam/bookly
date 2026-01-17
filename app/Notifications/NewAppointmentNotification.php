@@ -50,9 +50,15 @@ class NewAppointmentNotification extends Notification implements ShouldQueue {
         return 'تم حجز موعد جديد رقم : ' . $this->appointment->id;
     }
 
+    // Method to set the body ar dynamically
+    private function getToken()
+    {
+        return $this->appointment->serviceProvider->user->firebase_token;
+    }
+
     public function toFirebase($notifiable)
     {
-        $fcm_token = $notifiable->firebase_token;
+        $fcm_token = $this->getToken; //$notifiable->firebase_token;
         \Log::info('FCM Token: ' . $notifiable->firebase_token);
         return (new FirebaseNotification)
             ->withTitle($this->getTitle())

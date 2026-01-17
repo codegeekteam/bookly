@@ -12,7 +12,7 @@ class VerifyOTPRequest extends FormRequest
             'phone_number'   => 'required|string',
             'otp'  => 'required|numeric|digits:6',
             'access_type' => 'nullable|string|in:customer,employee,provider',
-            'firebase_token' => 'required|string',
+            'firebase_token' => 'nullable|string',
         ];
     }
 

@@ -178,4 +178,35 @@ class AuthController extends Controller
             return $this->error($e->getMessage());
         }
     }
+
+    /**
+     * Verify OTP
+     *
+     * Endpoint to update firebase token
+     *
+     * @group Auth
+     *
+     * @type POST
+     *
+     * @url api/update-firebase-token
+     *  
+     * @bodyParam firebase_token string required.
+     */
+    public function updateFirebaseToken(Request $request)
+    {
+        $request->validate([
+            'firebase_token' => 'required|string',
+        ]);
+
+        $user = auth()->user();
+
+        $user->update([
+            'firebase_token' => $request->firebase_token,
+        ]);
+
+        return response()->json([
+            'message' => 'Firebase token updated successfully',
+            'firebase_token' => $user->firebase_token,
+        ]);
+    }
 }
