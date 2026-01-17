@@ -75,14 +75,20 @@ class PayoutResource extends Resource
                             ->disabled()
                             ->columnSpan(1),
 
-                        Forms\Components\FileUpload::make('receipt_path')
-                            ->label('Transfer Receipt')
-                            ->directory('payout-receipts')
-                            ->disk('public')
-                            ->image()
-                            ->maxSize(5120)
-                            ->visible(fn ($record) => $record && $record->status === 'transferred')
-                            ->columnSpanFull(),
+                        // Forms\Components\FileUpload::make('receipt_path')
+                        //     ->label('Transfer Receipt')
+                        //     ->directory('payout-receipts')
+                        //     ->disk('public')
+                        //     ->image()
+                        //     ->maxSize(5120)
+                        //     ->visible(fn ($record) => $record && $record->status === 'transferred')
+                        //     ->columnSpanFull(),
+
+                        Forms\Components\View::make('filament.receipt_view')
+                        ->visible(fn ($record) => $record && $record->receipt_path)
+                        ->label('Transfer Receipt')
+                        ->columnSpanFull(),
+
 
                         Forms\Components\Textarea::make('cancellation_note')
                             ->label('Cancellation Note')

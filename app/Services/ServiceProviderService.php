@@ -16,8 +16,8 @@ class ServiceProviderService
 
         $query = ServiceProvider::query()
             ->with('addresses')
-            ->when($request->filled('rating'), function ($query) use ($request) {
-                $query->where('average_rating', '>=', $request->rating);
+            ->when($request->filled('rating'), function($query) use ($request) {
+                $query->where('average_rating', '>=', (int)$request->rating);
             })
             ->when($request->has('keyword'), function ($query) use ($request) {
                 $keyword = '%'.$request->keyword.'%';

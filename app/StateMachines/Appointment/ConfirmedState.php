@@ -4,7 +4,9 @@ namespace App\StateMachines\Appointment;
 
 use Exception;
 use Carbon\Carbon;
+use App\Models\RefundLog;
 use App\Models\PaymentLog;
+use App\Models\Appointment;
 use App\Helpers\PayfortHelper;
 use App\Models\AttachedService;
 use App\Enums\AppointmentStatus;
@@ -13,7 +15,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use App\Models\Enums\TransactionType;
 use App\Notifications\AppointmentNotification;
+use App\Notifications\RequestPaymentNotification;
 use App\Notifications\RejectAppointmentNotification;
+use App\Notifications\CompletedAppoitmentNotification;
 use App\Actions\Wallet\Mutations\CreateWalletTransactionMutation;
 
 class ConfirmedState extends BaseAppointmentState
@@ -26,11 +30,15 @@ class ConfirmedState extends BaseAppointmentState
         if ($this->appointment->serviceProvider->user_id !== auth()->id()) {
             throw new Exception('Only the appointment service provider can complete the appointment');
         }
+
     }
 
         $this->appointment->update([
             'status_id' => AppointmentStatus::Completed->value,
             'changed_status_at' => now(),
+            'remaining_amount' => 0,
+            'payment_status' => 'paid',
+            'total_payed' => $this->appointment->total,
         ]);
         $wallet = $this->appointment->serviceProvider->user->wallet;
         $amount=$this->appointment->amount_due;
@@ -38,6 +46,14 @@ class ConfirmedState extends BaseAppointmentState
             'balance' => $wallet->balance + $amount,
             'pending_balance' => $wallet->pending_balance - $amount,
         ]);
+
+            \Log::info('CompletedAppoitmentNotification reached in confirm state complete method');  
+        //notification
+           try {
+               $this->appointment->customer->user->notify(new CompletedAppoitmentNotification($this->appointment));
+           } catch (\Exception $e) {
+               Log::info($e);
+           }
     }
 
     /**
@@ -122,10 +138,10 @@ class ConfirmedState extends BaseAppointmentState
         }
 
           DB::commit();
-    
+  \Log::info('RejectAppointmentNotification reached in confirm state reject method');  
         //notification
            try {
-               $appointment->customer->user->notify(new RejectAppointmentNotification($appointment));
+               $appointment->customer->user->notify(new RejectAppointmentNotification($appointment, 'customer'));
            } catch (\Exception $e) {
                Log::info($e);
            }
@@ -233,8 +249,9 @@ class ConfirmedState extends BaseAppointmentState
 
         DB::commit();
         //notification
+        \Log::info('RejectAppointmentNotification reached in confirm state -cancel method');  
         try {
-            $appointment->serviceProvider->user->notify(new RejectAppointmentNotification($appointment));
+            $appointment->serviceProvider->user->notify(new RejectAppointmentNotification($appointment, 'provider'));
         } catch (\Exception $e) {
             Log::info($e);
         }
@@ -270,12 +287,22 @@ class ConfirmedState extends BaseAppointmentState
             'status_id' => AppointmentStatus::PaymentRequest->value,
             'changed_status_at' => now(),
         ]);
+          \Log::info('RequestPaymentNotification reached in confirm state request payment method');  
+        //notification
+           try {
+               $this->appointment->customer->user->notify(new RequestPaymentNotification($this->appointment));
+           } catch (\Exception $e) {
+               Log::info($e);
+           }
     
     }
 
     public function initiateRefund(Appointment $appointment, $type)
     {
         $paymentLog = PaymentLog::where('appointment_id', $appointment->id)->first();
+        if(!$paymentLog || $paymentLog->mechant_reference == null) {
+              \Log::info('paymentLog data insufficient');
+        }
          $description = json_decode($appointment->service?->title, true);
 
          if($type == 'reject') {
@@ -326,16 +353,18 @@ class ConfirmedState extends BaseAppointmentState
         ]);
 if($response['response_code'] == '06000') {
         RefundLog::create([
-            $request->input('response_code'),
-            $request->input('response_message'),
-            $request->input('amount'),
-            $request->input('status'),
-            $request->input('merchant_reference'),          
-            json_encode($request->input())
+           'response_code' => $response['response_code'],
+           'response_message' => $response['response_message'],
+           'amount' => $response['amount'],
+           'status' => $response['status'],
+           'merchant_reference' => $response['merchant_reference'],          
+           'response' => json_encode($response)
         ]);
 }else {
     \Log::info('Refund Failed');
 }
        //  return $response->json();
+
+}
 
 }

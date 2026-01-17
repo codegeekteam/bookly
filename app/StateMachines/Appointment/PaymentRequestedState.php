@@ -4,16 +4,27 @@ namespace App\StateMachines\Appointment;
 
 use Exception;
 use App\Enums\AppointmentStatus;
+use App\Notifications\CompletedAppoitmentNotification;
 
 class PaymentRequestedState extends BaseAppointmentState
 {
     public function complete(): void
     {
+        if ($this->appointment->status_id == AppointmentStatus::Completed->value) {
+            \Log::info('Already completed, skipping state transition');
+            return;
+        }
+
         $paymentMethod = $this->appointment->paymentMethod;
 
         $this->appointment->update([
             'status_id' => AppointmentStatus::Completed->value,
             'changed_status_at' => now(),
+           // 'deposit_payment_status' => 'paid',
+          //  'remaining_payment_status' => 'paid',
+           // 'payment_status' => 'paid',
+           // 'remaining_amount' => 0,
+           // 'total_payed' => $this->appointment->total,
         ]);
         $wallet = $this->appointment->serviceProvider->user->wallet;
         $amount=$this->appointment->amount_due;
@@ -21,6 +32,14 @@ class PaymentRequestedState extends BaseAppointmentState
             'balance' => $wallet->balance + $amount,
             'pending_balance' => $wallet->pending_balance - $amount,
         ]);
+
+             \Log::info('CompletedAppoitmentNotification reached in payment requested state complete method');  
+        //notification
+           try {
+               $this->appointment->customer->user->notify(new CompletedAppoitmentNotification($this->appointment));
+           } catch (\Exception $e) {
+               \Log::info($e);
+           }
     }
   
 }

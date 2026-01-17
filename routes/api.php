@@ -73,6 +73,7 @@ Route::get('/attached-service/{attached_service_id}', [ServiceController::class,
 Route::get('/services', [ServiceController::class, 'index']);
 Route::get('/services/{service_id}/employees', [EmployeeController::class, 'getEmployeesByService']);
 Route::group(['middleware' => ['auth:sanctum',CheckBlockedMiddleware::class]], function () {
+    Route::post('/update-firebase-token', [AuthController::class, 'updateFirebaseToken']);
     Route::get('/cart', [\App\Http\Controllers\Api\CartController::class, 'index']);
     Route::post('/cart', [\App\Http\Controllers\Api\CartController::class, 'store']);
     Route::post('/cart/{cart_item_id}/update-quantity', [\App\Http\Controllers\Api\CartController::class, 'update']);

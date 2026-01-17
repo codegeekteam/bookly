@@ -31,8 +31,7 @@ class RejectUnpaidAppointmentsJob implements ShouldQueue
         try {
             $expired_appointments = Appointment::where('status_id', AppointmentStatus::Pending->value)
                 ->where('created_at', '<', $fiveMinutesFromNow)->whereIn('payment_status', ['partially_paid', 'unpaid'])
-                ->get()
-            ;
+                ->get();
             foreach ($expired_appointments as $appointment) {
                 $appointment->update(['status_id' => AppointmentStatus::Rejected->value]);
                 //check total payed and return the amount to user wallet
