@@ -13,10 +13,12 @@ class CancelAppointmentNotification extends Notification implements ShouldQueue 
     use Queueable;
 
     public $appointment;
+    public $type;
 
-    public function __construct($appointment)
+    public function __construct($appointment, $type)
     {
         $this->appointment = $appointment;
+         $this->type = $type;
         $this->onQueue('default');
     }
 
@@ -50,9 +52,20 @@ class CancelAppointmentNotification extends Notification implements ShouldQueue 
         return 'تم الغاء موعد رقم :  ' . $this->appointment->id;
     }
 
+     // Method to get token
+    private function getToken($type)
+    {
+        if($type == 'customer') {
+            return $this->appointment->customer->user->firebase_token;
+        }
+        if($type == 'provider') {
+            return $this->appointment->serviceProvider->user->firebase_token;
+        }
+    }
+
     public function toFirebase($notifiable)
     {
-        $fcm_token = $notifiable->firebase_token;
+        $fcm_token = $this->getToken($this->type); //$notifiable->firebase_token;
         return (new FirebaseNotification)
             ->withTitle($this->getTitle())
             ->withBody($this->getBody())

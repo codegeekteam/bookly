@@ -50,11 +50,17 @@ class RequestPaymentNotification extends Notification implements ShouldQueue
             . $this->appointment->id;
     }
 
+    // Method to get token
+    private function getToken()
+    {
+        return $this->appointment->customer->user->firebase_token;
+    }
+
     /* -------------------- FIREBASE -------------------- */
 
     public function toFirebase($notifiable)
     {
-        $fcm_token = $notifiable->firebase_token;
+        $fcm_token = $this->getToken(); // $notifiable->firebase_token;
 
         return (new FirebaseNotification)
             ->withTitle($this->getTitle())

@@ -184,8 +184,8 @@ class AppointmentController extends Controller
     {
         try {
             $appointment->state()->cancel();
-            $appointment->customer->user->notify(new CancelAppointmentNotification($appointment));
-            $appointment->serviceProvider->user->notify(new CancelAppointmentNotification($appointment));
+            $appointment->customer->user->notify(new CancelAppointmentNotification($appointment, 'customer'));
+            $appointment->serviceProvider->user->notify(new CancelAppointmentNotification($appointment, 'provider'));
             return response()->json(['message' => __('Appointment cancelled successfully')]);
         } catch (\Exception $exception) {
             return $this->error($exception->getMessage());
