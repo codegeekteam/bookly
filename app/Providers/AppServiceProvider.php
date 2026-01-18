@@ -2,24 +2,25 @@
 
 namespace App\Providers;
 
-use App\Http\Resources\CustomerResource;
-use App\Models\Appointment;
+use App\Models\User;
+use App\Models\Review;
 use App\Models\Customer;
 use App\Models\Employee;
+use App\Models\Appointment;
+use App\Observers\UserObserver;
 use App\Models\PointTransaction;
-use App\Models\Review;
-use App\Models\User;
 use App\Models\WalletTransaction;
-use App\Observers\AppointmentObserver;
+use App\Observers\ReviewObserver;
 use App\Observers\CustomerObserver;
 use App\Observers\EmployeeObserver;
-use App\Observers\PointTransactionObserver;
-use App\Observers\ReviewObserver;
-use App\Observers\ServiceProviderObserver;
-use App\Observers\UserObserver;
-use App\Observers\WalletTransactionObserver;
+use App\Observers\AppointmentObserver;
+use Illuminate\Support\Facades\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Support\ServiceProvider;
+use App\Http\Resources\CustomerResource;
+use App\Observers\ServiceProviderObserver;
+use App\Observers\PointTransactionObserver;
+use App\Observers\WalletTransactionObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -59,5 +60,7 @@ class AppServiceProvider extends ServiceProvider
             'customer' => \App\Models\Customer::class,
             'provider' => \App\Models\ServiceProvider::class,
         ]);
+
+        Schema::defaultStringLength(191);
     }
 }

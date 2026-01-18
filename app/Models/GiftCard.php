@@ -50,4 +50,9 @@ class GiftCard extends Model
     {
         return $this->belongsTo(GiftCardTheme::class, 'gift_card_theme_id');
     }
+
+    public function refundLogs()
+    {
+        return $this->morphMany(RefundLog::class, 'model');
+    }
 }

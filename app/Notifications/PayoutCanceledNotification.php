@@ -1,60 +1,68 @@
 <?php
 
 namespace App\Notifications;
-use App\Services\FirebaseNotification;
-use GGInnovative\Larafirebase\Messages\FirebaseMessage;
+
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use App\Services\FirebaseNotification;
 use Illuminate\Notifications\Notification;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 
-class NewAppointmentNotification extends Notification implements ShouldQueue {
-
+class PayoutCanceledNotification extends Notification implements ShouldQueue
+{
     use Queueable;
 
-    public $appointment;
+    public $payout;
 
-    public function __construct($appointment)
+    /**
+     * Create a new notification instance.
+     */
+    public function __construct($payout)
     {
-        $this->appointment = $appointment;
+        $this->payout = $payout;
         $this->onQueue('default');
     }
 
-
-    public function via($notifiable): array
+    /**
+     * Get the notification's delivery channels.
+     *
+     * @return array<int, string>
+     */
+    public function via(object $notifiable): array
     {
         return ['database','firebase'];
     }
 
-    // Method to set the title dynamically
+     // Method to set the title dynamically
     private function getTitle()
     {
-        return "New appointment booked";
+        return "Payout Transferred";
     }
 
     // Method to set the body dynamically
     private function getBody()
     {
-        return 'New appointment booked # ' . $this->appointment->id;
+        return 'Payout Transferred # ' . $this->payout->id;
     }
 
     // Method to set the title ar dynamically
     private function getTitleAr()
     {
-        return "تم حجز موعد جديد";
+        return "تم تحويل الدفع";
     }
 
     // Method to set the body ar dynamically
     private function getBodyAr()
     {
-        return 'تم حجز موعد جديد رقم : ' . $this->appointment->id;
+        return 'تم تحويل المبلغ #' . $this->payout->id;
     }
 
     // Method to get token
     private function getToken()
     {
-        return $this->appointment->serviceProvider->user->firebase_token;
+        return $this->payout->serviceProvider->user->firebase_token;
     }
+
 
     public function toFirebase($notifiable)
     {
@@ -64,25 +72,27 @@ class NewAppointmentNotification extends Notification implements ShouldQueue {
             ->withTitle($this->getTitle())
             ->withBody($this->getBody())
             ->withAdditionalData([
-                'redirect_id' => (string) $this->appointment->id,
-                'redirect_action' => 'appointments',
+                'redirect_id' => (string) $this->payout->id,
+                'redirect_action' => 'payouts',
             ])
             ->withToken($fcm_token)
             ->sendNotification();
     }
 
+    /**
+     * Get the array representation of the notification.
+     *
+     * @return array<string, mixed>
+     */
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => $this->getTitle(),
+             'title' => $this->getTitle(),
             'body' => $this->getBody(),
             'title_ar' => $this->getTitleAr(),
             'body_ar' =>$this->getBodyAr(),
-            'redirect_id' => (string) $this->appointment->id,
-            'redirect_action' => 'appointments',
-            //'image_url' => $this->order->items->first()->product->thumbnail,
+            'redirect_id' => (string) $this->payout->id,
+            'redirect_action' => 'payouts',
         ];
-
     }
-
 }

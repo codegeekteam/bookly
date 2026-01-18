@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use App\Models\RefundLog;
 use App\Models\PaymentLog;
 use App\Models\Appointment;
+use App\Helpers\RefundHelper;
 use App\Helpers\PayfortHelper;
 use App\Models\AttachedService;
 use App\Enums\AppointmentStatus;
@@ -303,7 +304,7 @@ class ConfirmedState extends BaseAppointmentState
         if(!$paymentLog || $paymentLog->mechant_reference == null) {
               \Log::info('paymentLog data insufficient');
         }
-         $description = json_decode($appointment->service?->title, true);
+        //  $description = json_decode($appointment->service?->title, true);
 
          if($type == 'reject') {
          $total = $appointment->total_payed;
@@ -334,13 +335,10 @@ class ConfirmedState extends BaseAppointmentState
                         'amount' =>  $amount,
                         'currency' =>  'SAR',
                         'language' => 'en',
-                        'fort_id' =>  $paymentLog->transaction_id, //"149295435400084008",
-                    //    'signature' =>  $paymentLog->signature, //"7cad05f0212ed933c9a5d5dffa31661acf2c827a",
-                       // 'maintenance_reference' =>  "REF-2024-001",
-                    //    'order_description' =>  $description['en'] . '- Refund', //"Premium Wireless Headphones - Full Refund"
+                        'fort_id' =>  $paymentLog->fort_id,            
                     ];
          $refund_data['signature'] = PayfortHelper::generateSignature($refund_data);
-         $refund_data['order_description'] =  $description['en'] . '- Refund'; //"Premium Wireless Headphones - Full Refund"
+         $refund_data['order_description'] =  $paymentLog->appointment_id . '- Refund Request Processed'; 
          $response = Http::withHeaders([
             'Content-Type' => 'application/json',
         ])->post($base_url, $refund_data); 
@@ -351,15 +349,34 @@ class ConfirmedState extends BaseAppointmentState
             'status' => $response->status(),
            // 'body'   => $response->body(),
         ]);
+       
+    // Split the merchant_reference into type and identifier
+        $parts = explode('_', $response['merchant_reference']);
+
+        if (count($parts) < 2) {
+            return response()->json(['message' => 'Invalid ID format'], 200);
+            // return response()->json(['message' => 'success'], 200);
+        }
+            if(count($parts) == 3) {
+            $type = 'appointment'; 
+            $identifier = $parts[2];
+            $paymentType = 'remaining';
+        }elseif(count($parts) == 2) {
+             $type = $parts[0];
+            $identifier = $parts[1];
+        }      
 if($response['response_code'] == '06000') {
+        $refundHelper = new RefundHelper;
         RefundLog::create([
            'response_code' => $response['response_code'],
            'response_message' => $response['response_message'],
            'amount' => $response['amount'],
            'status' => $response['status'],
            'merchant_reference' => $response['merchant_reference'],          
-           'response' => json_encode($response)
-        ]);
+           'response' => json_encode($response),
+           'model_type' => $refundHelper->getMorphClassFromType($type),
+           'model_id' => $identifier,
+        ]);        
 }else {
     \Log::info('Refund Failed');
 }

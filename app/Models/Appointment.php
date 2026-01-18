@@ -160,4 +160,9 @@ class Appointment extends Model
     {
         return $this->hasOne(ChatConversation::class);
     }
+    public function refundLogs()
+    {
+        return $this->morphMany(RefundLog::class, 'model');
+    }
+
 }
