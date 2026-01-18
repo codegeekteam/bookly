@@ -44,17 +44,17 @@ class AppointmentObserver
                 $this->sendConfirmationEmail($appointment);
 
                 // Create or reactivate conversation when appointment is confirmed
-                if (!$appointment->conversation) {
+               /* if (!$appointment->conversation) {
                     $this->chatService->createConversation($appointment);
                 } else {
                     $appointment->conversation->update(['is_active' => true]);
-                }
-            } else {
+                }*/
+            } /* else {
                 // Deactivate conversation when status changes away from Confirmed
                 if ($appointment->conversation) {
                     $this->chatService->deactivateConversation($appointment->id);
                 }
-            }
+            }*/
 
             // Send email when status changes to rejected
             if ($appointment->status_id === AppointmentStatus::Rejected->value) {
@@ -65,6 +65,20 @@ class AppointmentObserver
             if ($appointment->status_id === AppointmentStatus::Completed->value) {
                    \Log::info('create DeferredPayouts For Appointment reached');
                 $this->payoutService->createDeferredPayoutsForAppointment($appointment);
+            }
+
+            if ($appointment->status_id !== AppointmentStatus::Pending->value) {
+                // Create or reactivate conversation when appointment is not pending
+                if (!$appointment->conversation) {
+                    $this->chatService->createConversation($appointment);
+                } else {
+                    $appointment->conversation->update(['is_active' => true]);
+                } 
+            }else {
+                // Deactivate conversation when status changes to  Pending
+                if ($appointment->conversation) {
+                    $this->chatService->deactivateConversation($appointment->id);
+                }
             }
         }
     }
