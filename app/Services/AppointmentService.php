@@ -506,6 +506,9 @@ class AppointmentService
             $appointment->remaining_amount = $remaining_after_discount;
             $appointment->remaining_payment_status = $remaining_after_discount > 0 ? 'pending' : 'paid';
             $appointment->remaining_payment_method_id = $payment_method_id;
+            if($appointment->deposit_payment_status == 'pending') {
+                $appointment->total_payed = ($appointment->total_payed ?? 0) + $appointment->deposit_amount;
+            }
 
             // Set overall payment status
             if ($appointment->amount_due == 0) {
@@ -1002,11 +1005,11 @@ class AppointmentService
             
             // Process remaining payment or full payment
             else {
-                //only remaining payment happening here - deposit payment not coming here
+                //process remaining payment
                 if($appointment->deposit_amount && $appointment->deposit_amount > 0 &&  $appointment->deposit_payment_status == 'pending') {
                     $appointment->deposit_payment_status = 'paid';
                     $appointment->card_amount = ($appointment->card_amount ?? 0) + $appointment->deposit_amount;
-                    $appointment->total_payed = ($appointment->total_payed ?? 0) + $appointment->deposit_amount;
+                    // $appointment->total_payed = ($appointment->total_payed ?? 0) + $appointment->deposit_amount;
                 }
 
                 $newTotal = $normalizedAmount + ($appointment->total_payed ?? 0);
