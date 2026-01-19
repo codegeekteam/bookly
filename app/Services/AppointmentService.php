@@ -1237,7 +1237,7 @@ class AppointmentService
     /**
      * @throws Exception
      */
-   /* public function markAsComplete($appointment): JsonResponse {     
+    public function markAsComplete($appointment): JsonResponse {     
         $last_appointment_service = $appointment->appointmentServices
             ->sortByDesc(function ($service) {
                 return Carbon::parse($service->date)->format('Y-m-d') . ' ' . $service->end_time;
@@ -1299,9 +1299,9 @@ class AppointmentService
         return response()->json([
             'message' => __('Appointment marked as complete'),
         ], 200);
-    } */
+    } 
 
-    public function markAsComplete($appointment): bool
+  /*  public function markAsComplete($appointment): bool
     {
         Log::info('➡ markAsComplete invoked', [
             'appointment_id' => $appointment->id,
@@ -1309,13 +1309,13 @@ class AppointmentService
 
         DB::transaction(function () use ($appointment) {
 
-            /** Already completed? Skip */
+            /* Already completed? Skip *
             if ($appointment->status_id === AppointmentStatus::Completed->value) {
-                Log::info("⛔ Already completed. Skipping.");
+                Log::info("Already completed. Skipping.");
                 return;
             }
 
-            /** ALWAYS reload fresh appointment with relationships */
+            /* ALWAYS reload fresh appointment with relationships *
             $appointment->load(['appointmentServices', 'serviceProvider.user.wallet', 'customer']);
 
             // Call state machine
@@ -1366,7 +1366,7 @@ class AppointmentService
         }, 3); // automatic retry for deadlocks
 
         return true;
-    }
+    }*/
 
 
     public function checkReferId($referralId, $customer)
