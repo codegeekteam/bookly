@@ -15,7 +15,7 @@ class AppointmentNotification extends Notification implements ShouldQueue {
     public string $title;
     public string $body;
     public ?string $title_ar; // Optional Arabic fields
-    public ?string $body_ar;
+    public ?string $body_ar;   
 
     public function __construct(string $title, string $body, ?string $title_ar = null, ?string $body_ar = null)
     {
