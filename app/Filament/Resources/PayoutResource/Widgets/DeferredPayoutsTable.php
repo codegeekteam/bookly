@@ -19,7 +19,12 @@ class DeferredPayoutsTable extends BaseWidget
         return $table
             ->heading('Appointment Breakdown')
             ->description('Detailed list of all appointments included in this payout')
-            ->query(
+            // ->query(
+            //     DeferredPayout::query()
+            //         ->where('payout_id', $this->record?->id)
+            //         ->with(['appointment', 'paymentMethod'])
+            // )
+            ->query(fn () =>
                 DeferredPayout::query()
                     ->where('payout_id', $this->record?->id)
                     ->with(['appointment', 'paymentMethod'])
