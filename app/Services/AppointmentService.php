@@ -30,6 +30,7 @@ use Illuminate\Validation\ValidationException;
 use App\Notifications\NewAppointmentNotification;
 use App\Notifications\RequestPaymentNotification;
 use App\Notifications\AppointmentCompleteNotification;
+use App\Notifications\NewRescheduleRequestNotification;
 use App\Actions\PromoCode\Mutations\CheckPromoCodeMutation;
 use App\Notifications\AcceptRescheduleAppointmentNotification;
 use App\Notifications\RejectRescheduleAppointmentNotification;
@@ -745,7 +746,7 @@ class AppointmentService
             $body = 'Your appointment #' . $appointment->id . ' has been requested to be rescheduled to ' . $rescheduleTime->format('H:i') . ' on ' . $rescheduleDate->format('Y-m-d');
             $title_ar = 'طلب تعديل موعد';
             $body_ar = 'تم طلب تعديل موعد رقم :  ' . $appointment->id . 'الى : ' . $rescheduleTime->format('H:i') . '  ' . $rescheduleDate->format('Y-m-d');
-            $appointment->customer->user->notify(new AppointmentNotification($title, $body, $title_ar, $body_ar));
+            $appointment->customer->user->notify(new NewRescheduleRequestNotification($appointment, $rescheduleTime->format('H:i'), $rescheduleDate->format('Y-m-d')));
         } catch (\Exception $e) {
             Log::info($e);
         }
