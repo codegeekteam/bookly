@@ -1009,7 +1009,10 @@ class AppointmentService
                 if($appointment->deposit_amount && $appointment->deposit_amount > 0 &&  $appointment->deposit_payment_status == 'pending') {
                     $appointment->deposit_payment_status = 'paid';
                     $appointment->card_amount = ($appointment->card_amount ?? 0) + $appointment->deposit_amount;
-                    // $appointment->total_payed = ($appointment->total_payed ?? 0) + $appointment->deposit_amount;
+                    if($appointment->total_payed == 0) {
+                        $appointment->total_payed = ($appointment->total_payed ?? 0) + $appointment->deposit_amount;
+                    }
+                    
                 }
 
                 $newTotal = $normalizedAmount + ($appointment->total_payed ?? 0);
