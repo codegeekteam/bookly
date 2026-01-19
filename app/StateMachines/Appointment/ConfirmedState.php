@@ -84,7 +84,8 @@ class ConfirmedState extends BaseAppointmentState
         ]);
         DB::commit(); 
         $paymentMethod = $appointment->paymentMethod;
-        if ($paymentMethod && strtolower($paymentMethod->name) === 'card') { 
+        $paymentLog = PaymentLog::find($appointment->id);
+        if ($paymentLog && $paymentMethod && strtolower($paymentMethod->name) === 'card') { 
             $response = $this->initiateRefund($appointment, 'reject');
         }
  
@@ -176,7 +177,8 @@ class ConfirmedState extends BaseAppointmentState
 
          DB::commit();
         $paymentMethod = $appointment->paymentMethod;
-        if ($paymentMethod && strtolower($paymentMethod->name) === 'card') {      
+        $paymentLog = PaymentLog::find($appointment->id);
+        if($paymentLog && $paymentMethod && strtolower($paymentMethod->name) === 'card') {      
             $response = $this->initiateRefund($appointment, 'cancel');
         }
  DB::beginTransaction();
