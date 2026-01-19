@@ -935,7 +935,7 @@ class AppointmentService
 
         if(count($parts) == 3) {
             $type = 'appointment'; 
-            $identifier = $parts[2];
+            $identifier = $parts[1];
             $paymentType = 'remaining';
         }elseif(count($parts) == 2) {
              $type = $parts[0];
