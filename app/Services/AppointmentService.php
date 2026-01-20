@@ -551,7 +551,7 @@ class AppointmentService
                     'merchant_reference' => $data['merchant_reference'],
                     'amount' => $data['amount'],
                     'currency' => $data['currency'],
-                    'appointment_id' => $data['appointment_id'],
+                    'appointment_id' => $appointment->id,
                     'fort_id' => $data['fort_id'],
                     'response' => json_encode($data),
                     ]);
