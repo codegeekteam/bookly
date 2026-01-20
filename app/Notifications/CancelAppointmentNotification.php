@@ -31,13 +31,13 @@ class CancelAppointmentNotification extends Notification implements ShouldQueue 
     // Method to set the title dynamically
     private function getTitle()
     {
-        return "appointment canceled";
+        return "Appointment cancelled";
     }
 
     // Method to set the body dynamically
     private function getBody()
     {
-        return 'your appointment # ' . $this->appointment->id . ' canceled';
+        return 'Your appointment # ' . $this->appointment->id . ' cancelled';
     }
 
     // Method to set the title ar dynamically

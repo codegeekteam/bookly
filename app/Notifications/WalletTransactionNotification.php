@@ -32,7 +32,7 @@ class WalletTransactionNotification extends Notification implements ShouldQueue 
     // Method to set the title dynamically
     private function getTitle()
     {
-        return "your wallet balance updated";
+        return "Your wallet balance updated";
     }
 
     // Method to set the title ar dynamically
