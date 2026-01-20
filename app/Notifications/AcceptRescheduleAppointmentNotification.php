@@ -29,13 +29,13 @@ class AcceptRescheduleAppointmentNotification extends Notification implements Sh
     // Method to set the title dynamically
     private function getTitle()
     {
-        return "appointment reschedule request accepted";
+        return "Appointment reschedule request accepted";
     }
 
     // Method to set the body dynamically
     private function getBody()
     {
-        return 'appointment reschedule request accepted to your appointment # '.$this->appointment->id;
+        return 'Appointment reschedule request accepted to your appointment # '.$this->appointment->id;
     }
 
     // Method to set the title ar dynamically

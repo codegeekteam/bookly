@@ -29,13 +29,13 @@ class RejectRescheduleAppointmentNotification extends Notification implements Sh
     // Method to set the title dynamically
     private function getTitle()
     {
-        return "appointment reschedule request rejected";
+        return "Appointment reschedule request rejected";
     }
 
     // Method to set the body dynamically
     private function getBody()
     {
-        return 'appointment reschedule request rejected to your appointment # '.$this->appointment->id;
+        return 'Appointment reschedule request rejected to your appointment # '.$this->appointment->id;
     }
 
     // Method to set the title ar dynamically
