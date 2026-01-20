@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Customer;
 use App\Models\GiftCard;
 use App\Models\PromoCode;
+use App\Models\PaymentLog;
 use App\Models\Appointment;
 use App\Models\HeldTimeSlot;
 use App\Models\Subscription;
@@ -326,7 +327,8 @@ class AppointmentService
         ?string $promo_code,
         ?string $comment,
         ?int $payment_method_id,
-        ?int $loyalty_discount_customer_id
+        ?int $loyalty_discount_customer_id,
+        ?array $deposit_payment_response,
     ) {
         $loyalty_discount = null;
         $serviceProviderId = array_reduce($services, static function ($carry, $service) {
@@ -533,8 +535,30 @@ class AppointmentService
         }
 
         $appointment->save();
-            \Log::info('Appointment save reached');     
-
+            \Log::info('Appointment save reached');    
+            
+        if ($deposit_payment_response && isset($deposit_payment_response['fort_id'])) {
+            $data = $deposit_payment_response;
+            $fortId = $data['fort_id'];
+            if ($fortId) {
+                $existing = PaymentLog::where('fort_id', $fortId)->first();
+                if ($existing) {
+                    Log::warning("Duplicate Payfort callback ignored", ['fort_id' => $fortId]);                    
+                }else {
+                    $paymentLog = PaymentLog::create([
+                    'response_code' => $data['response_code'],
+                    'status' => $data['status'],
+                    'merchant_reference' => $data['merchant_reference'],
+                    'amount' => $data['amount'],
+                    'currency' => $data['currency'],
+                    'appointment_id' => $data['appointment_id'],
+                    'fort_id' => $data['fort_id'],
+                    'response' => json_encode($data),
+                    ]);
+                    \Log::info('Payment log created', ['id' => $paymentLog->id]);
+                }       
+            }
+        }
        // Auto complete appointment if Card payment
 
         if ($payment_method_id) {

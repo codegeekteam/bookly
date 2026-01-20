@@ -228,6 +228,7 @@ class AppointmentController extends Controller
                 comment: $request->comment,
                 payment_method_id: $request->payment_method_id,
                 loyalty_discount_customer_id: $request->loyalty_discount_customer_id,
+                deposit_payment_response: $request->deposit_payment_response,
             );
         } catch (\Exception $exception) {
             Log::critical($exception->getMessage(), [
