@@ -2,12 +2,13 @@
 
 namespace App\Services;
 
+use App\Models\User;
+use App\Models\Address;
+use Illuminate\Http\Request;
+use App\Models\ServiceProvider;
 use App\Http\Requests\AddressRequest;
 use App\Http\Resources\AddressResource;
-use App\Models\Address;
-use App\Models\ServiceProvider;
-use App\Models\User;
-use Illuminate\Http\Request;
+use App\Http\Resources\AddressResourceSp;
 
 class AddressService
 {
@@ -101,9 +102,11 @@ class AddressService
     public function providerAddress($provider_id)
     {
         // $address = Address::where('addressable_id', $provider_id)->where('addressable_type', ServiceProvider::class)->first();
-        $address = Address::where('addressable_id', $provider_id)->where('addressable_type', 'provider')->first();
+        $address = Address::where('addressable_id', $provider_id)->where('addressable_type', ServiceProvider::class)->get();
+        //$address = Address::where('addressable_id', $provider_id)->where('addressable_type', 'provider')->first();       
         if ($address) {           
-            return new AddressResource($address);
+           // return  new AddressResource($address);
+            return  AddressResource::collection($address);
         }
 
         throw new \Exception(__('no data found'));
