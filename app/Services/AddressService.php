@@ -101,12 +101,9 @@ class AddressService
 
     public function providerAddress($provider_id)
     {
-        // $address = Address::where('addressable_id', $provider_id)->where('addressable_type', ServiceProvider::class)->first();
-        $address = Address::where('addressable_id', $provider_id)->where('addressable_type', ServiceProvider::class)->get();
-        //$address = Address::where('addressable_id', $provider_id)->where('addressable_type', 'provider')->first();       
-        if ($address) {           
-           // return  new AddressResource($address);
-            return  AddressResource::collection($address);
+        $address = Address::where('addressable_id', $provider_id)->where('addressable_type', ServiceProvider::class)->first();      
+         if ($address) {           
+            return  new AddressResource($address);        
         }
 
         throw new \Exception(__('no data found'));
