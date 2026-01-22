@@ -14,6 +14,14 @@ class RefundLog extends Model
         'amount',
         'status',
         'merchant_reference',
-        'response'
+        'response',
+        'model_type',
+        'model_id'
     ];
+
+    public function model()
+    {
+        return $this->morphTo();
+    }
+
 }

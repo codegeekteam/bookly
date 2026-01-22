@@ -28,13 +28,13 @@ class ConfirmAppointmentNotification extends Notification implements ShouldQueue
     // Method to set the title dynamically
     private function getTitle()
     {
-        return 'appointment confirmed';
+        return 'Appointment confirmed';
     }
 
     // Method to set the body dynamically
     private function getBody()
     {
-        return 'your appointment # '.$this->appointment->id.' confirmed';
+        return 'Your appointment # '.$this->appointment->id.' confirmed';
     }
 
     // Method to set the title ar dynamically
@@ -49,9 +49,15 @@ class ConfirmAppointmentNotification extends Notification implements ShouldQueue
         return 'تم قبول موعد رقم :  '.$this->appointment->id;
     }
 
+    // Method to get token
+    private function getToken()
+    {
+        return $this->appointment->customer->user->firebase_token;
+    }
+
     public function toFirebase($notifiable)
     {
-        $fcm_token = $notifiable->firebase_token;
+        $fcm_token = $this->getToken(); //$notifiable->firebase_token;
 
         return (new FirebaseNotification)
             ->withTitle($this->getTitle())

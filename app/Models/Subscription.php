@@ -34,5 +34,10 @@ class Subscription extends Model
         return $this->belongsTo(Plan::class);
     }
 
+    public function refundLogs()
+    {
+        return $this->morphMany(RefundLog::class, 'model');
+    }
+
 
 }

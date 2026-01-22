@@ -2,15 +2,17 @@
 
 namespace App\Services;
 
-use App\Models\Appointment;
-use App\Models\DeferredPayout;
-use App\Models\Payout;
-use App\Models\PayoutSetting;
-use App\Mail\PayoutTransferredMail;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
+use App\Models\Payout;
+use App\Models\Appointment;
+use App\Models\PayoutSetting;
+use App\Models\DeferredPayout;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
+use App\Mail\PayoutTransferredMail;
+use Illuminate\Support\Facades\Mail;
+use App\Notifications\PayoutCanceledNotification;
+use App\Notifications\PayoutTransferredNotification;
 
 class PayoutService
 {
@@ -178,9 +180,16 @@ class PayoutService
                 'payment_transferred_date' => $transferDate, 
                 'transaction_id' => $transactionId
             ]);
-
+         
             // Send email notification to service provider
             $this->sendTransferredEmail($payout);
+
+            try {
+                $payout->serviceProvider->user->notify(new PayoutTransferredNotification($payout));
+            } catch (\Exception $e) {
+                \Log::info($e);
+            }
+
         });
     }
 
@@ -201,6 +210,12 @@ class PayoutService
                 'payout_id' => null,
             ]);
         });
+
+        try {
+            $payout->serviceProvider->user->notify(new PayoutCanceledNotification($payout));
+        } catch (\Exception $e) {
+            \Log::info($e);
+        }
     }
 
     /**

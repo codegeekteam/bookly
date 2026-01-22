@@ -184,8 +184,8 @@ class AppointmentController extends Controller
     {
         try {
             $appointment->state()->cancel();
-            $appointment->customer->user->notify(new CancelAppointmentNotification($appointment));
-            $appointment->serviceProvider->user->notify(new CancelAppointmentNotification($appointment));
+            $appointment->customer->user->notify(new CancelAppointmentNotification($appointment, 'customer'));
+            $appointment->serviceProvider->user->notify(new CancelAppointmentNotification($appointment, 'provider'));
             return response()->json(['message' => __('Appointment cancelled successfully')]);
         } catch (\Exception $exception) {
             return $this->error($exception->getMessage());
@@ -218,6 +218,8 @@ class AppointmentController extends Controller
      */
     public function book(AppointmentService $appointmentService, BookAppointmentRequest $request)
     {
+        Log::info('appointmentService',['appointmentService' => $appointmentService]);
+        Log::info('request',['request' => $request]);
         try {
             return $appointmentService->book(
                 customer: auth()->user()->customer,
@@ -226,6 +228,7 @@ class AppointmentController extends Controller
                 comment: $request->comment,
                 payment_method_id: $request->payment_method_id,
                 loyalty_discount_customer_id: $request->loyalty_discount_customer_id,
+                deposit_payment_response: $request->deposit_payment_response,
             );
         } catch (\Exception $exception) {
             Log::critical($exception->getMessage(), [
@@ -319,17 +322,28 @@ class AppointmentController extends Controller
      */
     public function getPayfortFeedback(AppointmentService $appointmentService, Request $request)
     {
+        \Log::info('Payfort callback raw:', $request->all());    
+
         try {
-            PaymentLog::create([
-                $request->input('response_code'),
-                $request->input('status'),
-                $request->input('merchant_reference'),
-                $request->input('amount'),
-                $request->input('currency'),
-                $request->input('appointment_id'),
-                $request->input('fort_id'),
-                json_encode($request->input())
+            $fortId = $request->input('fort_id');
+            if ($fortId) {
+                $existing = PaymentLog::where('fort_id', $fortId)->first();
+                if ($existing) {
+                    Log::warning("Duplicate Payfort callback ignored", ['fort_id' => $fortId]);
+                    return response()->json(['message' => 'success'], 200);
+                }
+            }
+             $paymentLog = PaymentLog::create([
+               'response_code' => $request->input('response_code'),
+               'status' => $request->input('status'),
+               'merchant_reference' => $request->input('merchant_reference'),
+               'amount' => $request->input('amount'),
+               'currency' => $request->input('currency'),
+               'appointment_id' => $request->input('appointment_id'),
+               'fort_id' => $request->input('fort_id'),
+               'response' => json_encode($request->input())
             ]);
+            \Log::info('Payment log created', ['id' => $paymentLog->id]);
             return $appointmentService->getPayfortFeedback(
                 response_code: $request->input('response_code'),
                 id: $request->input('merchant_reference'),
@@ -430,7 +444,7 @@ class AppointmentController extends Controller
     public function reject(Appointment $appointment)
     {
         try {
-            $appointment->state()->reject();
+             $appointment->state()->reject();
 
             return response()->json(['message' => __('Appointment rejected successfully')]);
         } catch (\Exception $exception) {

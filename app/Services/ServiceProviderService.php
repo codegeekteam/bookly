@@ -16,8 +16,18 @@ class ServiceProviderService
 
         $query = ServiceProvider::query()
             ->with('addresses')
+           /* ->when($request->filled('rating'), function($query) use ($request) {
+                $query->where('average_rating', '>=', (int)$request->rating);
+            })*/
             ->when($request->filled('rating'), function ($query) use ($request) {
-                $query->where('average_rating', '>=', $request->rating);
+                $query->whereHas('reviews', function ($q) {
+                    $q->select('service_provider_id')
+                    ->selectRaw('AVG(rate) as avg_rating')
+                    ->groupBy('service_provider_id');
+                })
+                ->whereRaw('(SELECT AVG(rate) FROM reviews WHERE reviews.service_provider_id = service_providers.id) >= ?', [
+                    (int) $request->rating
+                ]);
             })
             ->when($request->has('keyword'), function ($query) use ($request) {
                 $keyword = '%'.$request->keyword.'%';

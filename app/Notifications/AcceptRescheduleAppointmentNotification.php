@@ -29,13 +29,13 @@ class AcceptRescheduleAppointmentNotification extends Notification implements Sh
     // Method to set the title dynamically
     private function getTitle()
     {
-        return "appointment reschedule request accepted";
+        return "Appointment reschedule request accepted";
     }
 
     // Method to set the body dynamically
     private function getBody()
     {
-        return 'appointment reschedule request accepted to your appointment # '.$this->appointment->id;
+        return 'Appointment reschedule request accepted to your appointment # '.$this->appointment->id;
     }
 
     // Method to set the title ar dynamically
@@ -50,9 +50,15 @@ class AcceptRescheduleAppointmentNotification extends Notification implements Sh
         return 'تم قبول تعديل موعد :  ' . $this->appointment->id ;
     }
 
+    // Method to get token
+    private function getToken()
+    {
+        return $this->appointment->serviceProvider->user->firebase_token;
+    }
+
     public function toFirebase($notifiable)
     {
-        $fcm_token = $notifiable->firebase_token;
+        $fcm_token = $this->getToken(); //$notifiable->firebase_token;
         return (new FirebaseNotification)
             ->withTitle($this->getTitle())
             ->withBody($this->getBody())

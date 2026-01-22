@@ -34,6 +34,7 @@ class GroupPayouts extends Command
      */
     public function handle()
     {
+        \Log::info('Starting payout grouping process..');
         $this->info('Starting payout grouping process...');
 
         $result = $this->payoutService->groupEligiblePayouts();

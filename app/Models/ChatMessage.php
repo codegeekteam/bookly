@@ -30,7 +30,7 @@ class ChatMessage extends Model
         return $this->belongsTo(ChatConversation::class, 'conversation_id');
     }
 
-   /* public function getSenderAttribute()
+    public function getSenderAttribute()
     {
         if ($this->sender_type === 'customer') {
             return Customer::find($this->sender_id);
@@ -38,17 +38,17 @@ class ChatMessage extends Model
             return ServiceProvider::find($this->sender_id);
         }
         return null;
-    } */
+    } 
 
     //By sreeja
-    public function sender(): MorphTo
+  /*  public function sender(): MorphTo
     {
         return $this->morphTo(
             __FUNCTION__,
             'sender_type',
             'sender_id'
         );
-    }
+    } */
 
     public function isFromCustomer(): bool
     {

@@ -10,7 +10,7 @@ class LoginRequest extends FormRequest
     {
         return [
             'phone_number' => 'required|numeric|digits:9',
-            // TODO : add access type validation
+            'access_type' => 'required|string|in:customer,employee,provider',
         ];
     }
 
