@@ -556,7 +556,25 @@ class AppointmentService
                     'response' => json_encode($data),
                     ]);
                     \Log::info('Payment log created', ['id' => $paymentLog->id]);
-                }       
+                }  
+                //add deposit payment updates here
+                     $normalizedAmount = $data['amount'] / 100;
+                if ($appointment->deposit_amount) {
+                    if ($normalizedAmount >= $appointment->deposit_amount) {
+                        $appointment->deposit_payment_status = 'paid';
+                        $appointment->card_amount = ($appointment->card_amount ?? 0) + $normalizedAmount;
+                        $appointment->total_payed = ($appointment->total_payed ?? 0) + $normalizedAmount;
+
+                        // Update overall status
+                        if ($appointment->remaining_amount == 0 || $appointment->remaining_amount == null) {
+                            $appointment->payment_status = 'paid';
+                        } else {
+                            $appointment->payment_status = 'partially_paid';
+                        }
+                    }
+                    \Log::info('Process deposit Payment', ['appintment_payment_status' => $appointment->payment_status]);
+                }
+
             }
         }
        // Auto complete appointment if Card payment
@@ -855,8 +873,7 @@ class AppointmentService
         }
     }
 
-    public
-    function getSDKToken($device_id) {
+    public function getSDKToken($device_id) {
         $payfort_helper = new PayfortHelper();
 
         $payment_gateway_response = $payfort_helper->generateSDKToken($device_id);
@@ -987,7 +1004,7 @@ class AppointmentService
         // Appointment logic with deposit/remaining tracking
         if ($type === 'appointment') {
             $appointment = $model;
-        if ($appointment->payment_status === 'paid' && $appointment->status_id == AppointmentStatus::Completed->value) {
+        if ($appointment->payment_status === 'paid' && $appointment->status_id == AppointmentStatus::Completed->value) { 
             \Log::info('Callback ignored: already completed');
             return response()->json(['message' => 'success'], 200);
         }
@@ -1031,14 +1048,14 @@ class AppointmentService
             // Process remaining payment or full payment
             else {
                 //process remaining payment
-                if($appointment->deposit_amount && $appointment->deposit_amount > 0 &&  $appointment->deposit_payment_status == 'pending') {
+               /* if($appointment->deposit_amount && $appointment->deposit_amount > 0 &&  $appointment->deposit_payment_status == 'pending') {
                     $appointment->deposit_payment_status = 'paid';
                     $appointment->card_amount = ($appointment->card_amount ?? 0) + $appointment->deposit_amount;
                     if($appointment->total_payed == 0) {
                         $appointment->total_payed = ($appointment->total_payed ?? 0) + $appointment->deposit_amount;
                     }
                     
-                }
+                } */
 
                 $newTotal = $normalizedAmount + ($appointment->total_payed ?? 0);
                 $isPaid = $newTotal >= $appointment->amount_due;
