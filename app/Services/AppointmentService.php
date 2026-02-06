@@ -556,7 +556,25 @@ class AppointmentService
                     'response' => json_encode($data),
                     ]);
                     \Log::info('Payment log created', ['id' => $paymentLog->id]);
-                }       
+                }  
+                //add deposit payment updates here
+                     $normalizedAmount = $data['amount'] / 100;
+                if ($appointment->deposit_amount) {
+                    if ($normalizedAmount >= $appointment->deposit_amount) {
+                        $appointment->deposit_payment_status = 'paid';
+                        $appointment->card_amount = ($appointment->card_amount ?? 0) + $normalizedAmount;
+                        $appointment->total_payed = ($appointment->total_payed ?? 0) + $normalizedAmount;
+
+                        // Update overall status
+                        if ($appointment->remaining_amount == 0 || $appointment->remaining_amount == null) {
+                            $appointment->payment_status = 'paid';
+                        } else {
+                            $appointment->payment_status = 'partially_paid';
+                        }
+                    }
+                    \Log::info('Process deposit Payment', ['appintment_payment_status' => $appointment->payment_status]);
+                }
+
             }
         }
        // Auto complete appointment if Card payment
@@ -855,8 +873,7 @@ class AppointmentService
         }
     }
 
-    public
-    function getSDKToken($device_id) {
+    public function getSDKToken($device_id) {
         $payfort_helper = new PayfortHelper();
 
         $payment_gateway_response = $payfort_helper->generateSDKToken($device_id);
@@ -987,7 +1004,7 @@ class AppointmentService
         // Appointment logic with deposit/remaining tracking
         if ($type === 'appointment') {
             $appointment = $model;
-        if ($appointment->payment_status === 'paid' && $appointment->status_id == AppointmentStatus::Completed->value) {
+        if ($appointment->payment_status === 'paid' && $appointment->status_id == AppointmentStatus::Completed->value) { 
             \Log::info('Callback ignored: already completed');
             return response()->json(['message' => 'success'], 200);
         }
@@ -1031,14 +1048,14 @@ class AppointmentService
             // Process remaining payment or full payment
             else {
                 //process remaining payment
-                if($appointment->deposit_amount && $appointment->deposit_amount > 0 &&  $appointment->deposit_payment_status == 'pending') {
+               /* if($appointment->deposit_amount && $appointment->deposit_amount > 0 &&  $appointment->deposit_payment_status == 'pending') {
                     $appointment->deposit_payment_status = 'paid';
                     $appointment->card_amount = ($appointment->card_amount ?? 0) + $appointment->deposit_amount;
                     if($appointment->total_payed == 0) {
                         $appointment->total_payed = ($appointment->total_payed ?? 0) + $appointment->deposit_amount;
                     }
                     
-                }
+                } */
 
                 $newTotal = $normalizedAmount + ($appointment->total_payed ?? 0);
                 $isPaid = $newTotal >= $appointment->amount_due;
@@ -1247,7 +1264,7 @@ class AppointmentService
 
         // $booked_appointments = $provider->appointments()->where('date', $date)->get();
 
-        // if ($booked_appointments->count() > 0) {
+        // if ($booked_appointments->count() > 0) { //check pr
         //     foreach ($booked_appointments as $booked_appointment) {
         //         $booked_appointment_time_from = $booked_appointment->time_from->format('H:i:s');
         //         $booked_appointment_time_to = $booked_appointment->time_to->format('H:i:s');
@@ -1271,14 +1288,14 @@ class AppointmentService
 
         $last_service_end_datetime = Carbon::parse($last_appointment_service->date)->setTimeFromTimeString($last_appointment_service->end_time);
 
-        // if (Carbon::parse($last_appointment_service->date)->isAfter(today())) {
-        //     throw new Exception(__('Appointment is not yet completed'));
-        // }
+        if (Carbon::parse($last_appointment_service->date)->isAfter(today())) {
+            throw new Exception(__('Appointment is not yet completed'));
+        }
 
 
-        // if ($last_service_end_datetime->greaterThan(Carbon::now())) {
-        //     throw new Exception(__('Appointment is not yet completed'));
-        // }
+        if ($last_service_end_datetime->greaterThan(Carbon::now())) {
+            throw new Exception(__('Appointment is not yet completed'));
+        }
 
             $appointment->state()->complete();
 
@@ -1318,81 +1335,10 @@ class AppointmentService
             }
         }
 
-
-
-
         return response()->json([
             'message' => __('Appointment marked as complete'),
         ], 200);
     } 
-
-  /*  public function markAsComplete($appointment): bool
-    {
-        Log::info('➡ markAsComplete invoked', [
-            'appointment_id' => $appointment->id,
-        ]);
-
-        DB::transaction(function () use ($appointment) {
-
-            /* Already completed? Skip *
-            if ($appointment->status_id === AppointmentStatus::Completed->value) {
-                Log::info("Already completed. Skipping.");
-                return;
-            }
-
-            /* ALWAYS reload fresh appointment with relationships *
-            $appointment->load(['appointmentServices', 'serviceProvider.user.wallet', 'customer']);
-
-            // Call state machine
-            $appointment->state()->complete();
-
-            // Loyalty + Referral
-            if ($appointment->customer) {
-
-                // referral bonus
-                if ($appointment->customer->appointments()
-                        ->where('status_id', AppointmentStatus::Completed->value)
-                        ->count() === 1
-                ) {
-                    if ($appointment->customer->referral_id) {
-                        $this->checkReferId($appointment->customer->referral_id, $appointment->customer);
-                    }
-                }
-
-                // loyalty points
-                $this->incrementCustomerPoints($appointment->customer, $appointment->total);
-            }
-
-            // notify customer for cash payment
-            if ($appointment->payment_method_id) {
-                try {
-                    $paymentMethod = PaymentMethod::find($appointment->payment_method_id);
-
-                    if ($paymentMethod && strtolower($paymentMethod->name) === 'cash') {
-                        $appointment->customer->user
-                            ->notify(new RequestPaymentNotification($appointment));
-                    }
-
-                } catch (\Exception $e) {
-                    // Log::error("Notification error", [
-                    //     'appointment_id' => $appointment->id,
-                    //     'exception' => $e->getMessage()
-                    // ]);
-                     Log::error('Failed to send RequestPaymentNotification', [
-                        'appointment_id'      => $appointment->id,
-                        'provider_user_id'     => $appointment->serviceProvider->user_id ?? null,
-                        'payment_method_name' => $paymentMethod->name ?? null,
-                        'exception'            => $e->getMessage(),
-                        'trace'                => $e->getTraceAsString(),
-                    ]);
-                }
-            }
-
-        }, 3); // automatic retry for deadlocks
-
-        return true;
-    }*/
-
 
     public function checkReferId($referralId, $customer)
     {
