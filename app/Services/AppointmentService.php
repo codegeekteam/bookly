@@ -1264,7 +1264,7 @@ class AppointmentService
 
         // $booked_appointments = $provider->appointments()->where('date', $date)->get();
 
-        // if ($booked_appointments->count() > 0) {
+        // if ($booked_appointments->count() > 0) { //check pr
         //     foreach ($booked_appointments as $booked_appointment) {
         //         $booked_appointment_time_from = $booked_appointment->time_from->format('H:i:s');
         //         $booked_appointment_time_to = $booked_appointment->time_to->format('H:i:s');
