@@ -59,6 +59,10 @@ class GiftCardResource extends Resource
         return $table
             ->defaultSort('created_at', 'desc')
             ->columns([
+                TextColumn::make('serial_no')
+                    ->label('S.No.')
+                    ->rowIndex(),
+
                 TextColumn::make('code')
                     ->searchable()
                     ->label(__('Code'))

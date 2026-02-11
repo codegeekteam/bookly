@@ -21,8 +21,8 @@ class PayoutSettingResource extends Resource
 
     protected static ?string $navigationLabel = 'Payout Settings';
 
-    protected static ?string $navigationGroup = 'Settings';
-
+    protected static ?string $navigationGroup = 'Financial'; 
+    
     protected static ?int $navigationSort = 10;
 
     public static function shouldRegisterNavigation(): bool

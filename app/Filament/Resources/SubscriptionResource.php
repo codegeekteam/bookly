@@ -119,6 +119,10 @@ class SubscriptionResource extends Resource
         return $table
             ->defaultSort('created_at', 'desc')
             ->columns([
+                TextColumn::make('serial_no')
+                    ->label('S.No.')
+                    ->rowIndex(),
+
                 TextColumn::make('plan.number_of_months')
                     ->searchable()
                     ->sortable()

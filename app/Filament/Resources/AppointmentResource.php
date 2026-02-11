@@ -328,7 +328,12 @@ class AppointmentResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('id', 'desc')
             ->columns([
+                TextColumn::make('serial_no')
+                    ->label('S.No.')
+                    ->rowIndex(),
+                    
                 TextColumn::make('id')
                     ->label('ID')
                     ->searchable()
