@@ -124,6 +124,7 @@ Route::group(['middleware' => ['auth:sanctum',CheckBlockedMiddleware::class]], f
         Route::get('/sdk-token', [AppointmentController::class, 'getSDKToken']);
 
         Route::get('/available-dates', [AppointmentController::class, 'getAvailableDates']);
+         Route::get('/payment-requested', [AppointmentController::class, 'getPaymentRequestedAppointments']);
     });
 
     Route::group(['prefix' => 'invoices'], function () {
