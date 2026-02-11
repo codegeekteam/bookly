@@ -217,7 +217,12 @@ class ServiceProviderResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+           ->defaultSort('id', 'desc')
             ->columns([
+                TextColumn::make('serial_no')
+                    ->label('S.No.')
+                    ->rowIndex(),
+
                 TextColumn::make('name')
                     ->label(__('Name'))
                     ->default(fn ($record) => $record->name ?? $record->phone_number)

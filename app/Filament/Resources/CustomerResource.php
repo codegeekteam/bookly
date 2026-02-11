@@ -111,8 +111,13 @@ class CustomerResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('id', 'desc')
             ->recordAction(null)
             ->columns([
+                TextColumn::make('serial_no')
+                    ->label('S.No.')
+                    ->rowIndex(),
+
                 ToggleColumn::make('is_blocked')
                     ->label(__('Blocked')),
 

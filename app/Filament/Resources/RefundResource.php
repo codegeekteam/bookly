@@ -26,11 +26,14 @@ class RefundResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-receipt-refund';
     protected static ?string $navigationLabel = 'Refund List';
 
-
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('id', 'desc')
             ->columns([
+                TextColumn::make('serial_no')
+                    ->label('S.No.')
+                    ->rowIndex(),
                 TextColumn::make('id')
                     ->label('ID')
                     ->searchable()
