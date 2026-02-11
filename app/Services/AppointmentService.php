@@ -1451,23 +1451,53 @@ class AppointmentService
         ], 200);
     }
 
-    public function paymentRequestedAppointments(User $user) {
+  /*  public function paymentRequestedAppointments(User $user) {
         if ($user->serviceProvider) {            
-            $appointments = $user->serviceProvider->appointments()->where('status_id', AppointmentStatus::PaymentRequest->value);
-            if ($appointments->count() > 0) {
-                return new AppointmentCollection($appointments->load('serviceProvider', 'services', 'appointmentServices', 'customer', 'PromoCode', 'paymentMethod', 'invoice')->sortByDesc('id'));
+            $appointments = $user->serviceProvider->appointments()->where('status_id', AppointmentStatus::PaymentRequest->value)->get();
+            if ($appointments->isNotEmpty()) {
+                $appointments->load('serviceProvider', 'services', 'appointmentServices', 'customer', 'PromoCode', 'paymentMethod', 'invoice');
+                return new AppointmentCollection($appointments->sortByDesc('id'));
             }
 
             return response()->json([]);
         }
         if ($user->customer) {
-            $appointments = $user->customer->appointments()->where('status_id', AppointmentStatus::PaymentRequest->value);
-            if ($appointments->count() > 0) {
-                return new AppointmentCollection($appointments->load('serviceProvider', 'services', 'appointmentServices', 'customer', 'PromoCode', 'paymentMethod', 'invoice')->sortByDesc('id'));
+            $appointments = $user->customer->appointments()->where('status_id', AppointmentStatus::PaymentRequest->value)->get();
+            if ($appointments->isNotEmpty()) {
+                $appointments->load('serviceProvider', 'services', 'appointmentServices', 'customer', 'PromoCode', 'paymentMethod', 'invoice');
+                return new AppointmentCollection($appointments->sortByDesc('id'));
             }
 
             return response()->json([]);
         }
         throw new Exception(__('User not found'));
+    } */
+
+    public function paymentRequestedAppointments(User $user)
+    {
+        $relation = $user->serviceProvider ?? $user->customer;
+
+        if (! $relation) {
+            throw new Exception(__('User not found'));
+        }
+
+        $appointments = $relation->appointments()
+            ->where('status_id', AppointmentStatus::PaymentRequest->value)
+            ->with([
+                'serviceProvider',
+                'services',
+                'appointmentServices',
+                'customer',
+                'PromoCode',
+                'paymentMethod',
+                'invoice',
+            ])
+            ->orderByDesc('id')
+            ->get();
+
+        return $appointments->isNotEmpty()
+            ? new AppointmentCollection($appointments)
+            : response()->json([]);
     }
+
 }
