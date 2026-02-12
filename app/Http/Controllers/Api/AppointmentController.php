@@ -217,9 +217,7 @@ class AppointmentController extends Controller
      * @response 200 { "id": 1, "services": [ { "name": "accusamus", "price": 100, "service_beneficiaries": 1, "selected_employee": null, "date": "2023-11-20", "start_time": "09:00:00", "end_time": "10:00:00", "location": "123, Desert Boulevard, Riyadh, 67890, Saudi Arabia", "employee": null } ], "promo_code": "XISM2000", "discount": 200, "payment_method": "Cash", "total": { "amount": 100, "currency": "SAR" }, "provider": { "id": 8, "name": "reprehenderit", "image": "http://localhost:8000/assets/default.jpg", "type": "enterprise" }, "has_review": null, "comment": null, "status": "confirmed", "created_at": "19-11-2023 12:48" }, { "id": 8, "services": [], "promo_code": "XISM2000", "discount": 200, "payment_method": "Cash", "total": { "amount": 0, "payment_status": unpaid/partially_paid/paid  ,"currency": "SAR" }, "provider": { "id": 2, "name": "laudantium", "image": "http://localhost:8000/assets/default.jpg", "type": "freelancer" }, "has_review": null, "comment": null, "status": "confirmed", "created_at": "19-11-2023 12:48" }
      */
     public function book(AppointmentService $appointmentService, BookAppointmentRequest $request)
-    {
-        Log::info('appointmentService',['appointmentService' => $appointmentService]);
-        Log::info('request',['request' => $request]);
+    {        
         try {
             return $appointmentService->book(
                 customer: auth()->user()->customer,
