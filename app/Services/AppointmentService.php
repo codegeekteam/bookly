@@ -571,6 +571,8 @@ class AppointmentService
                         } else {
                             $appointment->payment_status = 'partially_paid';
                         }
+                        $appointment->save();
+                        \Log::info('Inside Fort ID - Appointment save reached'); 
                     }
                     \Log::info('Process deposit Payment', ['appintment_payment_status' => $appointment->payment_status]);
                 }
