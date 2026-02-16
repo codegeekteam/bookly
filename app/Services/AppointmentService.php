@@ -1067,15 +1067,17 @@ class AppointmentService
                      \Log::info('Status id Value: ' . $appointment->status_id);
                                \Log::info('Status payment status Value: ' . $appointment->payment_status);
 
-            $appointment->refresh();
-                     \Log::info('Status id Value: ' . $appointment->status_id);
-                               \Log::info('Status payment status Value: ' . $appointment->payment_status);
+          //  $appointment->refresh();
+                    //  \Log::info('Status id Value: ' . $appointment->status_id);
+                    //            \Log::info('Status payment status Value: ' . $appointment->payment_status);
 
             \Log::info('Completed Enum Value: ' . AppointmentStatus::Completed->value);
       
 
             if ($appointment->payment_status === 'paid' && $appointment->status_id !== AppointmentStatus::Completed->value) {  //By Sreeja             
-                $this->markAsComplete($appointment);
+                 \Log::info('Status id Value inside if: ' . $appointment->status_id);
+                               \Log::info('Status payment status Value inside if: ' . $appointment->payment_status);   
+            $this->markAsComplete($appointment);
                 \Log::info('executed in feedback api');
             }
     
