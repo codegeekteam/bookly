@@ -494,8 +494,8 @@ class AppointmentService
         $appointment->total = $sum_of_services - $discount;
         $appointment->amount_due = max(0, $amount_due - $discount);
         $appointment->discount = $discount;
-\Log::info('has any deposit', ['has_any_deposit' => $has_any_deposit]);
-\Log::info('total deposit amount', ['total_deposit_amount' => $total_deposit_amount]);
+        \Log::info('has any deposit', ['has_any_deposit' => $has_any_deposit]);
+        \Log::info('total deposit amount', ['total_deposit_amount' => $total_deposit_amount]);
         // Handle deposit and remaining payment tracking not workinh in this project flow
         if ($has_any_deposit && $total_deposit_amount > 0) {
             // Apply discount proportionally
@@ -579,15 +579,10 @@ class AppointmentService
        // Auto complete appointment if Card payment
 
         if ($payment_method_id) {
-            $paymentMethod = PaymentMethod::find($payment_method_id);
+            $paymentMethod = PaymentMethod::find($payment_method_id);           
 
-             // if (($paymentMethod && strtolower($paymentMethod->name) == 'card') && ($appointment->payment_status == 'paid')) {
-            //     $appointment->state()->confirm();
-            //     $this->markAsComplete($appointment);
-            // }
-
-            // 🔹 Notify provider to mark booking complete if Cash payment
-          /*  else*/ if ($paymentMethod && strtolower($paymentMethod->name) === 'cash') { 
+            //  Notify provider to mark booking complete if Cash payment
+            if ($paymentMethod && strtolower($paymentMethod->name) === 'cash') { 
                 try {
                     $appointment->serviceProvider->user
                         ->notify(new AppointmentCompleteNotification($appointment));
@@ -605,8 +600,7 @@ class AppointmentService
         } 
 
         //customer wallet check
-        $this->customerWalletActions($customer, $appointment);
- //DB::beginTransaction();
+        $this->customerWalletActions($customer, $appointment); 
         //add total to provider wallet
         (new CreateWalletTransactionMutation())
             ->handle(
@@ -1060,10 +1054,10 @@ class AppointmentService
                 $isPaid = $newTotal >= $appointment->amount_due;
 
                 if ($appointment->remaining_amount) {
-                    $appointment->remaining_payment_status = 'paid'; //$isPaid ? 'paid' : 'pending';
+                    $appointment->remaining_payment_status = $isPaid ? 'paid' : 'pending';
                 }
 
-                $appointment->payment_status = 'paid'; //$isPaid ? 'paid' : 'partially_paid';
+                $appointment->payment_status = $isPaid ? 'paid' : 'partially_paid';
                 $appointment->card_amount = ($appointment->card_amount ?? 0) + $normalizedAmount;
                 $appointment->total_payed = $newTotal;
                 \Log::info('Process remaining Payment', ['appintment_payment_remaining_status' => $appointment->remaining_payment_status]);
