@@ -1064,8 +1064,15 @@ class AppointmentService
             }
 
             $appointment->save();
+                     \Log::info('Status id Value: ' . $appointment->status_id);
+                               \Log::info('Status payment status Value: ' . $appointment->payment_status);
 
             $appointment->refresh();
+                     \Log::info('Status id Value: ' . $appointment->status_id);
+                               \Log::info('Status payment status Value: ' . $appointment->payment_status);
+
+            \Log::info('Completed Enum Value: ' . AppointmentStatus::Completed->value);
+      
 
             if ($appointment->payment_status === 'paid' && $appointment->status_id !== AppointmentStatus::Completed->value) {  //By Sreeja             
                 $this->markAsComplete($appointment);
@@ -1110,7 +1117,7 @@ class AppointmentService
                 'payment_status' => 'paid',
             ]);
         }
-
+    \Log::info('success');
         return response()->json(['message' => 'success'], 200);
     }
 

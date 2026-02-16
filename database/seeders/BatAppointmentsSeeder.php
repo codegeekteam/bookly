@@ -14,7 +14,7 @@ class BatAppointmentsSeeder extends Seeder
      */
     public function run(): void
     {
-        $appointmentIds = [617,618,619,620];       
+        $appointmentIds = [610,617,618,619,620];       
         $appointments = Appointment::whereIn('id', $appointmentIds)->get();
         foreach($appointments as $appointment)
         {
