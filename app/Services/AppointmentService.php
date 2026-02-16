@@ -1064,19 +1064,15 @@ class AppointmentService
             }
 
             $appointment->save();
-                     \Log::info('Status id Value: ' . $appointment->status_id);
-                               \Log::info('Status payment status Value: ' . $appointment->payment_status);
-
-          //  $appointment->refresh();
-                    //  \Log::info('Status id Value: ' . $appointment->status_id);
-                    //            \Log::info('Status payment status Value: ' . $appointment->payment_status);
+            $appointment->refresh();
+                \Log::info('Status id Value: ' . $appointment->status_id);
+                \Log::info('Status payment status Value: ' . $appointment->payment_status);
 
             \Log::info('Completed Enum Value: ' . AppointmentStatus::Completed->value);
       
-
-            if ($appointment->payment_status === 'paid' && $appointment->status_id !== AppointmentStatus::Completed->value) {  //By Sreeja             
-                 \Log::info('Status id Value inside if: ' . $appointment->status_id);
-                               \Log::info('Status payment status Value inside if: ' . $appointment->payment_status);   
+ $paymentStatus = trim(strtolower($appointment->payment_status)); //appoinment->payment_status is enum , not string, strict comparison may skip it
+            if ((string)$paymentStatus == 'paid' && (int)$appointment->status_id !== AppointmentStatus::Completed->value) {  //By Sreeja             
+                 \Log::info('MarkAsComplete triggered');  
             $this->markAsComplete($appointment);
                 \Log::info('executed in feedback api');
             }
@@ -1084,6 +1080,7 @@ class AppointmentService
             //By Sreeja ends here
 
             // Generate invoice if payment is complete
+           
             if ($appointment->payment_status === 'paid' && !$appointment->invoice) {
                 try {
                     $invoiceService = new InvoiceService();
