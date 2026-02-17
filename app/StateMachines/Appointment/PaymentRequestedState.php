@@ -10,6 +10,7 @@ class PaymentRequestedState extends BaseAppointmentState
 {
     public function complete(): void
     {
+         \Log::info('Reached state machine');
         if ($this->appointment->status_id == AppointmentStatus::Completed->value) {
             \Log::info('Already completed, skipping state transition');
             return;
@@ -19,12 +20,7 @@ class PaymentRequestedState extends BaseAppointmentState
 
         $this->appointment->update([
             'status_id' => AppointmentStatus::Completed->value,
-            'changed_status_at' => now(),
-           // 'deposit_payment_status' => 'paid',
-          //  'remaining_payment_status' => 'paid',
-           // 'payment_status' => 'paid',
-           // 'remaining_amount' => 0,
-           // 'total_payed' => $this->appointment->total,
+            'changed_status_at' => now(),         
         ]);
         $wallet = $this->appointment->serviceProvider->user->wallet;
         $amount=$this->appointment->amount_due;
