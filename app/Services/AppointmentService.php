@@ -1073,7 +1073,7 @@ class AppointmentService
  $paymentStatus = trim(strtolower($appointment->payment_status)); //appoinment->payment_status is enum , not string, strict comparison may skip it
             if ((string)$paymentStatus == 'paid' && (int)$appointment->status_id !== AppointmentStatus::Completed->value) {  //By Sreeja             
                  \Log::info('MarkAsComplete triggered');  
-            $this->markAsComplete($appointment);
+           $str =  $this->markAsComplete($appointment);
                 \Log::info('executed in feedback api');
             }
     
@@ -1288,15 +1288,18 @@ class AppointmentService
         $last_service_end_datetime = Carbon::parse($last_appointment_service->date)->setTimeFromTimeString($last_appointment_service->end_time);
 
         if (Carbon::parse($last_appointment_service->date)->isAfter(today())) {
+            \Log::info('Appointment is not yet completed');
             throw new Exception(__('Appointment is not yet completed'));
         }
 
 
         if ($last_service_end_datetime->greaterThan(Carbon::now())) {
+             \Log::info('Appointment is not yet completed');
             throw new Exception(__('Appointment is not yet completed'));
         }
 
             $appointment->state()->complete();
+            \Log::info('After update continue');
 
          // Check for the referral code if this is the customer's first appointment
         if ($appointment->customer && $appointment->customer->appointments()->where('status_id', AppointmentStatus::Completed->value)->count() === 1) {
@@ -1333,7 +1336,7 @@ class AppointmentService
                 ]);
             }
         }
-
+     \Log::info('Appointment marked as complete reached');
         return response()->json([
             'message' => __('Appointment marked as complete'),
         ], 200);
