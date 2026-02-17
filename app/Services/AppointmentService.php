@@ -1402,9 +1402,20 @@ class AppointmentService
                 return Carbon::parse($service->date)->format('Y-m-d') . ' ' . $service->end_time;
             })
             ->first();
+        $last_service_end_datetime = Carbon::parse($last_appointment_service->date)->setTimeFromTimeString($last_appointment_service->end_time);
+        
+        if (Carbon::parse($last_appointment_service->date)->isAfter(today())) {
+            throw new Exception(__('Appointment is not yet completed'));
+        }
+
+
+        if ($last_service_end_datetime->greaterThan(Carbon::now())) {
+            throw new Exception(__('Appointment is not yet completed'));
+        }
 
         $last_service_end_datetime = Carbon::parse($last_appointment_service->date)->setTimeFromTimeString($last_appointment_service->end_time);
 
+       
         $appointment->state()->paymentRequest();
         // Check for the referral code if this is the customer's first appointment
       /*  if ($appointment->customer && $appointment->customer->appointments()->where('status_id', AppointmentStatus::PaymentRequest->value)->count() === 1) {
@@ -1460,6 +1471,7 @@ class AppointmentService
 
         $appointments = $relation->appointments()
             ->where('status_id', AppointmentStatus::PaymentRequest->value)
+            ->where('payment_status', '!=', 'paid')
             ->with([
                 'serviceProvider',
                 'services',

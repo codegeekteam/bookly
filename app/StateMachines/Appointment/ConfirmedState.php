@@ -32,41 +32,7 @@ class ConfirmedState extends BaseAppointmentState
             throw new Exception('Only the appointment service provider can complete the appointment');
         }
 
-      }
-
-      /* by sreeja for deposit payment status update */
-      /*  $updateAppointment = [
-            'status_id' => AppointmentStatus::Completed->value,
-            'changed_status_at' => now(),
-            'remaining_amount' => 0,
-            'payment_status' => 'paid',
-            'total_payed' => $this->appointment->total,
-        ];
-          //process remaining payment
-                if($this->appointment->deposit_amount && $this->appointment->deposit_amount > 0 &&  $this->appointment->deposit_payment_status == 'pending') {
-                   // $this->appointment->deposit_payment_status = 'paid';
-                    $updateAppointment['deposit_payment_status']   =  'paid';
-                   // $this->appointment->card_amount = ($this->appointment->card_amount ?? 0) + $this->appointment->deposit_amount;
-                     $updateAppointment['card_amount']   =  ($this->appointment->card_amount ?? 0) + $this->appointment->deposit_amount;
-                    if($this->appointment->total_payed == 0) {
-                        $this->appointment->total_payed = ($this->appointment->total_payed ?? 0) + $this->appointment->deposit_amount;
-
-                        $updateAppointment['total_payed']   =  ($this->appointment->total_payed ?? 0) + $this->appointment->deposit_amount;
-                    }
-                    $normalizedAmount = $this->appointment->remaining_amount;
-                     $newTotal = $normalizedAmount + ($updateAppointment['total_payed'] ?? 0);
-                    $isPaid = $newTotal >= $this->appointment->amount_due;
-                    if ($this->appointment->remaining_amount) {
-                        $updateAppointment['remaining_payment_status'] = 'paid'; //$isPaid ? 'paid' : 'pending';
-                    }
-                   // $updateAppointment['payment_status'] = 'paid'; //$isPaid ? 'paid' : 'partially_paid';
-                    $updateAppointment['card_amount'] = ($updateAppointment['card_amount'] ?? 0) + $normalizedAmount;
-                    $updateAppointment['total_payed'] = $newTotal;
-                    
-                }
-
-                $this->appointment->update($updateAppointment); */
-     /* ends here */           
+      }              
 
         $this->appointment->update([   //restore when the above block is commented
             'status_id' => AppointmentStatus::Completed->value,
@@ -215,7 +181,7 @@ class ConfirmedState extends BaseAppointmentState
         if($paymentLog && $paymentMethod && strtolower($paymentMethod->name) === 'card') {      
             $response = $this->initiateRefund($appointment, 'cancel');
         }
- DB::beginTransaction();
+        DB::beginTransaction();
         // Handle refund based on policy
         if ($appointment->payment_status == 'paid' || $appointment->payment_status == 'partially_paid') {
             $refundAmount = $refundInfo['refund_amount'];
