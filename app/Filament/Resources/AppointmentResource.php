@@ -2,12 +2,18 @@
 
 namespace App\Filament\Resources;
 
+use App\Actions\Wallet\Mutations\CreateWalletTransactionMutation;
+use App\Enums\AppointmentStatus;
 use App\Filament\Resources\AppointmentResource\Pages;
 use App\Models\Appointment;
+use App\Models\Enums\TransactionType;
 use App\Models\OperationalHour;
+use App\Models\PaymentLog;
+use App\Notifications\CancelAppointmentNotification;
 use App\Rules\DateWithinOperationalHoursRule;
 use App\Rules\TimeWithinOperationalHoursRule;
 use App\Services\InvoiceService;
+use App\Traits\RefundTrait;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
@@ -26,15 +32,21 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
 
 class AppointmentResource extends Resource
 {
+    use RefundTrait;
+
     protected static ?string $model = Appointment::class;
 
     protected static ?string $slug = 'appointments';
 
     //protected static ?string $recordTitleAttribute = 'id';
+
+ //   protected static bool $shouldRegisterNavigation = true;
+
 
     public static function getNavigationGroup(): string
     {
@@ -424,6 +436,122 @@ class AppointmentResource extends Resource
                         ->visible(fn (Appointment $record): bool => $record->invoice !== null)
                         ->url(fn (Appointment $record): string => $record->invoice ? $record->invoice->getPdfUrl() : '#')
                         ->openUrlInNewTab(),
+
+                    Action::make('cancel')
+                    ->label('Cancel')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')                   
+                    ->form([
+                         Select::make('refund_option')
+                            ->label('Refund Option')
+                            ->options([
+                                'no_refund' => 'No Refund',
+                                'bank' => "Refund to User's Bank Account",
+                                'wallet' => "Refund to User's Wallet",
+                            ])
+                            ->required()
+                            ->native(false), // optional: enables nice UI
+                    ])
+                    ->action(function (Appointment $record, array $data) {                                                                       
+                        $record->update([
+                            'status_id' => AppointmentStatus::Cancelled->value,
+                            'changed_status_at' => now(),
+                        ]);                       
+                        if(($data['refund_option'] == 'bank') && ($record->payment_status !== 'unpaid')){
+                            $paymentMethod = $record->paymentMethod;
+                            $paymentLog = PaymentLog::where('appointment_id',$record->id)->first();
+                            if($paymentLog && $paymentMethod && strtolower($paymentMethod->name) === 'card') {      
+                                $response = $this->initiateRefund($record, 'cancel');
+                                \Log::info('Refund Initiate : '. $response);
+                            }
+                            \Log::info('Refund  skipped — no valid payment method');
+                        }elseif(($data['refund_option'] == 'wallet') && ($record->payment_status !== 'unpaid')) {
+                            DB::beginTransaction();
+                            try {
+                                $cancellationPolicyService = new \App\Services\CancellationPolicyService();
+                                $refundInfo = $cancellationPolicyService->calculateRefund($record, false); //customer cancel
+                                // Handle refund based on policy
+                                if ($record->payment_status == 'paid' || $record->payment_status == 'partially_paid') {
+                                    $refundAmount = $refundInfo['refund_amount'];
+
+                                    if ($refundInfo['refund_percentage'] == 100 && $refundAmount > 0) {
+                                        // Refund to customer (deposit only for provider, full amount for customer)
+                                        $customerWallet = $record->customer->user->wallet;
+                                        $refundReason = $record->id .' - Refund Full';
+                                        $refundReasonAr = "$record->id - استرجاع كامل";
+
+                                        // Add refund to customer wallet (observer will update balance)
+                                        (new CreateWalletTransactionMutation())->handle(
+                                            $customerWallet,
+                                            $refundAmount,
+                                            TransactionType::IN,
+                                            $refundReason,
+                                            false,
+                                            $refundReasonAr
+                                        );
+
+                                        // Manually deduct from provider's pending balance (observer doesn't handle this correctly)
+                                        $providerWallet = $record->serviceProvider->user->wallet;
+                                        $providerWallet->pending_balance = max(0, $providerWallet->pending_balance - $refundAmount);
+                                        $providerWallet->save();
+                                    } else {
+                                        // No refund - provider keeps the money (only when customer cancels late)
+                                        // Money already in provider's pending balance, no action needed
+                                    }
+                                }                   
+
+                                //return promo code
+                                if ($record->promo_code_id !== null) {
+                                    if($record->promoCode){
+                                        $record->promoCode->decrement('count_of_redeems');
+                                    }
+                                    $record->update([
+                                        'promo_code_id' => null,
+                                    ]);
+                                }
+
+                                if ($record->gift_card_id !== null) {
+
+                                    $record->update([
+                                        'gift_card_id' => null,
+                                    ]);
+
+                                    $record->giftCard->update([
+                                        'is_used' => false,
+                                        'used_by' => null,
+                                        'appointment_id' => null,
+                                    ]);
+                                }
+
+                                //return loyalty discount
+                                if ($record->loyalty_discount_customer_id !== null) {
+                                    if($record->loyaltyDiscountCustomer){
+                                        $record->loyaltyDiscountCustomer->update(['is_used' => false]);
+                                    }
+                                    $record->update([
+                                        'loyalty_discount_customer_id' => null,
+                                    ]);
+                                }
+                                DB::commit();
+                            } catch (\Throwable $e) {
+                                DB::rollBack();
+                                \Log::error("Wallet Refund Error: " . $e->getMessage());
+                            }
+                        }
+                        if ($record->customer && $record->customer->user) {
+                            $record->customer->user->notify(new CancelAppointmentNotification($record, 'customer'));
+                        }
+                        if ($record->serviceProvider && $record->serviceProvider->user) {
+                            $record->serviceProvider->user->notify(new CancelAppointmentNotification($record, 'provider'));
+                        }                              
+                        Notification::make()
+                            ->title('Appointment Cancelled')
+                            ->warning()
+                            ->body('The appointment has been cancelled.')
+                            ->send();                          
+                    })
+                    ->requiresConfirmation()
+                    ->visible(fn (Appointment $record): bool => $record->payment_status !== 'paid')
                 ]),
             ])
             ->bulkActions([
@@ -517,6 +645,8 @@ class AppointmentResource extends Resource
             'index' => Pages\ListAppointments::route('/'),
             //'create' => Pages\CreateAppointment::route('/create'),
             'edit' => Pages\EditAppointment::route('/{record}/edit'),
+
+           // 'cancelled' => Pages\ListCancelledAppointments::route('/cancelled'),
         ];
     }
 }

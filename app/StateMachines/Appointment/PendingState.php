@@ -4,10 +4,16 @@ namespace App\StateMachines\Appointment;
 
 use App\Actions\Wallet\Mutations\CreateWalletTransactionMutation;
 use App\Enums\AppointmentStatus;
-use App\Notifications\AppointmentNotification;
+use App\Helpers\RefundHelper;
+use App\Models\Appointment;
 use App\Models\Enums\TransactionType;
+use App\Models\PaymentLog;
+use App\Models\RefundLog;
+use App\Models\RefundSetting;
+use App\Notifications\AppointmentNotification;
 use App\Notifications\ConfirmAppointmentNotification;
 use App\Notifications\RejectAppointmentNotification;
+use App\Traits\RefundTrait;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -15,8 +21,15 @@ use Illuminate\Support\Facades\Log;
 
 class PendingState extends BaseAppointmentState
 {
+    use RefundTrait;
+    
     public function confirm(): void
     {
+        if(auth()->id() === $this->appointment->serviceProvider->user_id) {
+            if ($this->appointment->created_at->lt(now()->subHours(24))) {
+                throw new Exception('The time limit exceeded. Cannot confirm this appointment');
+            }
+        }
        $paymentMethod = $this->appointment->paymentMethod;
 
        if ($paymentMethod && strtolower($paymentMethod->name) === 'cash') {
@@ -48,6 +61,12 @@ class PendingState extends BaseAppointmentState
      */
     public function reject(): void
     {
+        if(auth()->id() === $this->appointment->serviceProvider->user_id) {
+            if ($this->appointment->created_at->lt(now()->subHours(24))) {
+                throw new Exception('The time limit exceeded. Cannot reject this appointment');
+            }
+        }
+        
         $appointment = $this->appointment;
 
         if ($appointment->serviceProvider->user_id !== auth()->id()) {
@@ -67,54 +86,67 @@ class PendingState extends BaseAppointmentState
             'status_id' => AppointmentStatus::Rejected->value,
             'changed_status_at' => now(),
         ]);
-
-        //return money to user wallet
-          if ($appointment->payment_status == 'paid' || $appointment->payment_status == 'partially_paid') {
-              $wallet = $appointment->customer->user->wallet;
-              $total = $appointment->total_payed;
-              if ($total > 0) {
-                  (new CreateWalletTransactionMutation())->handle(
-                      $wallet,
-                      $total,
-                      TransactionType::IN,
-                      "Appointment #$appointment->id rejected",
-                      false,
-                      " رفض موعد رقم : $appointment->id"
-                  );
-              }
-
-          }
-          //return promo code
-        if ($appointment->promo_code_id !== null) {
-            if($appointment->promoCode){
-                $appointment->promoCode->decrement('count_of_redeems');
-            }
-            $appointment->update([
-                'promo_code_id' => null,
-            ]);
-        }
-         if ($appointment->gift_card_id !== null) {
-
-             $appointment->update([
-                 'gift_card_id' => null,
-             ]);
-
-             $appointment->giftCard->update([
-                 'is_used' => false,
-                 'used_by' => null,
-                 'appointment_id' => null,
-             ]);
-         }
-         //return loyalty discount
-        if ($appointment->loyalty_discount_customer_id !== null) {
-            if($appointment->loyaltyDiscountCustomer){
-                $appointment->loyaltyDiscountCustomer->update(['is_used' => false]);
-            }
-            $appointment->update([
-                'loyalty_discount_customer_id' => null,
-            ]);
-        }
         DB::commit();
+
+        $refund_type = RefundSetting::find(1); 
+        if($refund_type->bank_account_refund == 1) {
+            $paymentMethod = $appointment->paymentMethod;
+            $paymentLog = PaymentLog::where('appointment_id',$appointment->id)->first();
+            if($paymentLog && $paymentMethod && strtolower($paymentMethod->name) === 'card') {      
+                $response = $this->initiateRefund($appointment, 'reject');
+                 \Log::info('Refund Initiate : '. $response);
+            }
+          \Log::info('Refund  skipped — no valid payment method');
+        }elseif($refund_type->wallet_refund == 1){
+            DB::beginTransaction();
+            //return money to user wallet
+            if ($appointment->payment_status == 'paid' || $appointment->payment_status == 'partially_paid') {
+                $wallet = $appointment->customer->user->wallet;
+                $total = $appointment->total_payed;
+                if ($total > 0) {
+                    (new CreateWalletTransactionMutation())->handle(
+                        $wallet,
+                        $total,
+                        TransactionType::IN,
+                        "Appointment #$appointment->id rejected",
+                        false,
+                        " رفض موعد رقم : $appointment->id"
+                    );
+                }
+
+            }
+            //return promo code
+            if ($appointment->promo_code_id !== null) {
+                if($appointment->promoCode){
+                    $appointment->promoCode->decrement('count_of_redeems');
+                }
+                $appointment->update([
+                    'promo_code_id' => null,
+                ]);
+            }
+            if ($appointment->gift_card_id !== null) {
+
+                $appointment->update([
+                    'gift_card_id' => null,
+                ]);
+
+                $appointment->giftCard->update([
+                    'is_used' => false,
+                    'used_by' => null,
+                    'appointment_id' => null,
+                ]);
+            }
+            //return loyalty discount
+            if ($appointment->loyalty_discount_customer_id !== null) {
+                if($appointment->loyaltyDiscountCustomer){
+                    $appointment->loyaltyDiscountCustomer->update(['is_used' => false]);
+                }
+                $appointment->update([
+                    'loyalty_discount_customer_id' => null,
+                ]);
+            }
+            DB::commit();
+        }
         //notification
            try {
                $appointment->customer->user->notify(new RejectAppointmentNotification($appointment, 'customer'));
@@ -128,8 +160,14 @@ class PendingState extends BaseAppointmentState
 
         $appointment = $this->appointment;
 
-        if ($appointment->customer->user_id !== auth()->id() && $appointment->serviceProvider->user_id !== auth()->id()) {
-            throw new \Exception('Either the appointment customer or the appointment provider can cancel the appointment');
+        // if ($appointment->customer->user_id !== auth()->id() && $appointment->serviceProvider->user_id !== auth()->id()) {
+        //     throw new \Exception('Either the appointment customer or the appointment provider can cancel the appointment');
+        // }
+        if ($appointment->customer->user_id !== auth()->id()) {
+            throw new \Exception('Only the appointment customer can cancel the appointment');
+        }
+        if ($appointment->serviceProvider->user_id === auth()->id()) {
+            throw new \Exception('The appointment provider cannot cancel the appointment');
         }
 
         // Determine who is cancelling
@@ -144,74 +182,90 @@ class PendingState extends BaseAppointmentState
             'status_id' => AppointmentStatus::Cancelled->value,
             'changed_status_at' => now(),
         ]);
+        DB::commit();
 
-        // Handle refund based on policy
-        if ($appointment->payment_status == 'paid' || $appointment->payment_status == 'partially_paid') {
-            $refundAmount = $refundInfo['refund_amount'];
-
-            if ($refundInfo['refund_percentage'] == 100 && $refundAmount > 0) {
-                // Refund to customer (deposit only for provider, full amount for customer)
-                $customerWallet = $appointment->customer->user->wallet;
-                $refundReason = $isProviderCancelling
-                    ? "Appointment #$appointment->id canceled by provider - Deposit refund"
-                    : "Appointment #$appointment->id canceled - Full refund";
-                $refundReasonAr = $isProviderCancelling
-                    ? "الغاء موعد رقم : $appointment->id من قبل مقدم الخدمة - استرجاع العربون"
-                    : "الغاء موعد رقم : $appointment->id - استرجاع كامل";
-
-                // Add refund to customer wallet (observer will update balance)
-                (new CreateWalletTransactionMutation())->handle(
-                    $customerWallet,
-                    $refundAmount,
-                    TransactionType::IN,
-                    $refundReason,
-                    false,
-                    $refundReasonAr
-                );
-
-                // Manually deduct from provider's pending balance (observer doesn't handle this correctly)
-                $providerWallet = $appointment->serviceProvider->user->wallet;
-                $providerWallet->pending_balance = max(0, $providerWallet->pending_balance - $refundAmount);
-                $providerWallet->save();
-            } else {
-                // No refund - provider keeps the money (only when customer cancels late)
-                // Money already in provider's pending balance, no action needed
+        $refund_type = RefundSetting::find(1); 
+        if($refund_type->bank_account_refund == 1) {
+            $paymentMethod = $appointment->paymentMethod;
+            $paymentLog = PaymentLog::where('appointment_id',$appointment->id)->first();
+            if($paymentLog && $paymentMethod && strtolower($paymentMethod->name) === 'card') {      
+                $response = $this->initiateRefund($appointment, 'reject');
+                \Log::info('Refund Initiate : '. $response);
             }
+             \Log::info('Refund  skipped — no valid payment method');
         }
+        elseif($refund_type->wallet_refund == 1){
+             DB::beginTransaction();
+            // Handle refund based on policy
+            if ($appointment->payment_status == 'paid' || $appointment->payment_status == 'partially_paid') {
+                $refundAmount = $refundInfo['refund_amount'];
 
-        //return promo code
-        if ($appointment->promo_code_id !== null) {
-            if($appointment->promoCode){
-                $appointment->promoCode->decrement('count_of_redeems');
+                if ($refundInfo['refund_percentage'] == 100 && $refundAmount > 0) {
+                    // Refund to customer (deposit only for provider, full amount for customer)
+                    $customerWallet = $appointment->customer->user->wallet;
+                    $refundReason = $isProviderCancelling
+                        ? "Appointment #$appointment->id canceled by provider - Deposit refund"
+                        : "Appointment #$appointment->id canceled - Full refund";
+                    $refundReasonAr = $isProviderCancelling
+                        ? "الغاء موعد رقم : $appointment->id من قبل مقدم الخدمة - استرجاع العربون"
+                        : "الغاء موعد رقم : $appointment->id - استرجاع كامل";
+
+                    // Add refund to customer wallet (observer will update balance)
+                    (new CreateWalletTransactionMutation())->handle(
+                        $customerWallet,
+                        $refundAmount,
+                        TransactionType::IN,
+                        $refundReason,
+                        false,
+                        $refundReasonAr
+                    );
+
+                    // Manually deduct from provider's pending balance (observer doesn't handle this correctly)
+                    $providerWallet = $appointment->serviceProvider->user->wallet;
+                    $providerWallet->pending_balance = max(0, $providerWallet->pending_balance - $refundAmount);
+                    $providerWallet->save();
+                } else {
+                    // No refund - provider keeps the money (only when customer cancels late)
+                    // Money already in provider's pending balance, no action needed
+                }
             }
-            $appointment->update([
-                'promo_code_id' => null,
-            ]);
-        }
+      //  }
 
-        if ($appointment->gift_card_id !== null) {
-
-            $appointment->update([
-                'gift_card_id' => null,
-            ]);
-
-            $appointment->giftCard->update([
-                'is_used' => false,
-                'used_by' => null,
-                'appointment_id' => null,
-            ]);
-        }
-
-        //return loyalty discount
-        if ($appointment->loyalty_discount_customer_id !== null) {
-            if($appointment->loyaltyDiscountCustomer){
-                $appointment->loyaltyDiscountCustomer->update(['is_used' => false]);
+            //return promo code
+            if ($appointment->promo_code_id !== null) {
+                if($appointment->promoCode){
+                    $appointment->promoCode->decrement('count_of_redeems');
+                }
+                $appointment->update([
+                    'promo_code_id' => null,
+                ]);
             }
-            $appointment->update([
-                'loyalty_discount_customer_id' => null,
-            ]);
+
+            if ($appointment->gift_card_id !== null) {
+
+                $appointment->update([
+                    'gift_card_id' => null,
+                ]);
+
+                $appointment->giftCard->update([
+                    'is_used' => false,
+                    'used_by' => null,
+                    'appointment_id' => null,
+                ]);
+            }
+
+            //return loyalty discount
+            if ($appointment->loyalty_discount_customer_id !== null) {
+                if($appointment->loyaltyDiscountCustomer){
+                    $appointment->loyaltyDiscountCustomer->update(['is_used' => false]);
+                }
+                $appointment->update([
+                    'loyalty_discount_customer_id' => null,
+                ]);
+            }
+            DB::commit();
         }
-         DB::commit();
+        
         //notification
          try {
              $appointment->serviceProvider->user->notify(new RejectAppointmentNotification($appointment, 'provider'));
@@ -233,6 +287,91 @@ class PendingState extends BaseAppointmentState
             'previous_status_id' => $appointment->status_id,
             'changed_status_at' => now(),
         ]);
+
+    }
+
+    public function initiateRefund(Appointment $appointment, $type)
+    {
+        $paymentLog = PaymentLog::where('appointment_id', $appointment->id)->first();
+        if(!$paymentLog || $paymentLog->mechant_reference == null) {
+              \Log::info('paymentLog data insufficient');
+        }
+        //  $description = json_decode($appointment->service?->title, true);
+        if($type == 'reject') {
+        $total = $appointment->total_payed;
+        }
+        if($type == 'cancel') {
+            // Determine who is cancelling
+        $isProviderCancelling = ($appointment->serviceProvider->user_id === auth()->id());
+
+        // Calculate refund based on cancellation policy
+        $cancellationPolicyService = new \App\Services\CancellationPolicyService();
+        $refundInfo = $cancellationPolicyService->calculateRefund($appointment, $isProviderCancelling);
+            if ($appointment->payment_status == 'paid' || $appointment->payment_status == 'partially_paid') {
+                $refundAmount = $refundInfo['refund_amount'];
+                if ($refundInfo['refund_percentage'] == 100 && $refundAmount > 0) {        
+                    $total = $refundAmount;
+                }
+            }
+        }
+
+        $amount = round($total) * 100; //converted to sub unit
+
+        $base_url = config('services.payfort.refund_url').'/FortAPI/paymentApi';
+        $refund_data = [            
+                        'command' => 'REFUND',
+                        'access_code' =>  config('services.payfort.access_code'),
+                        'merchant_identifier' =>  config('services.payfort.merchant_identifier'),
+                        'merchant_reference' => $paymentLog->merchant_reference,
+                        'amount' =>  $amount,
+                        'currency' =>  'SAR',
+                        'language' => 'en',
+                        'fort_id' =>  $paymentLog->fort_id,            
+                    ];
+        $refund_data['signature'] = PayfortHelper::generateSignature($refund_data);
+        $refund_data['order_description'] =  $paymentLog->appointment_id . '- Refund Request Processed'; 
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+        ])->post($base_url, $refund_data); 
+
+        //    $response = Http::asForm()->post(config('payfort.endpoint'), $params);
+
+        \Log::info('REFUND PROCESSED RESPONSE STATUS', [
+            'status' => $response->status(),
+           // 'body'   => $response->body(),
+        ]);
+       
+        // Split the merchant_reference into type and identifier
+        $parts = explode('_', $response['merchant_reference']);
+
+        if (count($parts) < 2) {
+            return response()->json(['message' => 'Invalid ID format'], 200);
+            // return response()->json(['message' => 'success'], 200);
+        }
+        if(count($parts) == 3) {
+            $type = 'appointment'; 
+            $identifier = $parts[1];
+            $paymentType = 'remaining';
+        }elseif(count($parts) == 2) {
+             $type = $parts[0];
+            $identifier = $parts[1];
+        }      
+        if($response['response_code'] == '06000') {
+        $refundHelper = new RefundHelper;
+        RefundLog::create([
+           'response_code' => $response['response_code'],
+           'response_message' => $response['response_message'],
+           'amount' => $response['amount'],
+           'status' => $response['status'],
+           'merchant_reference' => $response['merchant_reference'],          
+           'response' => json_encode($response),
+           'model_type' => $refundHelper->getMorphClassFromType($type),
+           'model_id' => $identifier,
+        ]);        
+        }else {
+            \Log::info('Refund Failed');
+        }
+       //  return $response->json();
 
     }
 }

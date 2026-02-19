@@ -2,22 +2,23 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\PaymentLog;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\AppointmentRescheduleRequest;
+use App\Http\Requests\BookAppointmentRequest;
+use App\Http\Requests\ChangePaymentMethodRequest;
+use App\Http\Requests\ChangeRemainingPaymentMethodRequest;
+use App\Http\Requests\RescheduleAppointmentRequest;
+use App\Http\Resources\AppointmentResource;
 use App\Models\Appointment;
+use App\Models\PaymentLog;
+use App\Notifications\AppointmentNotification;
+use App\Notifications\CancelAppointmentNotification;
+use App\Services\AppointmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\Controller;
-use App\Services\AppointmentService;
-use Knuckles\Scribe\Attributes\Endpoint;
-use App\Http\Resources\AppointmentResource;
-use App\Http\Requests\BookAppointmentRequest;
 use Knuckles\Scribe\Attributes\Authenticated;
-use App\Notifications\AppointmentNotification;
-use App\Http\Requests\AppointmentRescheduleRequest;
-use App\Http\Requests\RescheduleAppointmentRequest;
-use App\Notifications\CancelAppointmentNotification;
+use Knuckles\Scribe\Attributes\Endpoint;
 use Knuckles\Scribe\Attributes\ResponseFromApiResource;
-use App\Http\Requests\ChangeRemainingPaymentMethodRequest;
 
 class AppointmentController extends Controller
 {
@@ -616,5 +617,93 @@ class AppointmentController extends Controller
             return $this->error($exception->getMessage());
         }
     }
+
+    /**
+     * reschedule appointment by customer - allows reschedule for multiple service appointments
+     *
+     * endpoint to reschedule an appointment
+     *
+     * @type POST
+     *
+     * @group appointments
+     *
+     * @authenticated
+     *
+     * @url api/appointments//reschedule-customer
+     *
+     * @bodyParam appointment_id integer required the id of the appointment
+     * @bodyParam service_id integer required the id of the service
+     * @bodyParam employee_id integer the id of the employee
+     * @bodyParam timeslot string required the timeslot that can be obtained from available slots endpoint
+     *
+     * @response 200 { "id": 12, "date": "2024-04-08", "services": [ { "name": "eligendi", "price": 500, "service_beneficiaries": 1, "selected_employee": null, "date": "2024-04-08", "start_time": "10:00 pm", "end_time": "11:00 pm", "delivery_type_id": 1, "delivery_type": "My Place", "location": "123, Desert Boulevard, Riyadh, 67890, Saudi Arabia", "employee": null } ], "promo_code": "XISM2000", "discount": 0, "payment_method": "Cash", "total": { "amount": 500, "payment_status": "unpaid", "currency": "SAR" }, "provider": { "id": 1, "name": "quia", "image": "http://localhost:8000/assets/default.jpg", "type": "freelancer" }, "has_review": null, "comment": "dont ring the bell", "status": "pending", "created_at": "2024-04-08T10:57:47.000000Z" }
+     * @response 400 {"message": "Appointment not found"}
+     * @response 400 {"message": "Appointment is not pending"}
+     * @response 400 {"message": "Time slot is not available"}
+     * @response 400 {"message": "Service not found"}
+     */
+    public function rescheduleMultiple(AppointmentService $appointmentService, RescheduleAppointmentRequest $request)
+    {
+        try {
+            return $appointmentService->rescheduleMultiple(
+                customer: auth()->user()->customer,
+                slot: $request->slot,
+                appointment_id: $request->appointment_id,       
+                employee_id: $request->employee_id,
+                date: $request->date
+            );
+        } catch (\Exception $exception) {
+            return $this->error($exception->getMessage());
+        }
+    }
+
+        /**
+     * Change payment method
+     *
+     * endpoint to change the payment method  of an appointment
+     *
+     * @type POST
+     *
+     * @group appointments
+     *
+     * @authenticated
+     *
+     * @url api/appointments/{appointment}/change-payment-method
+     *
+     * @bodyParam payment_method_id integer required the id of the new payment method Example: 2
+     *
+     * @response 200 {
+     *   "message": "Payment method updated successfully",
+     *   "appointment": {
+     *     "id": 123,
+     *     "payment_method": "Cash",
+     *     "payment_status": "pending",
+     *     "amount": 350.00
+     *   }
+     * }
+     * @response 422 {
+     *   "message": "The given data was invalid.",
+     *   "errors": {
+     *     "payment_status": ["The payment has already been processed and cannot be changed."]
+     *   }
+     * }
+     */
+    // #[Endpoint('change-remaining-payment-method')]
+    // #[Authenticated]
+    // #[ResponseFromApiResource(AppointmentResource::class, Appointment::class)]
+    // public function changePaymentMethod(
+    //     ChangePaymentMethodRequest $request,
+    //     Appointment $appointment,
+    //     AppointmentService $appointmentService
+    // ) {
+    //     try {
+    //         return $appointmentService->changePaymentMethod(
+    //             appointment: $appointment,
+    //             payment_method_id: $request->payment_method_id
+    //         );
+    //     } catch (\Exception $exception) {
+    //         return $this->error($exception->getMessage());
+    //     }
+    // } 
 
 }

@@ -2,44 +2,46 @@
 
 namespace App\Services;
 
-use Exception;
-use Carbon\Carbon;
-use App\Models\User;
-use App\Models\Customer;
-use App\Models\GiftCard;
-use App\Models\PromoCode;
-use App\Models\PaymentLog;
-use App\Models\Appointment;
-use App\Models\HeldTimeSlot;
-use App\Models\Subscription;
-use Illuminate\Http\Request;
-use App\Models\PaymentMethod;
-use App\Helpers\PayfortHelper;
-use App\Models\AttachedService;
-use App\Models\ServiceProvider;
+use App\Actions\LoyaltyPoints\Mutations\CheckLoyaltyDiscountUsageMutation;
+use App\Actions\LoyaltyPoints\Mutations\CreatePointTransactionMutation;
+use App\Actions\LoyaltyPoints\Mutations\LoyaltyDiscountCalculationsMutation;
+use App\Actions\PromoCode\Mutations\CheckPromoCodeMutation;
+use App\Actions\PromoCode\Mutations\PromoCodeCalculationsMutation;
+use App\Actions\Wallet\Mutations\CreateWalletTransactionMutation;
 use App\Enums\AppointmentStatus;
+use App\Helpers\PayfortHelper;
+use App\Http\Resources\AppointmentCollection;
+use App\Http\Resources\AppointmentResource;
+use App\Models\Appointment;
+use App\Models\AttachedService;
+use App\Models\Customer;
+use App\Models\Enums\TransactionType;
+use App\Models\GiftCard;
+use App\Models\HeldTimeSlot;
+use App\Models\PaymentLog;
+use App\Models\PaymentMethod;
+use App\Models\PromoCode;
+use App\Models\ServiceProvider;
+use App\Models\Subscription;
+use App\Models\User;
+use App\Notifications\AcceptRescheduleAppointmentNotification;
+use App\Notifications\AppointmentCompleteNotification;
+use App\Notifications\AppointmentNotification;
+use App\Notifications\NewAppointmentNotification;
+use App\Notifications\NewRequestRescheduledNotification;
+use App\Notifications\NewRescheduledNotification;
+use App\Notifications\NewRescheduleRequestNotification;
+use App\Notifications\RejectRescheduleAppointmentNotification;
+use App\Notifications\RequestPaymentNotification;
 use App\Services\InvoiceService;
 use App\Settings\RewardsSettings;
+use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Models\Enums\TransactionType;
-use App\Http\Resources\AppointmentResource;
-use App\Http\Resources\AppointmentCollection;
-use App\Notifications\AppointmentNotification;
 use Illuminate\Validation\ValidationException;
-use App\Notifications\NewAppointmentNotification;
-use App\Notifications\RequestPaymentNotification;
-use App\Notifications\AppointmentCompleteNotification;
-use App\Notifications\NewRescheduleRequestNotification;
-use App\Actions\PromoCode\Mutations\CheckPromoCodeMutation;
-use App\Notifications\AcceptRescheduleAppointmentNotification;
-use App\Notifications\RejectRescheduleAppointmentNotification;
-use App\Actions\Wallet\Mutations\CreateWalletTransactionMutation;
-use App\Actions\PromoCode\Mutations\PromoCodeCalculationsMutation;
-use App\Actions\LoyaltyPoints\Mutations\CreatePointTransactionMutation;
-use App\Actions\LoyaltyPoints\Mutations\CheckLoyaltyDiscountUsageMutation;
-use App\Actions\LoyaltyPoints\Mutations\LoyaltyDiscountCalculationsMutation;
 
 class AppointmentService
 {
@@ -124,7 +126,7 @@ class AppointmentService
         $booked_appointments = \App\Models\AppointmentService::where('date', $date)
             ->whereHas('appointment', function ($query) use ($provider) {
                 $query->where('service_provider_id', $provider->id)
-                    ->whereIn('status_id', [1, 2, 6]);  // Only include certain statuses
+                    ->whereIn('status_id', [1, 2, 6]);  // Only include certain statuses pending, confirmed, reschedule req
             })
             ->when($employee_id, function ($query) use ($employee_id) {
                 // For enterprise providers, filter by employee_id
@@ -400,8 +402,7 @@ class AppointmentService
         }
 
 
-        //comment it until testing finished
-        /*$is_daily_limit_reached = !($provider->max_appointments_per_day == null) && $provider->appointments()
+        $is_daily_limit_reached = !($provider->max_appointments_per_day == null) && $provider->appointments()
                 ->where('created_at', '>=', Carbon::now()->startOfDay())
                 ->where('created_at', '<=', Carbon::now()->endOfDay())
                 ->count() >= $provider->max_appointments_per_day;
@@ -410,7 +411,7 @@ class AppointmentService
             throw ValidationException::withMessages([
                 'services' => 'Daily limit reached',
             ]);
-        }*/
+        }
 
 
         $sum_of_services = 0;
@@ -1064,7 +1065,7 @@ class AppointmentService
             }
 
             $appointment->save();
-            $appointment->refresh();
+          //  $appointment->refresh();
                 \Log::info('Status id Value: ' . $appointment->status_id);
                 \Log::info('Status payment status Value: ' . $appointment->payment_status);
 
@@ -1392,7 +1393,6 @@ class AppointmentService
     {
         $appointment->remaining_payment_method_id = $payment_method_id;
         $appointment->save();
-
         return AppointmentResource::make($appointment->load('serviceProvider', 'services', 'appointmentServices', 'customer', 'promoCode', 'paymentMethod', 'depositPaymentMethod', 'remainingPaymentMethod', 'invoice'));
     }
 
@@ -1491,5 +1491,169 @@ class AppointmentService
             ? new AppointmentCollection($appointments)
             : response()->json([]);
     }
+
+     /**
+     * @throws Exception
+     */
+    public function rescheduleMultiple($customer, int $appointment_id, 
+       array $slot,
+        ?int $employee_id,
+        string $date, 
+  //  ): AppointmentResource {
+    ) : JsonResponse {
+
+        $time_slots =[]; $service_ids = []; $rescheduleTime = [];
+        foreach($slot as $slt) {
+            $slot_arr = json_decode($slt,true);
+            $time_slots[] = $slot_arr['timeslot'];
+            $service_ids[] = $slot_arr['service'];
+            $rescheduleTime[] = Carbon::parse($slot_arr['timeslot']);
+        }
+
+        $rescheduleDate = Carbon::parse($date);
+      //  $rescheduleTime = Carbon::parse($timeslot);
+        $currentDateTime = Carbon::now();
+
+
+        $appointment = Appointment::find($appointment_id);
+
+        if (!$appointment) {
+            throw new Exception(__('Appointment not found'));
+        }
+
+        Log::critical('customer_id ' . $customer->id);
+
+        if ($appointment->customer_id != $customer->id) {
+            throw new Exception(__('Appointment not found'));
+        }
+
+        if ($appointment->status_id != AppointmentStatus::Confirmed->value && $appointment->status_id != AppointmentStatus::Pending->value) {
+            throw new Exception(__('Appointment is not in confirmed or pending status'));
+        }   
+
+        $serviceCount = $appointment->services()->count();
+        if ($serviceCount < 0) {
+            throw new Exception(__('Services Not Found'));
+        }
+
+        if(($service_ids == null) || empty($service_ids)) {
+            throw new Exception(__('Services Not Found'));
+        }
+        
+        $booked_services = $appointment->services()->whereIn('service_id', $service_ids)->get();
+        
+
+        Log::critical('booked_service ' . $booked_services->isNotEmpty());
+
+        if ($booked_services->isEmpty()) {
+            throw new Exception(__('Services not found'));
+        }
+
+        if ($rescheduleDate->clone()->isBefore($currentDateTime->clone()->startOfDay())) {
+            throw new Exception(__('You cannot reschedule to a past date.'));
+        }
+
+        $flag = false;
+        foreach($rescheduleTime as $rescheduleTm) {
+            if ($rescheduleDate->isSameDay($currentDateTime) && $rescheduleTm->isBefore($currentDateTime)) {
+                $flag = true;
+                break;
+            }
+        }
+        if ($flag === true) {
+            throw new Exception(__('The rescheduled time cannot be in the past.'));
+        }
+
+
+        $date_in_ops_hours = $booked_services[0]->operationalHours()->where(
+            'day_of_week',
+            $rescheduleDate->format('l')
+        )->exists();
+
+        if (!$date_in_ops_hours) {
+            throw new Exception(__('The selected date is not available for this service.'));
+        }
+
+        foreach($rescheduleTime as $key => $rescheduleTm) {
+           $is_time_slot_same_time[] = $rescheduleTm->eq(Carbon::parse($booked_services[$key]->start_time));
+        }        
+
+        if (in_array(true, $is_time_slot_same_time)) {
+            throw new Exception(__('The rescheduled time slot is the same as the original time.'));
+        }
+
+        $available_timeslots = [];
+        foreach($booked_services as $booked_service) {
+            $available_timeslots[] = $this->getAvailableSlots(
+                $appointment->service_provider_id,
+                $booked_service->id,
+                $rescheduleDate
+            )['slots'];
+        }
+
+        foreach($time_slots as $key => $time_slot) {
+            if (!in_array($time_slot, $available_timeslots[$key])) {
+                throw new Exception(__('The selected time slot is not available.'));
+            }
+        }
+
+        $duration = [];
+        foreach($booked_services as $key => $booked_service) {
+            $duration[] = $appointment->serviceProvider->operationalHours()
+                ->where('day_of_week', $rescheduleDate->format('l'))
+                ->where('service_id', $booked_service->id)
+                ->first()->duration_in_minutes;
+        }
+
+        $appointment->state()->rescheduleRequest();
+
+        if ($appointment->status_id != AppointmentStatus::RescheduleRequest->value) {
+            throw new Exception(__('Appointment is not in reschedule request status'));
+        }
+
+        foreach($booked_services as $key => $booked_service) {     
+            $booked_service->pivot->update([
+                'start_time' => $rescheduleTime[$key],
+                'end_time' => $rescheduleTime[$key]->copy()->addMinutes($duration),
+                'date' => $rescheduleDate->format('Y-m-d'),
+                'new_start_time' => null,
+                'new_end_time' => null,
+                'new_date' => null,
+                'accepted_reschedule' => true,
+            ]);
+        }
+
+        $appointment->update([
+                'status_id' => AppointmentStatus::Pending->value, //$appointment->previous_status_id,
+        ]);
+        foreach($rescheduleTime as $rescheduleTm) {
+            $time_Arr[] = $rescheduleTm->format('H:i');
+        }
+        try {
+            $appointment->serviceProvider->user->notify(new NewRequestRescheduledNotification($appointment, $time_Arr, $rescheduleDate->format('Y-m-d')));
+            $appointment->customer->user->notify(new NewRescheduledNotification($appointment, $time_Arr, $rescheduleDate->format('Y-m-d')));
+         
+        } catch (\Exception $e) {
+            Log::info($e);
+        }
+        return response()->json([
+            'message' => __('appointment rescheduled successfully'),
+        ], 200);   
+
+    }
+
+    /**
+     * Change the payment method for remaining payment
+     *
+     * @param Appointment $appointment
+     * @param int $payment_method_id
+     * @return AppointmentResource
+     */
+    // public function changePaymentMethod(Appointment $appointment, int $payment_method_id): AppointmentResource
+    // {
+    //     $appointment->payment_method_id = $payment_method_id;
+    //     $appointment->save();
+    //     return AppointmentResource::make($appointment->load('serviceProvider', 'services', 'appointmentServices', 'customer', 'promoCode', 'paymentMethod', 'depositPaymentMethod', 'remainingPaymentMethod', 'invoice'));
+    // }
 
 }
