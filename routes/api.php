@@ -113,6 +113,7 @@ Route::group(['middleware' => ['auth:sanctum',CheckBlockedMiddleware::class]], f
         //        Route::post('/hold', [AppointmentController::class, 'holdAppointment']);
         Route::post('/reschedule', [AppointmentController::class, 'reschedule']);
         Route::post('/reschedule/customer-response', [AppointmentController::class, 'customerRescheduleResponse']);
+        Route::post('/reschedule-customer', [AppointmentController::class, 'rescheduleMultiple']);
 
         Route::post('/', [AppointmentController::class, 'book']);
         Route::post('/{appointment}/cancel', [AppointmentController::class, 'cancel']);
@@ -121,6 +122,8 @@ Route::group(['middleware' => ['auth:sanctum',CheckBlockedMiddleware::class]], f
         Route::post('/{appointment}/reject', [AppointmentController::class, 'reject']);
         Route::post('/{appointment}/payment-request', [AppointmentController::class, 'paymentRequest']);
         Route::post('/{appointment}/change-remaining-payment-method', [AppointmentController::class, 'changeRemainingPaymentMethod']);
+       // Route::post('/{appointment}/change-payment-method', [AppointmentController::class, 'changePaymentMethod']);
+      
         Route::get('/sdk-token', [AppointmentController::class, 'getSDKToken']);
 
         Route::get('/available-dates', [AppointmentController::class, 'getAvailableDates']);

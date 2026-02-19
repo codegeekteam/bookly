@@ -12,7 +12,8 @@ return new class extends Migration
    public function up()
     {
         Schema::table('payment_logs', function (Blueprint $table) {
-            $table->unique('fort_id');
+            // $table->string('fort_id', 100)->unique();
+             $table->unique('fort_id');
         });
     }
 
