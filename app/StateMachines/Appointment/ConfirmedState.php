@@ -38,7 +38,7 @@ class ConfirmedState extends BaseAppointmentState
 
       }              
 
-      if($this->appointment->remaining_payment_method_id == 1)
+        if($this->appointment->remaining_payment_method_id == 4)
         {
             $this->appointment->update([   //restore when the above block is commented
                 'status_id' => AppointmentStatus::Completed->value,
@@ -52,9 +52,8 @@ class ConfirmedState extends BaseAppointmentState
              $this->appointment->update([   //restore when the above block is commented
                 'status_id' => AppointmentStatus::Completed->value,
                 'changed_status_at' => now(),
-               // 'remaining_amount' => 0,
-                'payment_status' => 'paid',
-                // 'remaining_payment_status' => 'paid',
+                'remaining_amount' => 0,
+                'payment_status' => 'paid',          
                 'total_payed' => $this->appointment->total,
             ]);
         }
