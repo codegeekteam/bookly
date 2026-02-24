@@ -402,16 +402,16 @@ class AppointmentService
         }
 
 
-        $is_daily_limit_reached = !($provider->max_appointments_per_day == null) && $provider->appointments()
-                ->where('created_at', '>=', Carbon::now()->startOfDay())
-                ->where('created_at', '<=', Carbon::now()->endOfDay())
-                ->count() >= $provider->max_appointments_per_day;
+        // $is_daily_limit_reached = !($provider->max_appointments_per_day == null) && $provider->appointments()
+        //         ->where('created_at', '>=', Carbon::now()->startOfDay())
+        //         ->where('created_at', '<=', Carbon::now()->endOfDay())
+        //         ->count() >= $provider->max_appointments_per_day;
 
-        if ($is_daily_limit_reached) {
-            throw ValidationException::withMessages([
-                'services' => 'Daily limit reached',
-            ]);
-        }
+        // if ($is_daily_limit_reached) {
+        //     throw ValidationException::withMessages([
+        //         'services' => 'Daily limit reached',
+        //     ]);
+        // }                   //shifted to available dates api
 
 
         $sum_of_services = 0;
@@ -1212,10 +1212,16 @@ class AppointmentService
                     })
                     ->count();  // Get count of booked appointments
 
+                //maximum limit reached, skip this date
+                 $is_daily_limit_reached = !($provider->max_appointments_per_day == null) && ($booked_count >= $provider->max_appointments_per_day);
+                 if ($is_daily_limit_reached) {
+                     continue;
+                 }
+
                 // If booked count matches expected slots, skip this date
                 if ($booked_count >= count($slots)) {
                     continue;
-                }
+                }             
 
                 // Check held time slots for the day
                 $heldTimeSlots = $service->heldTimeSlots()
