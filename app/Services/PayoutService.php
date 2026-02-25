@@ -46,7 +46,7 @@ class PayoutService
                     'status' => 'pending',
                 ]);
 
-                      \Log::info('create DeferredPayoutscard created');
+                      \Log::info('create DeferredPayouts card created');
             }
         }
 
@@ -94,7 +94,7 @@ class PayoutService
                     'available_at' => $availableAt,
                     'status' => 'pending',
                 ]);
-                      \Log::info('create DeferredPayouts cash created');
+                      \Log::info('create DeferredPayouts full card created');
             }
         }
     }
