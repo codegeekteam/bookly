@@ -36,9 +36,11 @@ class ConfirmedState extends BaseAppointmentState
             throw new Exception('Only the appointment service provider can complete the appointment');
         }
 
-      }              
-
-        if($this->appointment->remaining_payment_method_id == 4)
+      }   
+      
+      
+        $remainingPaymentMethod = $this->appointment->remainingPaymentMethod;
+        if($remainingPaymentMethod &&  strtolower($remainingPaymentMethod->name) === 'cash')
         {
             $this->appointment->update([   //restore when the above block is commented
                 'status_id' => AppointmentStatus::Completed->value,

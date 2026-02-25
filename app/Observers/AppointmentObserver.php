@@ -32,7 +32,8 @@ class AppointmentObserver
                 'new' => $appointment->status_id,
             ]);
         // Check if appointment status changed
-        if ($appointment->isDirty('status_id')) {
+     //   if ($appointment->isDirty('status_id')) {
+        if ($appointment->getOriginal('status_id') !== $appointment->status_id) {
             \Log::info('Appointment updated fired', [
                 'id' => $appointment->id,
                 'old' => $appointment->getOriginal('status_id'),
@@ -62,9 +63,14 @@ class AppointmentObserver
             }
 
             // Create deferred payout records when appointment is completed
-            if ($appointment->status_id === AppointmentStatus::Completed->value) {
+            if ($appointment->status_id === AppointmentStatus::Completed->value && $appointment->getOriginal('status_id') !== AppointmentStatus::Completed->value) {
                    \Log::info('create DeferredPayouts For Appointment reached');
-                $this->payoutService->createDeferredPayoutsForAppointment($appointment);
+                   if (!DeferredPayout::where('appointment_id', $appointment->id)->exists()) {
+                        \Log::info('Creating payouts for appointment ' . $appointment->id);
+                        $this->payoutService->createDeferredPayoutsForAppointment($appointment);
+                    } else {
+                        \Log::info('Payout already exists. Skipping...');
+                    }
             }
 
             if ($appointment->status_id !== AppointmentStatus::Pending->value) {
