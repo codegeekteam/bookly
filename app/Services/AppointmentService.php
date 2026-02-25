@@ -134,8 +134,9 @@ class AppointmentService
             })
             ->get(['start_time', 'end_time']);  // Fetch only relevant fields
 
+        
         // 7. Remove slots that overlap with booked appointments
-        if ($booked_appointments->isNotEmpty()) {
+        if ($booked_appointments->isNotEmpty()) {          
             $slots = array_filter($slots, function ($slot) use ($booked_appointments, $duration) {
                 $slot_start = Carbon::parse($slot);
                 $slot_end = $slot_start->copy()->addMinutes($duration);
@@ -192,6 +193,14 @@ class AppointmentService
 
         // 11. Format remaining slots to a readable format (e.g., 01:00 pm)
         $slots = array_map(fn($slot) => Carbon::parse($slot)->format('h:i a'), $slots);
+
+        ////////////////////////////////////////////
+        //maximum limit reached, skip this date
+        $is_daily_limit_reached = !($provider->max_appointments_per_day == null) && ($booked_appointments->count() >= $provider->max_appointments_per_day);
+        if ($is_daily_limit_reached) {
+            $slots = [];
+        }
+        ///////////////////////////////////////////////
 
         // 12. Return the final list of available slots
         return ['slots' => $slots];
