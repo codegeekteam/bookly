@@ -6,6 +6,7 @@ use App\Enums\AppointmentStatus;
 use App\Mail\AppointmentConfirmedMail;
 use App\Mail\AppointmentRejectedMail;
 use App\Models\Appointment;
+use App\Models\DeferredPayout;
 use App\Services\ChatService;
 use App\Services\PayoutService;
 use Illuminate\Support\Facades\Mail;
