@@ -7,6 +7,7 @@ use App\Http\Requests\AppointmentRescheduleRequest;
 use App\Http\Requests\BookAppointmentRequest;
 use App\Http\Requests\ChangePaymentMethodRequest;
 use App\Http\Requests\ChangeRemainingPaymentMethodRequest;
+use App\Http\Requests\RescheduleAppointmentCustomerRequest;
 use App\Http\Requests\RescheduleAppointmentRequest;
 use App\Http\Resources\AppointmentResource;
 use App\Models\Appointment;
@@ -642,7 +643,7 @@ class AppointmentController extends Controller
      * @response 400 {"message": "Time slot is not available"}
      * @response 400 {"message": "Service not found"}
      */
-    public function rescheduleMultiple(AppointmentService $appointmentService, RescheduleAppointmentRequest $request)
+    public function rescheduleMultiple(AppointmentService $appointmentService, RescheduleAppointmentCustomerRequest $request)
     {
         try {
             return $appointmentService->rescheduleMultiple(
