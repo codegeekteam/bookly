@@ -647,7 +647,7 @@ class AppointmentController extends Controller
         try {
             return $appointmentService->rescheduleMultiple(
                 customer: auth()->user()->customer,
-                slot: $request->slot,
+                slot: $request->slots,
                 appointment_id: $request->appointment_id,       
                 employee_id: $request->employee_id,
                 date: $request->date

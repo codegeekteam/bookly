@@ -1521,7 +1521,7 @@ class AppointmentService
         foreach($slot as $slt) {
             $slot_arr = json_decode($slt,true);
             $time_slots[] = $slot_arr['timeslot'];
-            $service_ids[] = $slot_arr['service'];
+            $service_ids[] = $slot_arr['service_id'];
             $rescheduleTime[] = Carbon::parse($slot_arr['timeslot']);
         }
 
