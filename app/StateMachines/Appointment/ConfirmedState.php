@@ -107,9 +107,11 @@ class ConfirmedState extends BaseAppointmentState
             $paymentMethod = $appointment->paymentMethod;
             $paymentLog = PaymentLog::where('appointment_id', $appointment->id)->first();
             if ($paymentLog && $paymentMethod && strtolower($paymentMethod->name) === 'card') { 
+                \Log::info('Calling initiate Refund in  confirm state reject method');
                 $response = $this->initiateRefund($appointment, 'reject');
+                    \Log::info('Refund Initiate : '. $response);
             }
-
+            \Log::info('Refund  skipped — no valid payment method');
         }elseif($refund_type->wallet_refund == 1){
  
             DB::beginTransaction();
@@ -211,9 +213,12 @@ class ConfirmedState extends BaseAppointmentState
         if($refund_type->bank_account_refund == 1) {
             $paymentMethod = $appointment->paymentMethod;
             $paymentLog = PaymentLog::where('appointment_id',$appointment->id)->first();
-            if($paymentLog && $paymentMethod && strtolower($paymentMethod->name) === 'card') {      
+            if($paymentLog && $paymentMethod && strtolower($paymentMethod->name) === 'card') {    
+                 \Log::info('Calling initiate Refund in  confirm state cancel method');  
                 $response = $this->initiateRefund($appointment, 'cancel');
+                     \Log::info('Refund Initiate : '. $response);
             }
+                 \Log::info('Refund  skipped — no valid payment method');
         }
         elseif($refund_type->wallet_refund == 1){
             DB::beginTransaction();

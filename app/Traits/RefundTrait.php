@@ -52,6 +52,7 @@ trait RefundTrait
                     ];
         $refund_data['signature'] = PayfortHelper::generateSignature($refund_data);
         $refund_data['order_description'] =  $paymentLog->appointment_id . '- Refund Request Processed'; 
+        \Log::info('REQUEST DATA : '.json_encode($refund_data));
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
         ])->post($base_url, $refund_data); 
