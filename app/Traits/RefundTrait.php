@@ -14,13 +14,14 @@ trait RefundTrait
     public function initiateRefund(Appointment $appointment, $type)
     {
         $paymentLog = PaymentLog::where('appointment_id', $appointment->id)->first();
-        if(!$paymentLog || $paymentLog->mechant_reference == null) {
+        if(!$paymentLog || $paymentLog->merchant_reference == null) {
               \Log::info('paymentLog data insufficient');
               return false;
         }
         //  $description = json_decode($appointment->service?->title, true);
+        $total = 0;
         if($type == 'reject') {
-        $total = $appointment->total_payed;
+        $total = $appointment->total_payed ?? 0;
         }
         if($type == 'cancel') {
             // Determine who is cancelling
@@ -30,7 +31,7 @@ trait RefundTrait
         $cancellationPolicyService = new \App\Services\CancellationPolicyService();
         $refundInfo = $cancellationPolicyService->calculateRefund($appointment, $isProviderCancelling);
             if ($appointment->payment_status == 'paid' || $appointment->payment_status == 'partially_paid') {
-                $refundAmount = $refundInfo['refund_amount'];
+                $refundAmount = $refundInfo['refund_amount'] ?? 0;
                 if ($refundInfo['refund_percentage'] == 100 && $refundAmount > 0) {        
                     $total = $refundAmount;
                 }
@@ -63,13 +64,24 @@ trait RefundTrait
             'status' => $response->status(),
            // 'body'   => $response->body(),
         ]);
-       
+        if (!$response->successful()) {
+            \Log::error('Refund API call failed', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+            return false;
+        }
+       $responseData = $response->json();
+       if (!isset($responseData['merchant_reference'])) {
+            \Log::info('Refund response missing merchant_reference');
+            return false;
+        }
         // Split the merchant_reference into type and identifier
-        $parts = explode('_', $response['merchant_reference']);
+        $parts = explode('_', $responseData['merchant_reference']);
 
         if (count($parts) < 2) {
-            return response()->json(['message' => 'Invalid ID format'], 200);
-            // return response()->json(['message' => 'success'], 200);
+            \Log::info('Invalid ID format');
+            return false;
         }
         if(count($parts) == 3) {
             $type = 'appointment'; 
@@ -79,15 +91,15 @@ trait RefundTrait
              $type = $parts[0];
             $identifier = $parts[1];
         }      
-        if($response['response_code'] == '06000') {
+        if($responseData['response_code'] == '06000') {
         $refundHelper = new RefundHelper;
         RefundLog::create([
-           'response_code' => $response['response_code'],
-           'response_message' => $response['response_message'],
-           'amount' => $response['amount'],
-           'status' => $response['status'],
-           'merchant_reference' => $response['merchant_reference'],          
-           'response' => json_encode($response),
+           'response_code' => $responseData['response_code'],
+           'response_message' => $responseData['response_message'],
+           'amount' => $responseData['amount'],
+           'status' => $responseData['status'],
+           'merchant_reference' => $responseData['merchant_reference'],          
+           'response' => json_encode($responseData),
            'model_type' => $refundHelper->getMorphClassFromType($type),
            'model_id' => $identifier,
         ]);        
