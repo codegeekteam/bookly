@@ -191,7 +191,7 @@ class PendingState extends BaseAppointmentState
             $paymentLog = PaymentLog::where('appointment_id',$appointment->id)->first();
             if($paymentLog && $paymentMethod && strtolower($paymentMethod->name) === 'card') {  
                  \Log::info('Calling initiate Refund in  pending state cancel method');    
-                $response = $this->initiateRefund($appointment, 'reject');
+                $response = $this->initiateRefund($appointment, 'cancel');
                 \Log::info('Refund Initiate : '. $response);
             }
              \Log::info('Refund  skipped — no valid payment method');

@@ -62,7 +62,7 @@ trait RefundTrait
 
         \Log::info('REFUND PROCESSED RESPONSE STATUS', [
             'status' => $response->status(),
-           // 'body'   => $response->body(),
+            'body'   => $response->body(),
         ]);
         if (!$response->successful()) {
             \Log::error('Refund API call failed', [
