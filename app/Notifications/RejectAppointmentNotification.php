@@ -2,24 +2,23 @@
 
 namespace App\Notifications;
 use App\Services\FirebaseNotification;
+use Carbon\Carbon;
 use GGInnovative\Larafirebase\Messages\FirebaseMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
 
 class RejectAppointmentNotification extends Notification implements ShouldQueue {
 
     use Queueable;
 
     public $appointment;
-    public $type;
 
-    public function __construct($appointment, $type)
+    public function __construct($appointment)
     {
         $this->appointment = $appointment;
-        $this->onQueue('default');
-        $this->type = $type;
+        $this->onQueue('default');      
     }
 
 
@@ -31,13 +30,15 @@ class RejectAppointmentNotification extends Notification implements ShouldQueue 
     // Method to set the title dynamically
     private function getTitle()
     {
-        return "Appointment rejected";
+        return "Appointment cancelled";
     }
 
     // Method to set the body dynamically
     private function getBody()
     {
-        return 'Your appointment # ' . $this->appointment->id . ' rejected';
+        $date = $this->appointment->services[0]->pivot->date ?? now();
+        $serviceDate = Carbon::parse($date);
+        return 'Your appointment # ' . $this->appointment->id .  ' with ' . $this->appointment->serviceProvider->name . ' on ' . $serviceDate->format('l') . ' & ' . $serviceDate->format('d-m-Y') . ' & ' .$this->appointment->services[0]->pivot->start_time . ' has been cancelled due to no action. You will be refunded the full deposit amount of  SAR ' . $this->appointment->deposit_amount . ' to your bank account within 7 days';
     }
 
     // Method to set the title ar dynamically
@@ -49,23 +50,21 @@ class RejectAppointmentNotification extends Notification implements ShouldQueue 
     // Method to set the body ar dynamically
     private function getBodyAr()
     {
-        return 'تم رفض موعد رقم :  ' . $this->appointment->id;
+        $date = $this->appointment->services[0]->pivot->date ?? now();
+        $serviceDate = Carbon::parse($date);
+        return 'تم إلغاء موعدك رقم ' . $this->appointment->id . ' مع ' . $this->appointment->serviceProvider->name . ' بتاريخ ' . $serviceDate->format('l') . ' و ' . $serviceDate->format('d-m-Y') . ' و ' .$this->appointment->services[0]->pivot->start_time . ' لعدم اتخاذ أي إجراء. سيتم رد مبلغ التأمين بالكامل وقدره ' . $this->appointment->deposit_amount . ' ريال سعودي إلى حسابك البنكي خلال 7 أيام';
     }
 
         // Method to get token
-    private function getToken($type)
-    {
-        if($type == 'customer') {
-            return $this->appointment->customer->user->firebase_token;
-        }
-        if($type == 'provider') {
-            return $this->appointment->serviceProvider->user->firebase_token;
-        }
+    private function getToken()
+    {        
+        return $this->appointment->customer->user->firebase_token;       
+      
     }
 
     public function toFirebase($notifiable)
     {
-        $fcm_token = $this->getToken($this->type);  //$notifiable->firebase_token;
+        $fcm_token = $this->getToken();  //$notifiable->firebase_token;
         return (new FirebaseNotification)
             ->withTitle($this->getTitle())
             ->withBody($this->getBody())

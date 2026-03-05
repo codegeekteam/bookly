@@ -46,19 +46,19 @@ class NewRequestRescheduledNotification extends Notification implements ShouldQu
     // Method to set the body dynamically
     private function getBody()
     {
-        return 'Appointment is rescheduled by customer; appointment # '. $this->appointment->id . '; rescheduled. Date : '  . $this->reschedule_date . '; timeslots : ' . $this->reschedule_time;
+        return 'Appointment #' . $this->appointment->id . 'is rescheduled by customer. Date : '  . $this->reschedule_date . ', Timeslots : ' . $this->reschedule_time;
     }
 
    // Method to set the title ar dynamically
     private function getTitleAr()
     {
-        return "تم قبول تعديل موعد";
+        return "قام العميل بإعادة جدولة موعده";
     }
 
     // Method to set the body ar dynamically
     private function getBodyAr()
     {
-        return 'تم قبول تعديل موعد :  ' . $this->appointment->id ;
+        return 'تم إعادة جدولة الموعد رقم'. $this->appointment->id .' من قبل العميل. التاريخ: ' . $this->reschedule_date . '، الأوقات المتاحة: ' . $this->reschedule_time ;
     }
 
     // Method to get token

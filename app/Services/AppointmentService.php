@@ -1820,7 +1820,7 @@ class AppointmentService
             Log::info($e);
         }
         return response()->json([
-            'message' => __('appointment rescheduled successfully'),
+            'message' => __('Appointment rescheduled successfully'),
         ], 200);   
 
     } 

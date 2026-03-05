@@ -4,14 +4,18 @@ namespace App\Console\Commands;
 
 use App\Actions\Wallet\Mutations\CreateWalletTransactionMutation;
 use App\Enums\AppointmentStatus;
+use App\Mail\AppointmentAutoRejectCustomerMail;
+use App\Mail\AppointmentAutoRejectProviderMail;
 use App\Models\Appointment;
 use App\Models\Enums\TransactionType;
 use App\Models\PaymentLog;
 use App\Notifications\RejectAppointmentNotification;
+use App\Notifications\RejectAppointmentProviderNotification;
 use App\Traits\RefundTrait;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class RejectAppointment extends Command
 {
@@ -50,12 +54,12 @@ class RejectAppointment extends Command
         $paymentLog = PaymentLog::where('appointment_id', $appointment->id)->first();
         if($paymentLog && $paymentMethod && strtolower($paymentMethod->name) === 'card') {      
             $response = $this->initiateRefund($appointment, 'reject');
-            \Log::info('Refund Initiate : '. $response);
+            \Log::info('Refund Initiate in auto reject after 24 hrs : '. $response);
         }
           \Log::info('Refund  skipped — no valid payment method');
 
         //return money to user wallet
-          if ($appointment->payment_status == 'paid' || $appointment->payment_status == 'partially_paid') {
+        /*  if ($appointment->payment_status == 'paid' || $appointment->payment_status == 'partially_paid' && strtolower($paymentMethod->name) === 'wallet') {
               $wallet = $appointment->customer->user->wallet;
               $total = $appointment->total_payed;
               if ($total > 0) {
@@ -99,11 +103,14 @@ class RejectAppointment extends Command
             $appointment->update([
                 'loyalty_discount_customer_id' => null,
             ]);
-        }
+        } */
         DB::commit();
-        //notification
+        //notification and mail
            try {
-               $appointment->customer->user->notify(new RejectAppointmentNotification($appointment, 'customer'));
+                $appointment->customer->user->notify(new RejectAppointmentNotification($appointment));
+                $appointment->customer->user->notify(new RejectAppointmentProviderNotification($appointment));
+                Mail::to($appointment->customer->email)->send(new AppointmentAutoRejectCustomerMail($appointment));
+                Mail::to($appointment->serviceProvider->email)->send(new AppointmentAutoRejectProviderMail($appointment));
            } catch (\Exception $e) {
                \Log::info($e);
            }

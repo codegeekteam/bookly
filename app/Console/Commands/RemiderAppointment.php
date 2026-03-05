@@ -28,7 +28,8 @@ class RemiderAppointment extends Command
      */
     public function handle()
     {
-        $appointments = Appointment::where('status_id', AppointmentStatus::Pending->value)->where('created_at', '<',now()->subHours(23))->get();
+        $timeLimitHours =  (config('app.limit_hours') ?? 24) - 1;
+        $appointments = Appointment::where('status_id', AppointmentStatus::Pending->value)->where('created_at', '<',now()->subHours($timeLimitHours))->get();
         foreach($appointments as $appointment) {  
            $appointment->serviceProvider->user->notify(new ReminderAppointmentNotification($appointment, 'provider'));
         }
