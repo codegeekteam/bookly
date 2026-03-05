@@ -23,8 +23,8 @@ Route::get('privacy-policy', [\App\Http\Controllers\SettingController::class, 'p
 Route::get('terms-conditions', [\App\Http\Controllers\SettingController::class, 'termsConditions'])->name('termsConditions');
 Route::get('/contact', [\App\Http\Controllers\SettingController::class, 'contact'])->name('contactus');
 Route::get('/share/provider/{id}', [\App\Http\Controllers\AppDownloadController::class, 'showProvider'])->name('app.download.provider');
-/*Route::get('/test', function () {
-    $appointment = Appointment::find(460);
+ /*Route::get('/test', function () {
+   $appointment = Appointment::find(460);
       $normalizedAmount = $appointment->remaining_amount;
          $type = 'appointment'; 
          $identifier = 460;
@@ -61,4 +61,26 @@ Route::get('/share/provider/{id}', [\App\Http\Controllers\AppDownloadController:
         }
          \Log::info('success');
          dd('success');
+         $arr = [
+        "appointment_id" => "661",
+        "date" => "2026-03-04",
+        "slots" => [
+          '{
+            "service_id": "2",
+            "timeslot": "06:00"
+          }',
+           '{
+            "service_id": "3",
+            "timeslot": "07:00"
+          }'
+        ]
+         ];
+$slot = $arr['slots'];
+           foreach($slot as $slt) {
+            $slot_arr = json_decode($slt,true);
+            $time_slots[] = $slot_arr['timeslot'];
+            $service_ids[] = $slot_arr['service_id'];
+           // $rescheduleTime[] = Carbon::parse($slot_arr['timeslot']);
+        }
+        dd($service_ids);
 });*/

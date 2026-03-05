@@ -18,6 +18,7 @@ use App\Models\Customer;
 use App\Models\Enums\TransactionType;
 use App\Models\GiftCard;
 use App\Models\HeldTimeSlot;
+use App\Models\OperationalHour;
 use App\Models\PaymentLog;
 use App\Models\PaymentMethod;
 use App\Models\PromoCode;
@@ -1510,7 +1511,7 @@ class AppointmentService
      /**
      * @throws Exception
      */
-    public function rescheduleMultiple($customer, int $appointment_id, 
+  /*  public function rescheduleMultiple($customer, int $appointment_id, 
        array $slot,
         ?int $employee_id,
         string $date, 
@@ -1526,7 +1527,6 @@ class AppointmentService
         }
 
         $rescheduleDate = Carbon::parse($date);
-      //  $rescheduleTime = Carbon::parse($timeslot);
         $currentDateTime = Carbon::now();
 
 
@@ -1547,7 +1547,7 @@ class AppointmentService
         }   
 
         $serviceCount = $appointment->services()->count();
-        if ($serviceCount < 0) {
+        if ($serviceCount <= 0) {
             throw new Exception(__('Services Not Found'));
         }
 
@@ -1588,37 +1588,66 @@ class AppointmentService
         if (!$date_in_ops_hours) {
             throw new Exception(__('The selected date is not available for this service.'));
         }
+      
+        foreach ($slot as $slt) {
 
-        foreach($rescheduleTime as $key => $rescheduleTm) {
-           $is_time_slot_same_time[] = $rescheduleTm->eq(Carbon::parse($booked_services[$key]->start_time));
-        }        
+            $slot_arr = json_decode($slt, true);
 
-        if (in_array(true, $is_time_slot_same_time)) {
-            throw new Exception(__('The rescheduled time slot is the same as the original time.'));
-        }
+            $service_id = $slot_arr['service_id'];
+            $new_time = Carbon::parse($slot_arr['timeslot']);
+
+            $booked_service = $booked_services->firstWhere('service_id', $service_id);
+
+            if (!$booked_service) {
+                throw new Exception(__('Service not found in appointment.'));
+            }
+
+            $original_time = Carbon::parse($booked_service->start_time);
+
+            if ($new_time->eq($original_time)) {
+                throw new Exception(__('The rescheduled time slot is the same as the original time.'));
+            }
+        }       
+
+       
 
         $available_timeslots = [];
         foreach($booked_services as $booked_service) {
-            $available_timeslots[] = $this->getAvailableSlots(
+            $slots = $this->getAvailableSlots(
                 $appointment->service_provider_id,
-                $booked_service->id,
-                $rescheduleDate
+                $booked_service->service_id,
+                $rescheduleDate,
+                $employee_id
             )['slots'];
-        }
 
-        foreach($time_slots as $key => $time_slot) {
-            if (!in_array($time_slot, $available_timeslots[$key])) {
+            $available_timeslots[$booked_service->service_id] = $slots;
+        }
+       
+
+        foreach($slot as $slt){ //$slot is input array of json stirngs service_id, timeslot
+
+            $slot_arr = json_decode($slt,true);
+
+            $time = Carbon::parse($slot_arr['timeslot'])->format('h:i a');
+            $service_id = $slot_arr['service_id'];
+
+            if (!in_array($time, $available_timeslots[$service_id])) {
                 throw new Exception(__('The selected time slot is not available.'));
             }
         }
 
-        $duration = [];
-        foreach($booked_services as $key => $booked_service) {
-            $duration[] = $appointment->serviceProvider->operationalHours()
-                ->where('day_of_week', $rescheduleDate->format('l'))
-                ->where('service_id', $booked_service->id)
-                ->first()->duration_in_minutes;
+        $duration = [];      
+
+        $ops = $appointment->serviceProvider->operationalHours()
+            ->where('day_of_week', $rescheduleDate->format('l'))
+            ->where('service_id', $booked_service->service_id)
+            ->first();
+
+        if (!$ops) {
+            throw new Exception(__('Operational hours not configured'));
         }
+
+        $duration[] = $ops->duration_in_minutes;
 
         $appointment->state()->rescheduleRequest();
 
@@ -1629,7 +1658,7 @@ class AppointmentService
         foreach($booked_services as $key => $booked_service) {     
             $booked_service->pivot->update([
                 'start_time' => $rescheduleTime[$key],
-                'end_time' => $rescheduleTime[$key]->copy()->addMinutes($duration),
+                'end_time' => $rescheduleTime[$key]->copy()->addMinutes($duration[$key]),
                 'date' => $rescheduleDate->format('Y-m-d'),
                 'new_start_time' => null,
                 'new_end_time' => null,
@@ -1641,9 +1670,12 @@ class AppointmentService
         $appointment->update([
                 'status_id' => AppointmentStatus::Pending->value, //$appointment->previous_status_id,
         ]);
+        $time_Arr = [] ; 
         foreach($rescheduleTime as $rescheduleTm) {
             $time_Arr[] = $rescheduleTm->format('H:i');
-        }
+        }      
+    
+
         try {
             $appointment->serviceProvider->user->notify(new NewRequestRescheduledNotification($appointment, $time_Arr, $rescheduleDate->format('Y-m-d')));
             $appointment->customer->user->notify(new NewRescheduledNotification($appointment, $time_Arr, $rescheduleDate->format('Y-m-d')));
@@ -1655,7 +1687,144 @@ class AppointmentService
             'message' => __('appointment rescheduled successfully'),
         ], 200);   
 
-    }
+    } */
+
+    public function rescheduleMultiple($customer, int $appointment_id, 
+       array $slot,
+        ?int $employee_id,
+        string $date, 
+  //  ): AppointmentResource {
+    ) : JsonResponse {
+        $time_slots =[]; $service_ids = []; $rescheduleTime = [];
+        foreach($slot as $slt) {
+            $slot_arr = json_decode($slt,true);
+            $time_slots[] = $slot_arr['timeslot'];
+            $service_ids[] = $slot_arr['service_id'];
+            $rescheduleTime[] = Carbon::parse($slot_arr['timeslot']);
+        }
+        $rescheduleDate = Carbon::parse($date);
+        $currentDateTime = Carbon::now();
+        $appointment = Appointment::find($appointment_id);
+        if (!$appointment) {
+            throw new Exception(__('Appointment not found'));
+        }
+        Log::critical('customer_id ' . $customer->id);
+        if ($appointment->customer_id != $customer->id) {
+            throw new Exception(__('Appointment not found'));
+        }
+        if ($appointment->status_id != AppointmentStatus::Confirmed->value && $appointment->status_id != AppointmentStatus::Pending->value) {
+            throw new Exception(__('Appointment is not in confirmed or pending status'));
+        }  
+        $serviceCount = $appointment->services()->count();
+        if ($serviceCount <= 0) {
+            throw new Exception(__('Services Not Found'));
+        }
+        if(($service_ids == null) || empty($service_ids)) {
+            throw new Exception(__('Services Not Found'));
+        }        
+        $booked_services = $appointment->services()->whereIn('service_id', $service_ids)->get();       
+        Log::critical('booked_service is not empty ' . $booked_services->isNotEmpty());
+        if ($booked_services->isEmpty()) {
+            throw new Exception(__('Services not found'));
+        }
+        if ($rescheduleDate->clone()->isBefore($currentDateTime->clone()->startOfDay())) {
+            throw new Exception(__('You cannot reschedule to a past date.'));
+        }
+        $flag = false;
+        foreach($rescheduleTime as $rescheduleTm) {
+            if ($rescheduleDate->isSameDay($currentDateTime) && $rescheduleTm->isBefore($currentDateTime)) {
+                $flag = true;
+                break;
+            }
+        }
+        if ($flag === true) {
+            throw new Exception(__('The rescheduled time cannot be in the past.'));
+        }
+        $serviceIds = $booked_services->pluck('service_id');
+        $operationalHours = OperationalHour::where('service_provider_id', $appointment->service_provider_id)
+            ->where('day_of_week', $rescheduleDate->format('l'))
+            ->whereIn('service_id', $serviceIds)
+            ->get()
+            ->keyBy('service_id');
+        foreach ($booked_services as $booked_service) {
+            if (!$operationalHours->has($booked_service->service_id)) {
+                throw new Exception(__('The selected date is not available for one of the services.'));
+            }
+        }
+        foreach ($slot as $slt) {
+            $slot_arr = json_decode($slt, true);
+            $service_id = $slot_arr['service_id'];
+            $new_time = Carbon::parse($slot_arr['timeslot']);
+            $booked_service = $booked_services->firstWhere('service_id', $service_id);
+            if (!$booked_service) {
+                throw new Exception(__('Service not found in appointment.'));
+            }
+            $original_time = Carbon::parse($booked_service->start_time);
+            if ($new_time->eq($original_time)) {
+                throw new Exception(__('The rescheduled time slot is the same as the original time.'));
+            }
+        }  
+        $available_timeslots = [];
+        foreach($booked_services as $booked_service) {
+            $slots = $this->getAvailableSlots(
+                $appointment->service_provider_id,
+                $booked_service->service_id,
+                $rescheduleDate,
+                $employee_id
+            )['slots'];
+            $available_timeslots[$booked_service->service_id] = $slots;
+        }      
+        foreach($slot as $slt){ //$slot is input array of json stirngs service_id, timeslot
+            $slot_arr = json_decode($slt,true);
+            $time = Carbon::parse($slot_arr['timeslot'])->format('h:i a');
+            $service_id = $slot_arr['service_id'];
+            if (!in_array($time, $available_timeslots[$service_id])) {
+                throw new Exception(__('The selected time slot is not available.'));
+            }
+        }      
+        $duration = [];
+        foreach ($booked_services as $booked_service) {
+            $ops = $operationalHours->get($booked_service->service_id);
+            if (!$ops) {
+                throw new Exception(__('Operational hours not configured for service.'));
+            }
+            $duration[] = $ops->duration_in_minutes;
+        }
+        $appointment->state()->rescheduleRequest();
+        if ($appointment->status_id != AppointmentStatus::RescheduleRequest->value) {
+            throw new Exception(__('Appointment is not in reschedule request status'));
+        }
+        foreach($booked_services as $key => $booked_service) {     
+            $booked_service->pivot->update([
+                'start_time' => $rescheduleTime[$key],
+                'end_time' => $rescheduleTime[$key]->copy()->addMinutes($duration[$key]),
+                'date' => $rescheduleDate->format('Y-m-d'),
+                'new_start_time' => null,
+                'new_end_time' => null,
+                'new_date' => null,
+                'accepted_reschedule' => true,
+            ]);
+        }
+        $appointment->update([
+                'status_id' => AppointmentStatus::Pending->value, //$appointment->previous_status_id,
+        ]);
+        $time_Arr = [] ; 
+        foreach($rescheduleTime as $rescheduleTm) {
+            $time_Arr[] = $rescheduleTm->format('H:i');
+        }    
+        try {
+            $appointment->serviceProvider->user->notify(new NewRequestRescheduledNotification($appointment, $time_Arr, $rescheduleDate->format('Y-m-d')));
+            $appointment->customer->user->notify(new NewRescheduledNotification($appointment, $time_Arr, $rescheduleDate->format('Y-m-d')));
+         
+        } catch (\Exception $e) {
+            Log::info($e);
+        }
+        return response()->json([
+            'message' => __('appointment rescheduled successfully'),
+        ], 200);   
+
+    } 
+
 
     /**
      * Change the payment method for remaining payment
