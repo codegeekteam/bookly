@@ -48,7 +48,9 @@ class Appointment extends Model
         'deposit_payment_method_id',
         'remaining_amount',
         'remaining_payment_status',
-        'remaining_payment_method_id'
+        'remaining_payment_method_id',
+        'admin_cancel_reason',
+        'goodwill_amount',
     ];
 
     protected $casts = [

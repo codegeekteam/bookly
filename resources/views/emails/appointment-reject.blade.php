@@ -67,9 +67,9 @@
     <div style="direction: rtl; text-align: right;">
         <h2 style="text-align: right;">تم إلغاء موعدك</h2>
 
-        <p style="text-align: right;">عزيزتي {{ $appointment->customer->first_name }} {{ $appointment->customer->last_name }}،</p>
+        <p style="text-align: right;">عزيزتي {{ $appointment->serviceProvider->name }}،</p>
 
-        <p style="text-align: right;">تم رفض الموعد</p>
+        <p style="text-align: right;">تم رفض الموعد.</p>
 
         <div class="section" style="direction: rtl; text-align: right;">
             <div class="info-line" style="text-align: right;">
@@ -79,7 +79,7 @@
 
             <div class="info-line" style="text-align: right;">
                 <span class="label">تم الإلغاء :</span>
-                <span class="value">Your appointment #  {{ $appointment->id }}  with {{ $appointment->serviceProvider->name }} on {{ \Carbon\Carbon::parse($serviceDate)->format('l') }} & {{ \Carbon\Carbon::parse($serviceDate)->format('d-m-Y') }} & {{ $appointment->services[0]->pivot->start_time }} has been cancelled due to no action. You will be refunded the full deposit amount of  SAR {{ $appointment->deposit_amount }} to your bank account within ' . config('app.refund_days') . ' days. <br>تم إلغاء موعدك رقم {{ $appointment->id }} مع {{ $appointment->serviceProvider->name }} بتاريخ {{ \Carbon\Carbon::parse($serviceDate)->format('l') }} و {{ \Carbon\Carbon::parse($serviceDate)->format('d-m-Y') }} و {{ $appointment->services[0]->pivot->start_time }} لعدم اتخاذ أي إجراء. سيتم رد مبلغ التأمين بالكامل وقدره {{ $appointment->deposit_amount }} ريال سعودي إلى حسابك البنكي خلال 7 أيام</span>
+                <span class="value">Appointment # {{ $appointment->id }} cancelled by customer. <br><span> تم إلغاء الموعد رقم {{ $appointment->id }} من قبل العميل. <span>
             </div>
        
         </div>

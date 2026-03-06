@@ -6,6 +6,7 @@ use App\Actions\Wallet\Mutations\CreateWalletTransactionMutation;
 use App\Enums\AppointmentStatus;
 use App\Helpers\PayfortHelper;
 use App\Helpers\RefundHelper;
+use App\Mail\AppointmentRejectMail;
 use App\Models\Appointment;
 use App\Models\AttachedService;
 use App\Models\Enums\TransactionType;
@@ -22,6 +23,7 @@ use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class ConfirmedState extends BaseAppointmentState
 {
@@ -296,6 +298,7 @@ class ConfirmedState extends BaseAppointmentState
         \Log::info('RejectAppointmentNotification reached in confirm state -cancel method');  
         try {
             $appointment->serviceProvider->user->notify(new RejectAppointmentNotification($appointment, 'provider'));
+            Mail::to($appointment->serviceProvider->email)->send(new AppointmentRejectMail($appointment));
         } catch (\Exception $e) {
             Log::info($e);
         }

@@ -2,11 +2,12 @@
 
 namespace App\Notifications;
 use App\Services\FirebaseNotification;
+use Carbon\Carbon;
 use GGInnovative\Larafirebase\Messages\FirebaseMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
 
 class CancelAppointmentNotification extends Notification implements ShouldQueue {
 
@@ -14,11 +15,13 @@ class CancelAppointmentNotification extends Notification implements ShouldQueue 
 
     public $appointment;
     public $type;
+     public $goodWill;
 
-    public function __construct($appointment, $type)
+    public function __construct($appointment, $type, $goodWill)
     {
         $this->appointment = $appointment;
-         $this->type = $type;
+        $this->type = $type;
+        $this->goodWill = $goodWill;
         $this->onQueue('default');
     }
 
@@ -37,11 +40,31 @@ class CancelAppointmentNotification extends Notification implements ShouldQueue 
     // Method to set the body dynamically
     private function getBody()
     {
-        return 'Your appointment # ' . $this->appointment->id . ' cancelled';
+        if($this->type == 'customer' && $this->goodWill)
+        {
+            $date = $this->appointment->services[0]->pivot->date ?? now();
+            $serviceDate = Carbon::parse($date);
+            $messageText = 'Your booking #' . $this->appointment->id . ' with ' . $this->appointment->serviceProvider->name . ' on ' . $serviceDate->format('l') . ' & ' . $serviceDate->format('d-m-Y') . ' & ' .$this->appointment->services[0]->pivot->start_time . ' has been cancelled due to '. str_replace('_', ' ' , $this->appointment->admin_cancel_reason) . '. You will be refunded the full deposit amount of SAR ' . $this->appointment->total_payed . ' to your bank account within ' . config('app.refund_days') . ' days.
+            Because you’re a valued customer, we have transferred SAR ' . $this->appointment->goodwill_amount  . ' to your app wallet to use for your next booking.';
+            return  $messageText;
+        } 
+        if($this->type == 'customer' && !($this->goodWill))
+        {
+            $date = $this->appointment->services[0]->pivot->date ?? now();
+            $serviceDate = Carbon::parse($date);
+            $messageText = 'Your booking #' . $this->appointment->id . ' with ' . $this->appointment->serviceProvider->name . ' on ' . $serviceDate->format('l') . ' & ' . $serviceDate->format('d-m-Y') . ' & ' .$this->appointment->services[0]->pivot->start_time . ' has been cancelled due to '. str_replace('_', ' ' , $this->appointment->admin_cancel_reason) . '. You will be refunded the full deposit amount of SAR ' . $this->appointment->total_payed . ' to your bank account within ' . config('app.refund_days') . ' days.';
+            return  $messageText;
+        } 
+        if($this->type == 'provider'){
+            $date = $this->appointment->services[0]->pivot->date ?? now();
+            $serviceDate = Carbon::parse($date);
+            $messageText = 'Appointment #' . $this->appointment->id . ' of ' . $this->appointment->customer->first_name . " " . $this->appointment->customer->last_name . ' on ' . $serviceDate->format('l') . ' & ' . $serviceDate->format('d-m-Y') . ' & ' .$this->appointment->services[0]->pivot->start_time . ' has been cancelled due to '. str_replace("_", " "  , $this->appointment->admin_cancel_reason) . '.' ;
+            return $messageText;
+        }
     }
 
     // Method to set the title ar dynamically
-    private function getTitleAr()
+    private function getTitleAr($typ)
     {
         return "تم الغاء الموعد";
     }
@@ -49,7 +72,27 @@ class CancelAppointmentNotification extends Notification implements ShouldQueue 
     // Method to set the body ar dynamically
     private function getBodyAr()
     {
-        return 'تم الغاء موعد رقم :  ' . $this->appointment->id;
+         if($this->type == 'customer' && $this->goodWill)
+        {
+            $date = $this->appointment->services[0]->pivot->date ?? now();
+            $serviceDate = Carbon::parse($date);
+            $messageText = 'تم إلغاء حجزك رقم ' . $this->appointment->id . ' مع ' . $this->appointment->serviceProvider->name . ' بتاريخ ' . $serviceDate->format('l') . ' & ' . $serviceDate->format('d-m-Y') . ' & ' .$this->appointment->services[0]->pivot->start_time . ' بسبب '. str_replace('_', ' ' , $this->appointment->admin_cancel_reason) . '. سيتم رد مبلغ التأمين بالكامل وقدره ' . $this->appointment->total_payed . ' إلى حسابك البنكي خلال ' . config('app.refund_days') . ' يومًا.
+... لأنك عميل مميز، قمنا بتحويل مبلغ ' . $this->appointment->goodwill_amount . ' إلى محفظة التطبيق الخاصة بك لاستخدامه في حجزك القادم.';
+            return  $messageText;
+        } 
+        if($this->type == 'customer' && !($this->goodWill))
+        {
+            $date = $this->appointment->services[0]->pivot->date ?? now();
+            $serviceDate = Carbon::parse($date);
+            $messageText = 'تم إلغاء حجزك رقم ' . $this->appointment->id . ' مع ' . $this->appointment->serviceProvider->name . ' بتاريخ ' . $serviceDate->format('l') . ' & ' . $serviceDate->format('d-m-Y') . ' & ' .$this->appointment->services[0]->pivot->start_time . ' بسبب '. str_replace('_', ' ' , $this->appointment->admin_cancel_reason) . '. سيتم رد مبلغ التأمين بالكامل وقدره ' . $this->appointment->total_payed . ' إلى حسابك البنكي خلال ' . config('app.refund_days') . ' أيام.';
+            return  $messageText;
+        } 
+        if($this->type == 'provider'){
+            $date = $this->appointment->services[0]->pivot->date ?? now();
+            $serviceDate = Carbon::parse($date);
+            $messageText = 'تم إلغاء الموعد رقم ' . $this->appointment->id . ' الخاص بالعميل ' . $this->appointment->customer->first_name . " " . $this->appointment->customer->last_name . ' بتاريخ ' . $serviceDate->format('l') . ' & ' . $serviceDate->format('d-m-Y') . ' & ' .$this->appointment->services[0]->pivot->start_time . ' بسبب '. str_replace("_", " " , $this->appointment->admin_cancel_reason) . '.';
+            return $messageText;
+        }
     }
 
      // Method to get token

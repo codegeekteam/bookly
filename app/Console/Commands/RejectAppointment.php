@@ -9,7 +9,7 @@ use App\Mail\AppointmentAutoRejectProviderMail;
 use App\Models\Appointment;
 use App\Models\Enums\TransactionType;
 use App\Models\PaymentLog;
-use App\Notifications\RejectAppointmentNotification;
+use App\Notifications\RejectAppointmentCustomerNotification;
 use App\Notifications\RejectAppointmentProviderNotification;
 use App\Traits\RefundTrait;
 use Carbon\Carbon;
@@ -107,7 +107,7 @@ class RejectAppointment extends Command
         DB::commit();
         //notification and mail
            try {
-                $appointment->customer->user->notify(new RejectAppointmentNotification($appointment));
+                $appointment->customer->user->notify(new RejectAppointmentCustomerNotification($appointment));
                 $appointment->customer->user->notify(new RejectAppointmentProviderNotification($appointment));
                 Mail::to($appointment->customer->email)->send(new AppointmentAutoRejectCustomerMail($appointment));
                 Mail::to($appointment->serviceProvider->email)->send(new AppointmentAutoRejectProviderMail($appointment));

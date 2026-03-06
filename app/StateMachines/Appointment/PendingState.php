@@ -5,6 +5,7 @@ namespace App\StateMachines\Appointment;
 use App\Actions\Wallet\Mutations\CreateWalletTransactionMutation;
 use App\Enums\AppointmentStatus;
 use App\Helpers\RefundHelper;
+use App\Mail\AppointmentRejectMail;
 use App\Models\Appointment;
 use App\Models\Enums\TransactionType;
 use App\Models\PaymentLog;
@@ -18,6 +19,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class PendingState extends BaseAppointmentState
 {
@@ -272,7 +274,8 @@ class PendingState extends BaseAppointmentState
         
         //notification
          try {
-             $appointment->serviceProvider->user->notify(new RejectAppointmentNotification($appointment, 'provider'));
+            $appointment->serviceProvider->user->notify(new RejectAppointmentNotification($appointment, 'provider'));
+            Mail::to($appointment->serviceProvider->email)->send(new AppointmentRejectMail($appointment));
          } catch (\Exception $e) {
              Log::info($e);
          }
