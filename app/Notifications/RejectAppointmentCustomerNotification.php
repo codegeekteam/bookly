@@ -3,28 +3,26 @@
 namespace App\Notifications;
 
 use App\Services\FirebaseNotification;
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class NewRescheduledNotification extends Notification implements ShouldQueue 
+class RejectAppointmentCustomerNotification extends Notification
 {
     use Queueable;
 
     public $appointment;
-    public $reschedule_date;
-    public $reschedule_time;
 
+  
     /**
      * Create a new notification instance.
      */
-    public function __construct($appointment, $reschedule_date, $reschedule_time)
+    public function __construct($appointment)
     {
         $this->appointment = $appointment;
-        $this->reschedule_date = $reschedule_date;
-        $this->reschedule_time = $reschedule_time;
-        $this->onQueue('default');
+        $this->onQueue('default');      
     }
 
     /**
@@ -40,38 +38,41 @@ class NewRescheduledNotification extends Notification implements ShouldQueue
      // Method to set the title dynamically
     private function getTitle()
     {
-        return "Appointment Rescheduled";
+        return "Appointment cancelled";
     }
 
     // Method to set the body dynamically
     private function getBody()
     {
-        return 'Your appointment #' . $this->appointment->id . ' has been rescheduled. Date : '  . $this->reschedule_date . ' Time slots : ' . $this->reschedule_time;
+        $date = $this->appointment->services[0]->pivot->date ?? now();
+        $serviceDate = Carbon::parse($date);
+        return 'Your appointment # ' . $this->appointment->id .  ' with ' . $this->appointment->serviceProvider->name . ' on ' . $serviceDate->format('l') . ' & ' . $serviceDate->format('d-m-Y') . ' & ' .$this->appointment->services[0]->pivot->start_time . ' has been cancelled due to no action. You will be refunded the full deposit amount of  SAR ' . $this->appointment->deposit_amount . ' to your bank account within ' . config('app.refund_days') . ' days';
     }
 
     // Method to set the title ar dynamically
     private function getTitleAr()
     {
-        return "تم إعادة جدولة الموعد";
+        return "تم رفض الموعد";
     }
 
     // Method to set the body ar dynamically
     private function getBodyAr()
     {
-        return 'تم طلب تعديل موعد رقم :  ' . $this->appointment->id . 'الى : ' . $this->reschedule_time . '  ' . $this->reschedule_date;
-        return 'تم إعادة جدولة موعدك رقم' . $this->appointment->id . '. التاريخ: '  . $this->reschedule_date . '، الأوقات المتاحة: '  . $this->reschedule_time ;
+        $date = $this->appointment->services[0]->pivot->date ?? now();
+        $serviceDate = Carbon::parse($date);
+        return 'تم إلغاء موعدك رقم ' . $this->appointment->id . ' مع ' . $this->appointment->serviceProvider->name . ' بتاريخ ' . $serviceDate->format('l') . ' و ' . $serviceDate->format('d-m-Y') . ' و ' .$this->appointment->services[0]->pivot->start_time . ' لعدم اتخاذ أي إجراء. سيتم رد مبلغ التأمين بالكامل وقدره ' . $this->appointment->deposit_amount . ' ريال سعودي إلى حسابك البنكي خلال 7 أيام';
     }
 
-    // Method to get token
+        // Method to get token
     private function getToken()
-    {
-        return $this->appointment->customer->user->firebase_token;
+    {        
+        return $this->appointment->customer->user->firebase_token;       
+      
     }
 
-    public function toFirebase($notifiable)
+     public function toFirebase($notifiable)
     {
-        $fcm_token = $this->getToken(); //$notifiable->firebase_token;
-        \Log::info('FCM Token: ' . $notifiable->firebase_token);
+        $fcm_token = $this->getToken();  //$notifiable->firebase_token;
         return (new FirebaseNotification)
             ->withTitle($this->getTitle())
             ->withBody($this->getBody())
@@ -97,6 +98,7 @@ class NewRescheduledNotification extends Notification implements ShouldQueue
             'body_ar' =>$this->getBodyAr(),
             'redirect_id' => (string) $this->appointment->id,
             'redirect_action' => 'appointments',
+            //'image_url' => $this->order->items->first()->product->thumbnail,
         ];
     }
 }

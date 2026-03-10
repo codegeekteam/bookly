@@ -8,16 +8,20 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class ReminderAppointmentNotification extends Notification implements ShouldQueue
+class RejectAppointmentProviderNotification extends Notification
 {
     use Queueable;
 
+    
     public $appointment;
 
+    /**
+     * Create a new notification instance.
+     */
     public function __construct($appointment)
     {
         $this->appointment = $appointment;
-        $this->onQueue('default');
+        $this->onQueue('default');      
     }
 
     /**
@@ -27,43 +31,44 @@ class ReminderAppointmentNotification extends Notification implements ShouldQueu
      */
     public function via(object $notifiable): array
     {
-         return ['database', 'firebase'];
+         return ['database','firebase'];
     }
 
      // Method to set the title dynamically
     private function getTitle()
     {
-        return 'Appointment confirm/reject reminder';
+        return "Appointment cancelled";
     }
 
     // Method to set the body dynamically
     private function getBody()
     {
-        return 'Please confirm or reject the  appointment # '.$this->appointment->id.' with in 1 hr. You cannot confirm or reject it after 1 hour.';
+        return 'Appointment # ' . $this->appointment->id .  ' cancelled due to no action within 24 hours.';
     }
 
     // Method to set the title ar dynamically
     private function getTitleAr()
     {
-        return 'تذكير بتأكيد/رفض الموعد';
+        return "تم رفض الموعد";
     }
 
     // Method to set the body ar dynamically
     private function getBodyAr()
     {
-        return 'يرجى تأكيد أو رفض الموعد رقم '.$this->appointment->id.' خلال ساعة واحدة. لا يمكنك تأكيده أو رفضه بعد مرور ساعة.';
+        return 'تم إلغاء الموعد رقم ' . $this->appointment->id . ' بسبب عدم اتخاذ أي إجراء خلال 24 ساعة.';
     }
 
-    // Method to get token
+        // Method to get token
     private function getToken()
-    {
-        return $this->appointment->customer->user->firebase_token;
+    {        
+        return $this->appointment->serviceProvider->user->firebase_token;       
+      
     }
 
-    public function toFirebase($notifiable)
-    {
-        $fcm_token = $this->getToken(); //$notifiable->firebase_token;
 
+      public function toFirebase($notifiable)
+    {
+        $fcm_token = $this->getToken();  //$notifiable->firebase_token;
         return (new FirebaseNotification)
             ->withTitle($this->getTitle())
             ->withBody($this->getBody())
@@ -86,10 +91,9 @@ class ReminderAppointmentNotification extends Notification implements ShouldQueu
                 'title' => $this->getTitle(),
                 'body' => $this->getBody(),
                 'title_ar' => $this->getTitleAr(),
-                'body_ar' => $this->getBodyAr(),
+                'body_ar' =>$this->getBodyAr(),
                 'redirect_id' => (string) $this->appointment->id,
                 'redirect_action' => 'appointments',
-            
         ];
     }
 }

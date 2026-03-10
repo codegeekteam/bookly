@@ -5,6 +5,7 @@ namespace App\StateMachines\Appointment;
 use App\Actions\Wallet\Mutations\CreateWalletTransactionMutation;
 use App\Enums\AppointmentStatus;
 use App\Helpers\RefundHelper;
+use App\Mail\AppointmentRejectMail;
 use App\Models\Appointment;
 use App\Models\Enums\TransactionType;
 use App\Models\PaymentLog;
@@ -18,6 +19,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class PendingState extends BaseAppointmentState
 {
@@ -25,9 +27,10 @@ class PendingState extends BaseAppointmentState
     
     public function confirm(): void
     {
+        $timeLimitHours = config('app.limit_hours');
         if(auth()->id() === $this->appointment->serviceProvider->user_id) {
-            if ($this->appointment->created_at->lt(now()->subHours(24))) {
-                throw new Exception('The time limit exceeded. Cannot confirm this appointment');
+            if ($this->appointment->created_at->lt(now()->subHours($timeLimitHours))) {
+                throw new Exception('The time limit of {$timeLimitHours} hours exceeded. Cannot confirm this appointment');
             }
         }
        $paymentMethod = $this->appointment->paymentMethod;
@@ -61,9 +64,10 @@ class PendingState extends BaseAppointmentState
      */
     public function reject(): void
     {
+        $timeLimitHours = config('app.limit_hours');
         if(auth()->id() === $this->appointment->serviceProvider->user_id) {
-            if ($this->appointment->created_at->lt(now()->subHours(24))) {
-                throw new Exception('The time limit exceeded. Cannot reject this appointment');
+            if ($this->appointment->created_at->lt(now()->subHours($timeLimitHours))) {
+                throw new Exception('The time limit of {$timeLimitHours} hours exceeded. Cannot reject this appointment');
             }
         }
         
@@ -270,7 +274,8 @@ class PendingState extends BaseAppointmentState
         
         //notification
          try {
-             $appointment->serviceProvider->user->notify(new RejectAppointmentNotification($appointment, 'provider'));
+            $appointment->serviceProvider->user->notify(new RejectAppointmentNotification($appointment, 'provider'));
+            Mail::to($appointment->serviceProvider->email)->send(new AppointmentRejectMail($appointment));
          } catch (\Exception $e) {
              Log::info($e);
          }
@@ -279,9 +284,18 @@ class PendingState extends BaseAppointmentState
     public function rescheduleRequest(): void
     {
         $appointment = $this->appointment;
+        $userId = auth()->id();
 
-        if ($appointment->serviceProvider->user_id !== auth()->id()) {
-            throw new \Exception('Only the appointment provider can request reschedule the appointment');
+        // if ($appointment->serviceProvider->user_id !== auth()->id()) {
+        //     throw new \Exception('Only the appointment provider can request reschedule the appointment');
+        // }
+
+        // if(($appointment->serviceProvider->user_id !== $userId) && ($appointment->customer->user_id !== $userId)){
+        //     throw new Exception('Only the appointment customer or provider can reschedule the appointment');
+        // }
+
+        if ($appointment->customer->user_id !== auth()->id()) {
+            throw new \Exception('Only the appointment customer can reschedule the appointment');
         }
 
         $appointment->update([

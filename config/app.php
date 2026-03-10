@@ -59,6 +59,10 @@ return [
 
     'asset_url' => env('ASSET_URL'),
 
+    'limit_hours' => env('LIMIT_HOURS', '22'),
+
+    'refund_days' => env('REFUND_DAYS', 7),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

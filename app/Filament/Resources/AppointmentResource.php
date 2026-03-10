@@ -451,11 +451,26 @@ class AppointmentResource extends Resource
                             ])
                             ->required()
                             ->native(false), // optional: enables nice UI
-                    ])
+
+                        Select::make('cancellation_reason')
+                            ->label('Reason for cancellation')
+                            ->options([
+                                'Unforeseen_circumstances' => 'Unforeseen circumstances',
+                                'Administrative_decision' => "Administrative decision",
+                                'Service_unavailable' => "Service unavailable",
+                            ])
+                            ->required()
+                            ->native(false), // optional: enables nice UI
+                        TextInput::make('goodwill_amount')
+                            ->label('Goodwill Gesture (SAR)')
+                            ->numeric(),                 
+                        ])
                     ->action(function (Appointment $record, array $data) {                                                                       
                         $record->update([
                             'status_id' => AppointmentStatus::Cancelled->value,
                             'changed_status_at' => now(),
+                            'admin_cancel_reason' => $data['cancellation_reason'],
+                            'goodwill_amount' => $data['goodwill_amount'] ?? 0,
                         ]);                       
                         if(($data['refund_option'] == 'bank') && ($record->payment_status !== 'unpaid')){
                             $paymentMethod = $record->paymentMethod;
@@ -464,7 +479,7 @@ class AppointmentResource extends Resource
                                 $response = $this->initiateRefund($record, 'cancel');
                                 \Log::info('Refund Initiate : '. $response);
                             }
-                            \Log::info('Refund  skipped — no valid payment method');
+                            \Log::info('Refund  skipped — no valid payment method');                    
                         }elseif(($data['refund_option'] == 'wallet') && ($record->payment_status !== 'unpaid')) {
                             DB::beginTransaction();
                             try {
@@ -473,7 +488,9 @@ class AppointmentResource extends Resource
                                 // Handle refund based on policy
                                 if ($record->payment_status == 'paid' || $record->payment_status == 'partially_paid') {
                                     $refundAmount = $refundInfo['refund_amount'];
-
+                                     if($data['goodwill_amount'] > 0) {   
+                                        $refundAmount += $data['goodwill_amount'];
+                                     }               
                                     if ($refundInfo['refund_percentage'] == 100 && $refundAmount > 0) {
                                         // Refund to customer (deposit only for provider, full amount for customer)
                                         $customerWallet = $record->customer->user->wallet;
@@ -537,12 +554,31 @@ class AppointmentResource extends Resource
                                 DB::rollBack();
                                 \Log::error("Wallet Refund Error: " . $e->getMessage());
                             }
+                        } 
+                        
+                        $good_will  = false;
+                        if($data['goodwill_amount'] > 0) { 
+                            $good_will  = true;                 
+                            $customerWallet = $record->customer->user->wallet;
+                            $refundReason = $record->id .' - Valued Customer Bonus';
+                            $refundReasonAr = $record->id .' - مكافأة العميل المميز';
+                            
+                                // Add refund to customer wallet (observer will update balance)
+                                (new CreateWalletTransactionMutation())->handle(
+                                    $customerWallet,
+                                    $data['goodwill_amount'],
+                                    TransactionType::IN,
+                                    $refundReason,
+                                    false,
+                                    $refundReasonAr
+                                );
                         }
+
                         if ($record->customer && $record->customer->user) {
-                            $record->customer->user->notify(new CancelAppointmentNotification($record, 'customer'));
+                            $record->customer->user->notify(new CancelAppointmentNotification($record, 'customer', $good_will));
                         }
                         if ($record->serviceProvider && $record->serviceProvider->user) {
-                            $record->serviceProvider->user->notify(new CancelAppointmentNotification($record, 'provider'));
+                            $record->serviceProvider->user->notify(new CancelAppointmentNotification($record, 'provider', false));
                         }                              
                         Notification::make()
                             ->title('Appointment Cancelled')
@@ -550,8 +586,8 @@ class AppointmentResource extends Resource
                             ->body('The appointment has been cancelled.')
                             ->send();                          
                     })
-                    ->requiresConfirmation()
-                    ->visible(fn (Appointment $record): bool => $record->payment_status !== 'paid')
+                    ->requiresConfirmation() 
+                    ->visible(fn (Appointment $record): bool => $record->status_id !== AppointmentStatus::Completed->value && $record->status_id !== AppointmentStatus::Cancelled->value)
                 ]),
             ])
             ->bulkActions([
@@ -644,9 +680,7 @@ class AppointmentResource extends Resource
         return [
             'index' => Pages\ListAppointments::route('/'),
             //'create' => Pages\CreateAppointment::route('/create'),
-            'edit' => Pages\EditAppointment::route('/{record}/edit'),
-
-           // 'cancelled' => Pages\ListCancelledAppointments::route('/cancelled'),
+            'edit' => Pages\EditAppointment::route('/{record}/edit'),            
         ];
     }
 }

@@ -37,7 +37,7 @@ class RejectAppointmentNotification extends Notification implements ShouldQueue 
     // Method to set the body dynamically
     private function getBody()
     {
-        return 'Your appointment # ' . $this->appointment->id . ' rejected';
+        return 'Appointment # ' . $this->appointment->id . ' rejected';
     }
 
     // Method to set the title ar dynamically

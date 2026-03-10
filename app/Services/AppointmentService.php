@@ -465,7 +465,7 @@ class AppointmentService
                 ->where('service_id', $service['service_id'])
                 ->first();
 
-\Log::info('attached service', ['attachedService' => $attachedService]);
+        \Log::info('attached service', ['attachedService' => $attachedService]);
             if ($attachedService) {
        \Log::info('inside if attached service block');         
                 $price = $attachedService->price;
@@ -1820,7 +1820,7 @@ class AppointmentService
             Log::info($e);
         }
         return response()->json([
-            'message' => __('appointment rescheduled successfully'),
+            'message' => __('Appointment rescheduled successfully'),
         ], 200);   
 
     } 
