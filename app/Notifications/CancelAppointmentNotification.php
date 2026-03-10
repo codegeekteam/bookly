@@ -64,7 +64,7 @@ class CancelAppointmentNotification extends Notification implements ShouldQueue 
     }
 
     // Method to set the title ar dynamically
-    private function getTitleAr($typ)
+    private function getTitleAr()
     {
         return "تم الغاء الموعد";
     }
