@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Enums\AppointmentStatus;
+use App\Jobs\RemiderAppointmentJob;
 use App\Models\Appointment;
 use App\Notifications\ReminderAppointmentNotification;
 use Illuminate\Console\Command;
@@ -28,10 +29,18 @@ class RemiderAppointment extends Command
      */
     public function handle()
     {
-        $timeLimitHours =  (config('app.limit_hours') ?? 24) - 1;
-        $appointments = Appointment::where('status_id', AppointmentStatus::Pending->value)->where('created_at', '<',now()->subHours($timeLimitHours))->get();
-        foreach($appointments as $appointment) {  
-           $appointment->serviceProvider->user->notify(new ReminderAppointmentNotification($appointment, 'provider'));
-        }
+         $timeLimitHours = (config('app.limit_hours') ?? 24) - 1;
+
+        Appointment::where('status_id', AppointmentStatus::Pending->value)
+            ->where('created_at', '<', now()->subHours($timeLimitHours))
+            ->chunkById(100, function ($appointments) {
+
+                foreach ($appointments as $appointment) {
+
+                    RemiderAppointmentJob::dispatch($appointment);
+
+                }
+
+            });
     }
 }
