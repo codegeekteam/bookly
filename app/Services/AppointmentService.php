@@ -1746,6 +1746,7 @@ class AppointmentService
             ->whereIn('service_id', $serviceIds)
             ->get()
             ->keyBy('service_id');
+            \Log::info('operationalHours : ', ['operationalHours' => $operationalHours]);
         foreach ($booked_services as $booked_service) {
             if (!$operationalHours->has($booked_service->service_id)) {
                 throw new Exception(__('The selected date is not available for one of the services.'));

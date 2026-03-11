@@ -643,11 +643,8 @@ class AppointmentController extends Controller
      * @response 400 {"message": "Time slot is not available"}
      * @response 400 {"message": "Service not found"}
      */
-    public function rescheduleMultiple(AppointmentService $appointmentService, RescheduleAppointmentCustomerRequest $request)
-   // public function rescheduleMultiple(AppointmentService $appointmentService, Request $request)
-  
-  {
-      //  dd($request->all());
+    public function rescheduleMultiple(AppointmentService $appointmentService, RescheduleAppointmentCustomerRequest $request) 
+    {      
         try {
             return $appointmentService->rescheduleMultiple(
                 customer: auth()->user()->customer,
