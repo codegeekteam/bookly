@@ -1740,6 +1740,9 @@ class AppointmentService
         if ($flag === true) {
             throw new Exception(__('The rescheduled time cannot be in the past.'));
         }
+         \Log::info('rescheduleDate : '. $rescheduleDate->format('l'));
+
+             \Log::info('serviceIds : ', ['serviceIds' => $serviceIds]);
         $serviceIds = $booked_services->pluck('service_id');
         $operationalHours = OperationalHour::where('service_provider_id', $appointment->service_provider_id)
             ->where('day_of_week', $rescheduleDate->format('l'))
