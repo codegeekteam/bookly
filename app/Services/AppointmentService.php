@@ -1743,16 +1743,18 @@ class AppointmentService
          \Log::info('rescheduleDate : '. $rescheduleDate->format('l'));
 
                 \Log::info('booked_services : ', ['booked_services' => $booked_services]);
-        $serviceIds = $service_ids;//$booked_services->pluck('service_id');
+        $serviceIds = $service_ids;//$booked_services->pluck('id');
            \Log::info('serviceIds : ', ['serviceIds' => $serviceIds]);
         $operationalHours = OperationalHour::where('service_provider_id', $appointment->service_provider_id)
             ->where('day_of_week', $rescheduleDate->format('l'))
             ->whereIn('service_id', $serviceIds)
             ->get()
-            ->keyBy('service_id');
+          //  ->keyBy('service_id');
+            ->keyBy(fn($item) => (int)$item->service_id);
             \Log::info('operationalHours : ', ['operationalHours' => $operationalHours]);
         foreach ($booked_services as $booked_service) {
-            if (!$operationalHours->has($booked_service->service_id)) {
+             $booked_service_id = (int)$booked_service->service_id;
+            if (!$operationalHours->has($booked_service_id)) {
                 throw new Exception(__('The selected date is not available for one of the services.'));
             }
         }
