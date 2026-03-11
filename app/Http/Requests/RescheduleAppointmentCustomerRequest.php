@@ -35,8 +35,9 @@ class RescheduleAppointmentCustomerRequest extends FormRequest
     {
         return [
             'appointment_id' => 'required|exists:appointments,id',
-            'slots' => 'required|array',
-            'slots.*' => ['required', 'string', new ValidSlot],
+             'slots' => 'required',
+           // 'slots' => 'required|array',
+          //  'slots.*' => ['required', 'string', new ValidSlot],
             // 'slots.*.service_id' => 'required|integer',
             // 'slots.*.timeslot' => 'required|string',   
             'date' => 'required',
