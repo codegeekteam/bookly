@@ -1742,8 +1742,9 @@ class AppointmentService
         }
          \Log::info('rescheduleDate : '. $rescheduleDate->format('l'));
 
-             \Log::info('serviceIds : ', ['serviceIds' => $serviceIds]);
+          
         $serviceIds = $booked_services->pluck('service_id');
+           \Log::info('serviceIds : ', ['serviceIds' => $serviceIds]);
         $operationalHours = OperationalHour::where('service_provider_id', $appointment->service_provider_id)
             ->where('day_of_week', $rescheduleDate->format('l'))
             ->whereIn('service_id', $serviceIds)
