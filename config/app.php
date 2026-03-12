@@ -59,7 +59,9 @@ return [
 
     'asset_url' => env('ASSET_URL'),
 
-    'limit_hours' => env('LIMIT_HOURS', '22'),
+    'limit_hours' => env('LIMIT_HOURS', 24),
+
+    'sub_hours' => env('SUB_HOURS', 1),
 
     'refund_days' => env('REFUND_DAYS', 7),
 

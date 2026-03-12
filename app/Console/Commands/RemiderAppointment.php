@@ -29,7 +29,7 @@ class RemiderAppointment extends Command
      */
     public function handle()
     {
-         $timeLimitHours = (config('app.limit_hours') ?? 24) - 1;
+         $timeLimitHours = (config('app.limit_hours') ?? 24) - config('app.sub_hours');
 
         Appointment::where('status_id', AppointmentStatus::Pending->value)
             ->where('created_at', '<', now()->subHours($timeLimitHours))
