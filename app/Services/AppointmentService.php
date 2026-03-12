@@ -1722,7 +1722,7 @@ class AppointmentService
         if(($service_ids == null) || empty($service_ids)) {
             throw new Exception(__('Services Not Found'));
         }        
-        $booked_services = $appointment->services()->whereIn('service_id', $service_ids)->get();       
+        $booked_services = $appointment->services();//->whereIn('service_id', $service_ids)->get();       
         Log::critical('booked_service is not empty ' . $booked_services->isNotEmpty());
         if ($booked_services->isEmpty()) {
             throw new Exception(__('Services not found'));
@@ -1743,10 +1743,10 @@ class AppointmentService
          \Log::info('rescheduleDate : '. $rescheduleDate->format('l'));
 
                 \Log::info('booked_services : ', ['booked_services' => $booked_services]);
-        $serviceIds = $serviceIds = $booked_services->pluck('service_id')->map(fn($id) => (int)$id)->toArray(); //$service_ids;//$booked_services->pluck('id');
+        $serviceIds = $serviceIds = $service_ids; //$booked_services->pluck('service_id')->map(fn($id) => (int)$id)->toArray(); //$booked_services->pluck('id');
            \Log::info('serviceIds : ', ['serviceIds' => $serviceIds]);
 
-             \Log::info('service_ids : ', ['service_ids' => $service_ids]);
+          //   \Log::info('service_ids : ', ['service_ids' => $service_ids]);
 
            \Log::info('booked_services', [
                 'ids' => $booked_services->pluck('service_id')
