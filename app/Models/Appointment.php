@@ -51,6 +51,7 @@ class Appointment extends Model
         'remaining_payment_method_id',
         'admin_cancel_reason',
         'goodwill_amount',
+        'reminder_sent',
     ];
 
     protected $casts = [

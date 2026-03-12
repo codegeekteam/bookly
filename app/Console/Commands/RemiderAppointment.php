@@ -32,12 +32,14 @@ class RemiderAppointment extends Command
          $timeLimitHours = (config('app.limit_hours') ?? 24) - config('app.sub_hours');
 
         Appointment::where('status_id', AppointmentStatus::Pending->value)
+            ->where('reminder_sent', false)
             ->where('created_at', '<', now()->subHours($timeLimitHours))
             ->chunkById(100, function ($appointments) {
 
                 foreach ($appointments as $appointment) {
 
-                    RemiderAppointmentJob::dispatch($appointment);
+                    $appointment->update(['reminder_sent' => true]);
+                    RemiderAppointmentJob::dispatch($appointment);                    
 
                 }
 
