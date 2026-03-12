@@ -37,7 +37,7 @@ trait RefundTrait
                 }
             }
         }
-$total = 10; //remove after testing
+
         $amount = round($total) * 100; //converted to sub unit
 
         $base_url = config('services.payfort.refund_url').'/FortAPI/paymentApi';
