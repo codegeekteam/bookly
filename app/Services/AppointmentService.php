@@ -1722,7 +1722,7 @@ class AppointmentService
         if(($service_ids == null) || empty($service_ids)) {
             throw new Exception(__('Services Not Found'));
         }        
-        $booked_services = $appointment->services()/*->whereIn('service_id', $service_ids)*/->get();       
+        $booked_services = $appointment->services()->whereIn('id', $service_ids)->get();       
         Log::critical('booked_service is not empty ' . $booked_services->isNotEmpty());
         if ($booked_services->isEmpty()) {
             throw new Exception(__('Services not found'));
@@ -1743,13 +1743,13 @@ class AppointmentService
          \Log::info('rescheduleDate : '. $rescheduleDate->format('l'));
 
                 \Log::info('booked_services : ', ['booked_services' => $booked_services]);
-        $serviceIds = $serviceIds = $service_ids; //$booked_services->pluck('service_id')->map(fn($id) => (int)$id)->toArray(); //$booked_services->pluck('id');
+         $serviceIds =  $booked_services->pluck('id')->map(fn($id) => (int)$id)->toArray(); //$service_ids; // //$booked_services->pluck('id');
            \Log::info('serviceIds : ', ['serviceIds' => $serviceIds]);
 
-          //   \Log::info('service_ids : ', ['service_ids' => $service_ids]);
+             \Log::info('service_ids : ', ['service_ids' => $service_ids]);
 
            \Log::info('booked_services', [
-                'ids' => $booked_services->pluck('service_id')
+                'ids' => $booked_services->pluck('id')
             ]);
         $operationalHours = OperationalHour::where('service_provider_id', $appointment->service_provider_id)
             ->where('day_of_week', $rescheduleDate->format('l'))
@@ -1759,7 +1759,7 @@ class AppointmentService
             ->keyBy(fn($item) => (int)$item->service_id);
             \Log::info('operationalHours : ', ['operationalHours' => $operationalHours]);
         foreach ($booked_services as $booked_service) {
-             $booked_service_id = (int)$booked_service->service_id;
+             $booked_service_id = (int)$booked_service->id;
             if (!$operationalHours->has($booked_service_id)) {
                 throw new Exception(__('The selected date is not available for one of the services.'));
             }
@@ -1768,7 +1768,7 @@ class AppointmentService
             $slot_arr = json_decode($slt, true);
             $service_id = $slot_arr['service_id'];
             $new_time = Carbon::parse($slot_arr['timeslot']);
-            $booked_service = $booked_services->firstWhere('service_id', $service_id);
+            $booked_service = $booked_services->firstWhere('id', $service_id);
             if (!$booked_service) {
                 throw new Exception(__('Service not found in appointment.'));
             }
@@ -1781,11 +1781,11 @@ class AppointmentService
         foreach($booked_services as $booked_service) {
             $slots = $this->getAvailableSlots(
                 $appointment->service_provider_id,
-                $booked_service->service_id,
+                $booked_service->id,
                 $rescheduleDate,
                 $employee_id
             )['slots'];
-            $available_timeslots[$booked_service->service_id] = $slots;
+            $available_timeslots[$booked_service->id] = $slots;
         }      
         foreach($slot as $slt){ //$slot is input array of json stirngs service_id, timeslot
             $slot_arr = json_decode($slt,true);
@@ -1797,7 +1797,7 @@ class AppointmentService
         }      
         $duration = [];
         foreach ($booked_services as $booked_service) {
-            $ops = $operationalHours->get($booked_service->service_id);
+            $ops = $operationalHours->get($booked_service->id);
             if (!$ops) {
                 throw new Exception(__('Operational hours not configured for service.'));
             }
