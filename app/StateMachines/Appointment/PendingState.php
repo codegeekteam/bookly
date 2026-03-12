@@ -298,6 +298,12 @@ class PendingState extends BaseAppointmentState
             throw new \Exception('Only the appointment customer can reschedule the appointment');
         }
 
+        $timeLimitHours = config('app.limit_hours');   
+        if ($appointment->created_at->lt(now()->subHours($timeLimitHours))) {
+            throw new Exception('The time limit of {$timeLimitHours} hours exceeded. Cannot reschedule this appointment');
+        }
+        
+
         $appointment->update([
             'status_id' => AppointmentStatus::RescheduleRequest->value,
             'previous_status_id' => $appointment->status_id,
