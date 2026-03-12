@@ -61,7 +61,7 @@ $total = 10; //remove after testing
                         'language' => 'en',
                         'merchant_identifier' =>  config('services.payfort.merchant_identifier'),
                         'merchant_reference' => $paymentLog->merchant_reference, 
-                        'order_description' =>  $paymentLog->appointment_id . '- Refund Request Processed',                    
+                        'order_description' =>  $paymentLog->appointment_id . ' - Refund Request Processed',                    
                       ];            
         $signature = PayfortHelper::generateSignature($refund_data);
         $refund_data['signature'] = $signature;
@@ -98,12 +98,15 @@ $total = 10; //remove after testing
         }
         if(count($parts) == 3) {
             $type = 'appointment'; 
-            $identifier = $parts[1];
+           // $identifier = $parts[1];
             $paymentType = 'remaining';
         }elseif(count($parts) == 2) {
              $type = $parts[0];
-            $identifier = $parts[1];
-        }      
+          //  $identifier = $parts[1];
+        } 
+        $descript = explode('-', $responseData['order_description']);
+        $identifier = (int)trim($descript[0]);
+        
         if($responseData['response_code'] == '06000') {
         $refundHelper = new RefundHelper;
         RefundLog::create([
