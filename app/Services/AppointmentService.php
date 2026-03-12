@@ -1845,11 +1845,11 @@ class AppointmentService
      * @param int $payment_method_id
      * @return AppointmentResource
      */
-    // public function changePaymentMethod(Appointment $appointment, int $payment_method_id): AppointmentResource
-    // {
-    //     $appointment->payment_method_id = $payment_method_id;
-    //     $appointment->save();
-    //     return AppointmentResource::make($appointment->load('serviceProvider', 'services', 'appointmentServices', 'customer', 'promoCode', 'paymentMethod', 'depositPaymentMethod', 'remainingPaymentMethod', 'invoice'));
-    // }
+    public function changePaymentMethod(Appointment $appointment, int $payment_method_id): AppointmentResource
+    {
+        $appointment->payment_method_id = $payment_method_id;
+        $appointment->save();
+        return AppointmentResource::make($appointment->load('serviceProvider', 'services', 'appointmentServices', 'customer', 'promoCode', 'paymentMethod', 'depositPaymentMethod', 'remainingPaymentMethod', 'invoice'));
+    }
 
 }
