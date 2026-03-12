@@ -1743,8 +1743,14 @@ class AppointmentService
          \Log::info('rescheduleDate : '. $rescheduleDate->format('l'));
 
                 \Log::info('booked_services : ', ['booked_services' => $booked_services]);
-        $serviceIds = $service_ids;//$booked_services->pluck('id');
+        $serviceIds = $serviceIds = $booked_services->pluck('service_id')->map(fn($id) => (int)$id)->toArray(); //$service_ids;//$booked_services->pluck('id');
            \Log::info('serviceIds : ', ['serviceIds' => $serviceIds]);
+
+             \Log::info('service_ids : ', ['service_ids' => $service_ids]);
+
+           \Log::info('booked_services', [
+                'ids' => $booked_services->pluck('service_id')
+            ]);
         $operationalHours = OperationalHour::where('service_provider_id', $appointment->service_provider_id)
             ->where('day_of_week', $rescheduleDate->format('l'))
             ->whereIn('service_id', $serviceIds)
