@@ -1722,7 +1722,7 @@ class AppointmentService
         if(($service_ids == null) || empty($service_ids)) {
             throw new Exception(__('Services Not Found'));
         }        
-        $booked_services = $appointment->services()->whereIn('service_id', $service_ids)->get();       
+        $booked_services = $appointment->services();//->whereIn('service_id', $service_ids)->get();       
         Log::critical('booked_service is not empty ' . $booked_services->isNotEmpty());
         if ($booked_services->isEmpty()) {
             throw new Exception(__('Services not found'));
