@@ -1826,8 +1826,8 @@ class AppointmentService
             $time_Arr[] = $rescheduleTm->format('H:i');
         }    
         try {
-            $appointment->serviceProvider->user->notify(new NewRequestRescheduledNotification($appointment, $time_Arr, $rescheduleDate->format('Y-m-d')));
-            $appointment->customer->user->notify(new NewRescheduledNotification($appointment, $time_Arr, $rescheduleDate->format('Y-m-d')));
+            $appointment->serviceProvider->user->notify(new NewRequestRescheduledNotification($appointment, json_encode($time_Arr), $rescheduleDate->format('Y-m-d')));
+            $appointment->customer->user->notify(new NewRescheduledNotification($appointment, json_encode($time_Arr), $rescheduleDate->format('Y-m-d')));
          
         } catch (\Exception $e) {
             Log::info($e);
