@@ -692,19 +692,19 @@ class AppointmentController extends Controller
     // #[Endpoint('change-remaining-payment-method')]
     // #[Authenticated]
     // #[ResponseFromApiResource(AppointmentResource::class, Appointment::class)]
-    // public function changePaymentMethod(
-    //     ChangePaymentMethodRequest $request,
-    //     Appointment $appointment,
-    //     AppointmentService $appointmentService
-    // ) {
-    //     try {
-    //         return $appointmentService->changePaymentMethod(
-    //             appointment: $appointment,
-    //             payment_method_id: $request->payment_method_id
-    //         );
-    //     } catch (\Exception $exception) {
-    //         return $this->error($exception->getMessage());
-    //     }
-    // } 
+    public function changePaymentMethod(
+        ChangePaymentMethodRequest $request,
+        Appointment $appointment,
+        AppointmentService $appointmentService
+    ) {
+        try {
+            return $appointmentService->changePaymentMethod(
+                appointment: $appointment,
+                payment_method_id: $request->payment_method_id
+            );
+        } catch (\Exception $exception) {
+            return $this->error($exception->getMessage());
+        }
+    } 
 
 }

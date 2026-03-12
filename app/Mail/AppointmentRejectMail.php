@@ -38,7 +38,7 @@ class AppointmentRejectMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'appointment-reject',
+            view: 'emails.appointment-reject',
         );
     }
 

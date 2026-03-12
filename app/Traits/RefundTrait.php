@@ -41,16 +41,6 @@ $total = 10; //remove after testing
         $amount = round($total) * 100; //converted to sub unit
 
         $base_url = config('services.payfort.refund_url').'/FortAPI/paymentApi';
-        // $refund_data = [            
-        //                 'command' => 'REFUND',
-        //                 'access_code' =>  config('services.payfort.access_code'),
-        //                 'merchant_identifier' =>  config('services.payfort.merchant_identifier'),
-        //                 'merchant_reference' => $paymentLog->merchant_reference,
-        //                 'amount' =>  $amount,
-        //                 'currency' =>  'SAR',
-        //                 'language' => 'en',
-        //                 'fort_id' =>  $paymentLog->fort_id,            
-        //             ];
          $refund_data = [            
                        
                         'access_code' =>  config('services.payfort.access_code'),
@@ -64,8 +54,7 @@ $total = 10; //remove after testing
                         'order_description' =>  $paymentLog->appointment_id . ' - Refund Request Processed',                    
                       ];            
         $signature = PayfortHelper::generateSignature($refund_data);
-        $refund_data['signature'] = $signature;
-        // $refund_data['order_description'] =  $paymentLog->appointment_id . '- Refund Request Processed'; 
+        $refund_data['signature'] = $signature;   
         \Log::info('REQUEST DATA : '.json_encode($refund_data));
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
@@ -89,7 +78,7 @@ $total = 10; //remove after testing
             \Log::info('Refund response missing merchant_reference');
             return false;
         }
-        // Split the merchant_reference into type and identifier
+        // Split the merchant_reference to get type
         $parts = explode('_', $responseData['merchant_reference']);
 
         if (count($parts) < 2) {
@@ -97,12 +86,10 @@ $total = 10; //remove after testing
             return false;
         }
         if(count($parts) == 3) {
-            $type = 'appointment'; 
-           // $identifier = $parts[1];
+            $type = 'appointment';        
             $paymentType = 'remaining';
         }elseif(count($parts) == 2) {
-             $type = $parts[0];
-          //  $identifier = $parts[1];
+             $type = $parts[0];        
         } 
         $descript = explode('-', $responseData['order_description']);
         $identifier = (int)trim($descript[0]);
