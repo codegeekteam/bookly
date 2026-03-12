@@ -9,7 +9,7 @@ use App\Models\Appointment;
 use App\Models\Enums\TransactionType;
 use App\Models\OperationalHour;
 use App\Models\PaymentLog;
-use App\Notifications\CancelAppointmentNotification;
+use App\Notifications\AdminCancelAppointmentNotification;
 use App\Rules\DateWithinOperationalHoursRule;
 use App\Rules\TimeWithinOperationalHoursRule;
 use App\Services\InvoiceService;
@@ -575,10 +575,10 @@ class AppointmentResource extends Resource
                         }
 
                         if ($record->customer && $record->customer->user) {
-                            $record->customer->user->notify(new CancelAppointmentNotification($record, 'customer', $good_will));
+                            $record->customer->user->notify(new AdminCancelAppointmentNotification($record, 'customer', $good_will));
                         }
                         if ($record->serviceProvider && $record->serviceProvider->user) {
-                            $record->serviceProvider->user->notify(new CancelAppointmentNotification($record, 'provider', false));
+                            $record->serviceProvider->user->notify(new AdminCancelAppointmentNotification($record, 'provider', false));
                         }                              
                         Notification::make()
                             ->title('Appointment Cancelled')
