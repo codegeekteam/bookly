@@ -37,22 +37,35 @@ trait RefundTrait
                 }
             }
         }
-
+$total = 10; //remove after testing
         $amount = round($total) * 100; //converted to sub unit
 
         $base_url = config('services.payfort.refund_url').'/FortAPI/paymentApi';
-        $refund_data = [            
-                        'command' => 'REFUND',
+        // $refund_data = [            
+        //                 'command' => 'REFUND',
+        //                 'access_code' =>  config('services.payfort.access_code'),
+        //                 'merchant_identifier' =>  config('services.payfort.merchant_identifier'),
+        //                 'merchant_reference' => $paymentLog->merchant_reference,
+        //                 'amount' =>  $amount,
+        //                 'currency' =>  'SAR',
+        //                 'language' => 'en',
+        //                 'fort_id' =>  $paymentLog->fort_id,            
+        //             ];
+         $refund_data = [            
+                       
                         'access_code' =>  config('services.payfort.access_code'),
-                        'merchant_identifier' =>  config('services.payfort.merchant_identifier'),
-                        'merchant_reference' => $paymentLog->merchant_reference,
                         'amount' =>  $amount,
+                        'command' => 'REFUND',
                         'currency' =>  'SAR',
+                        'fort_id' =>  $paymentLog->fort_id,
                         'language' => 'en',
-                        'fort_id' =>  $paymentLog->fort_id,            
-                    ];
-        $refund_data['signature'] = PayfortHelper::generateSignature($refund_data);
-        $refund_data['order_description'] =  $paymentLog->appointment_id . '- Refund Request Processed'; 
+                        'merchant_identifier' =>  config('services.payfort.merchant_identifier'),
+                        'merchant_reference' => $paymentLog->merchant_reference, 
+                        'order_description' =>  $paymentLog->appointment_id . '- Refund Request Processed',                    
+                      ];            
+        $signature = PayfortHelper::generateSignature($refund_data);
+        $refund_data['signature'] = $signature;
+        // $refund_data['order_description'] =  $paymentLog->appointment_id . '- Refund Request Processed'; 
         \Log::info('REQUEST DATA : '.json_encode($refund_data));
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
