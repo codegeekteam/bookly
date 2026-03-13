@@ -1298,16 +1298,20 @@ class AppointmentService
     /**
      * @throws Exception
      */
-    public function markAsComplete($appointment): JsonResponse {     
+    public function markAsComplete($appointment): JsonResponse { 
+        
+    foreach ($appointment->appointmentServices as $service) {
+     \Log::info('date and time'. $service->date . ' ' . $service->end_time);
+}
         $last_appointment_service = $appointment->appointmentServices
             ->sortByDesc(function ($service) {
-              //  return Carbon::parse($service->date)->format('Y-m-d') . ' ' . $service->end_time;
-                return Carbon::createFromFormat('Y-m-d h:i a',  $service->date . ' ' . $service->end_time);
+                return Carbon::parse($service->date)->format('Y-m-d') . ' ' . $service->end_time;
+              //  return Carbon::createFromFormat('Y-m-d h:i a',  $service->date . ' ' . $service->end_time);
             })
             ->first();
 
         $last_service_end_datetime = Carbon::parse($last_appointment_service->date)->setTimeFromTimeString($last_appointment_service->end_time);
-        Log::info('last_appointment_service : ' . Carbon::parse($last_appointment_service->date));
+        \Log::info('last_appointment_service : ' . Carbon::parse($last_appointment_service->date));
         if (Carbon::parse($last_appointment_service->date)->isAfter(today())) {
             \Log::info('Appointment is not yet completed');
             throw new Exception(__('Appointment is not yet completed'));
