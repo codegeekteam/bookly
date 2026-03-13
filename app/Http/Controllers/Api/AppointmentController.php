@@ -185,7 +185,13 @@ class AppointmentController extends Controller
     public function cancel(Appointment $appointment, $refund_method = null)
     {
         try {
-            $appointment->update(['refund_method' => $refund_method ?? null]);
+            if($refund_method != null) {
+                 $appointment->update(['refund_method' => $refund_method ]);
+            } 
+            if ($appointment->serviceProvider->user_id === auth()->id()) {
+                $appointment->state()->cancellationRequest();
+                return response()->json(['message' => __('Appointment cancellation initiated successfully')]);
+            }          
             $appointment->state()->cancel();
             $appointment->customer->user->notify(new CancelAppointmentNotification($appointment, 'customer'));
             $appointment->serviceProvider->user->notify(new CancelAppointmentNotification($appointment, 'provider'));

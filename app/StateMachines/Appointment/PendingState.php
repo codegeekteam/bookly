@@ -14,6 +14,7 @@ use App\Models\RefundSetting;
 use App\Notifications\AppointmentNotification;
 use App\Notifications\ConfirmAppointmentNotification;
 use App\Notifications\RejectAppointmentNotification;
+use App\Notifications\RequestCancellationCustomerNotification;
 use App\Traits\RefundTrait;
 use Carbon\Carbon;
 use Exception;
@@ -319,6 +320,26 @@ class PendingState extends BaseAppointmentState
             'previous_status_id' => $appointment->status_id,
             'changed_status_at' => now(),
         ]);
+
+    }
+
+    public function cancellationRequest() : void
+    {
+        $appointment = $this->appointment;              
+        if ($appointment->serviceProvider->user_id !== auth()->id()) {
+            throw new \Exception('Only the appointment service provider can request cancellation of the appointment');
+        }
+        $this->appointment->update([
+            'status_id' => AppointmentStatus::CancellationRequest->value,
+            'changed_status_at' => now(),
+        ]);
+          \Log::info('RequestCancellationNotification reached in confirm state cancellation request method');  
+        //notification
+           try {
+               $this->appointment->customer->user->notify(new RequestCancellationCustomerNotification($this->appointment));
+           } catch (\Exception $e) {
+               Log::info($e);
+           }
 
     }
 
