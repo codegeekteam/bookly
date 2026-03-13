@@ -22,12 +22,12 @@ class PaymentRequestedState extends BaseAppointmentState
             'status_id' => AppointmentStatus::Completed->value,
             'changed_status_at' => now(),         
         ]);
-        $wallet = $this->appointment->serviceProvider->user->wallet;
+       /* $wallet = $this->appointment->serviceProvider->user->wallet;  //changed to payout creation
         $amount=$this->appointment->amount_due;
         $wallet->update([
             'balance' => $wallet->balance + $amount,
             'pending_balance' => $wallet->pending_balance - $amount,
-        ]);
+        ]); */
 
              \Log::info('CompletedAppoitmentNotification reached in payment requested state complete method');  
         //notification

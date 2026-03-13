@@ -62,12 +62,12 @@ class ConfirmedState extends BaseAppointmentState
             ]);
         }
        
-        $wallet = $this->appointment->serviceProvider->user->wallet;
-        $amount=$this->appointment->amount_due;
-        $wallet->update([
-            'balance' => $wallet->balance + $amount,
-            'pending_balance' => $wallet->pending_balance - $amount,
-        ]);
+        // $wallet = $this->appointment->serviceProvider->user->wallet; //changed to payout creation
+        // $amount=$this->appointment->amount_due;
+        // $wallet->update([
+        //     'balance' => $wallet->balance + $amount,
+        //     'pending_balance' => $wallet->pending_balance - $amount,
+        // ]);
 
             \Log::info('CompletedAppoitmentNotification reached in confirm state complete method');  
         //notification
