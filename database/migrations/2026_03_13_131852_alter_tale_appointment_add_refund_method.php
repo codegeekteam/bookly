@@ -11,9 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('appointments', function (Blueprint $table) {
-             $table->boolean('reminder_sent')->default(false);
+         Schema::table('appointments', function (Blueprint $table) {
+             $table->string('refund_method')->nullable();
         });
+        
     }
 
     /**
@@ -22,7 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('appointments', function (Blueprint $table) {
-             $table->dropColumn('reminder_sent');
-        });
+            $table->dropColumn('refund_method');
+         });
     }
 };

@@ -41,6 +41,8 @@ class BookAppointmentRequest extends FormRequest
             'loyalty_discount_customer_id' => 'nullable|integer',
             'comment' => 'nullable|max:255',
             'payment_method_id' => 'required|exists:payment_methods,id',
+            'deposit_payment_response' => 'nullable',
+            'wallet_enabled' => 'nullable',
         ];
     }
 }

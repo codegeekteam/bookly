@@ -182,9 +182,10 @@ class AppointmentController extends Controller
      * @response 200 { "message": "Appointment cancelled successfully" }
      * @response 400 { "message": "Invalid state transition" }
      */
-    public function cancel(Appointment $appointment)
+    public function cancel(Appointment $appointment, $refund_method = null)
     {
         try {
+            $appointment->update(['refund_method' => $refund_method ?? null]);
             $appointment->state()->cancel();
             $appointment->customer->user->notify(new CancelAppointmentNotification($appointment, 'customer'));
             $appointment->serviceProvider->user->notify(new CancelAppointmentNotification($appointment, 'provider'));
@@ -229,6 +230,7 @@ class AppointmentController extends Controller
                 payment_method_id: $request->payment_method_id,
                 loyalty_discount_customer_id: $request->loyalty_discount_customer_id,
                 deposit_payment_response: $request->deposit_payment_response,
+                wallet_enabled : $request->wallet_enabled,
             );
         } catch (\Exception $exception) {
             Log::critical($exception->getMessage(), [

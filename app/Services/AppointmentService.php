@@ -43,6 +43,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use phpDocumentor\Reflection\Types\Boolean;
 
 class AppointmentService
 {
@@ -341,6 +342,7 @@ class AppointmentService
         ?int $payment_method_id,
         ?int $loyalty_discount_customer_id,
         ?array $deposit_payment_response,
+        ?Boolean $wallet_enabled,
     ) {
         $loyalty_discount = null;
         $serviceProviderId = array_reduce($services, static function ($carry, $service) {
@@ -612,9 +614,17 @@ class AppointmentService
         } 
 
         //customer wallet check
-             \Log::info('customerWalletActions reached'); 
-        $this->customerWalletActions($customer, $appointment); 
-          \Log::info('customerWalletActions executed'); 
+           if ($has_any_deposit && $total_deposit_amount > 0) 
+            {
+                \Log::info('customerWalletActions in deposit payment reached'); 
+                $this->customerWalletActions($customer, $appointment); 
+                \Log::info('customerWalletActions executed'); 
+           }elseif(!$has_any_deposit && $wallet_enabled) 
+           {
+                \Log::info('customerWalletActions in other payments reached'); 
+                $this->customerWalletActions($customer, $appointment); 
+                \Log::info('customerWalletActions executed'); 
+           }
         //add total to provider wallet
         // (new CreateWalletTransactionMutation())  //changed to payout creation
         //     ->handle(
