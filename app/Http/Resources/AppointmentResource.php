@@ -51,6 +51,7 @@ class AppointmentResource extends JsonResource
             'unread_messages_count' => $this->getUnreadMessagesCount($request),
             'invoice_url' => $this->invoice ? $this->invoice->getPdfUrl() : null,
             'cancellation_policy' => $this->getCancellationPolicy(),
+            'admin_cancel_reason' => $this->admin_cancel_reason ?? '',
         ];
     }
 
