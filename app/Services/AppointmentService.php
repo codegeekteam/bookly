@@ -588,8 +588,7 @@ class AppointmentService
                 }
 
             }
-        }
-       // Auto complete appointment if Card payment
+        }    
 
         if ($payment_method_id) {
             $paymentMethod = PaymentMethod::find($payment_method_id);           
@@ -1307,7 +1306,7 @@ class AppointmentService
             ->first();
 
         $last_service_end_datetime = Carbon::parse($last_appointment_service->date)->setTimeFromTimeString($last_appointment_service->end_time);
-
+        Log::info('last_appointment_service : ' . Carbon::parse($last_appointment_service->date));
         if (Carbon::parse($last_appointment_service->date)->isAfter(today())) {
             \Log::info('Appointment is not yet completed');
             throw new Exception(__('Appointment is not yet completed'));
