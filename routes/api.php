@@ -116,7 +116,7 @@ Route::group(['middleware' => ['auth:sanctum',CheckBlockedMiddleware::class]], f
         Route::post('/reschedule-customer', [AppointmentController::class, 'rescheduleMultiple']);
 
         Route::post('/', [AppointmentController::class, 'book']);
-        Route::post('/{appointment}/cancel', [AppointmentController::class, 'cancel']);
+        Route::post('/{appointment}/{refund_method?}/cancel', [AppointmentController::class, 'cancel']);
         Route::post('/{appointment}/complete', [AppointmentController::class, 'complete']);
         Route::post('/{appointment}/confirm', [AppointmentController::class, 'confirm']);
         Route::post('/{appointment}/reject', [AppointmentController::class, 'reject']);

@@ -189,8 +189,18 @@ class PendingState extends BaseAppointmentState
         ]);
         DB::commit();
 
-        $refund_type = RefundSetting::find(1); 
-        if($refund_type->bank_account_refund == 1) {
+        $bankRefund = false;
+        $walletRefund = false;
+        $method = $appointment->refund_method;
+        if (!$method) {
+            $refund_type = RefundSetting::find(1);
+            $bankRefund   = $refund_type->bank_account_refund == 1;
+            $walletRefund = $refund_type->wallet_refund == 1;
+        } else {
+            $bankRefund   = $method === 'bank';
+            $walletRefund = $method === 'wallet';
+        }
+        if($bankRefund) {
             $paymentMethod = $appointment->paymentMethod;
             $paymentLog = PaymentLog::where('appointment_id',$appointment->id)->first();
             if($paymentLog && $paymentMethod && strtolower($paymentMethod->name) === 'card') {  
@@ -200,7 +210,7 @@ class PendingState extends BaseAppointmentState
             }
              \Log::info('Refund  skipped — no valid payment method');
         }
-        elseif($refund_type->wallet_refund == 1){
+        elseif($walletRefund) {
              DB::beginTransaction();
             // Handle refund based on policy
             if ($appointment->payment_status == 'paid' || $appointment->payment_status == 'partially_paid') {
