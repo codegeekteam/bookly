@@ -1301,7 +1301,8 @@ class AppointmentService
     public function markAsComplete($appointment): JsonResponse {     
         $last_appointment_service = $appointment->appointmentServices
             ->sortByDesc(function ($service) {
-                return Carbon::parse($service->date)->format('Y-m-d') . ' ' . $service->end_time;
+              //  return Carbon::parse($service->date)->format('Y-m-d') . ' ' . $service->end_time;
+                return Carbon::createFromFormat('Y-m-d h:i a',  $service->date . ' ' . $service->end_time);
             })
             ->first();
 
