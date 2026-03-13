@@ -46,7 +46,7 @@ class PayoutService
                     'status' => 'pending',
                 ]);
 
-                      \Log::info('create DeferredPayouts card created');
+                      \Log::info('create DeferredPayouts  deposit payment card created');
             }
         }
 

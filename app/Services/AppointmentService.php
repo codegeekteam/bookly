@@ -507,7 +507,7 @@ class AppointmentService
         $appointment->discount = $discount;
         \Log::info('has any deposit', ['has_any_deposit' => $has_any_deposit]);
         \Log::info('total deposit amount', ['total_deposit_amount' => $total_deposit_amount]);
-        // Handle deposit and remaining payment tracking not workinh in this project flow
+        // Handle deposit and remaining payment tracking not working in this project flow
         if ($has_any_deposit && $total_deposit_amount > 0) {
             // Apply discount proportionally
             $deposit_after_discount = max(0, $total_deposit_amount - ($discount * ($total_deposit_amount / $sum_of_services)));
@@ -529,6 +529,7 @@ class AppointmentService
             } else {
                 $appointment->payment_status = 'unpaid';
             }
+                    \Log::info('Handle deposit and remaining payment tracking executed');
         } else {
             // No deposit required - full amount payment
             $appointment->deposit_amount = null;
@@ -540,6 +541,7 @@ class AppointmentService
             $appointment->remaining_payment_method_id = $payment_method_id;
 
             $appointment->payment_status = $appointment->amount_due == 0 ? 'paid' : 'unpaid';
+              \Log::info('No deposit required - full amount payment executed');  
         }
 
         $appointment->save();
@@ -611,17 +613,19 @@ class AppointmentService
         } 
 
         //customer wallet check
+             \Log::info('customerWalletActions reached'); 
         $this->customerWalletActions($customer, $appointment); 
+          \Log::info('customerWalletActions executed'); 
         //add total to provider wallet
-        (new CreateWalletTransactionMutation())
-            ->handle(
-                $provider->user->wallet,
-                $appointment->amount_due,
-                TransactionType::IN,
-                "Appointment #$appointment->id booking",
-                false,
-                " حجز موعد رقم : $appointment->id"
-            );
+        // (new CreateWalletTransactionMutation())  //changed to payout creation
+        //     ->handle(
+        //         $provider->user->wallet,
+        //         $appointment->amount_due,
+        //         TransactionType::IN,
+        //         "Appointment #$appointment->id booking",
+        //         false,
+        //         " حجز موعد رقم : $appointment->id"
+        //     );
         //commit changes
         DB::commit();
         $appointment->refresh();
