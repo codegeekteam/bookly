@@ -617,7 +617,7 @@ class AppointmentService
            if ($has_any_deposit && $total_deposit_amount > 0 && $wallet_enabled) 
             {
                 \Log::info('customerWalletActions in deposit payment reached'); 
-                $this->customerWalletActions($customer, $appointment); 
+                $this->customerWalletActions($customer, $appointment, 'deposit'); 
                 \Log::info('customerWalletActions executed'); 
            }elseif(!$has_any_deposit && $wallet_enabled) 
            {
@@ -665,7 +665,7 @@ class AppointmentService
         return new AppointmentResource($appointment);
     }
 
-    public function customerWalletActions($customer, $appointment)
+    public function customerWalletActions($customer, $appointment, $type = null)
     {
         //check customer wallet
         $wallet = $customer->user->wallet;
@@ -673,36 +673,79 @@ class AppointmentService
             if ($wallet->balance > 0) {
                 $payed_amount = 0;
                 //the balance cover the total deposit
-                if (($wallet->balance >= $appointment->amount_due) && ($appointment->amount_due == $appointment->deposit_amount)){
-                    $appointment->wallet_amount = $appointment->amount_due;                  
-                    $appointment->total_payed = $appointment->amount_due;
-                    $appointment->card_amount = $appointment->amount_due;             
-                    $appointment->deposit_payment_status = 'paid';
-                    if ($appointment->remaining_amount == 0 || $appointment->remaining_amount == null) {
+              if ($wallet->balance >= $appointment->amount_due) {
+                    if($type == 'deposit') { //deposit case
+                        $appointment->wallet_amount = $appointment->amount_due;                  
+                        $appointment->total_payed = $appointment->amount_due;                                 
+                        $appointment->deposit_payment_status = 'paid';
+                        if ($appointment->remaining_amount == 0 || $appointment->remaining_amount == null) {
+                            $appointment->payment_status = 'paid';
+                            $appointment->payment_method_id = 2; //wallet
+                        } else {
+                            $appointment->payment_status = 'partially_paid';
+                        }
+                        $appointment->deposit_payment_method_id = 2; //wallet
+                        $appointment->amount_due = $appointment->remaining_amount;
+                        $appointment->save();
+                        $payed_amount = $appointment->wallet_amount;
+                    }elseif($type == 'remaining') {  // remaining case
+                        $appointment->wallet_amount = $appointment->amount_due;                  
+                        $appointment->total_payed = $appointment->amount_due;
+                        $appointment->remaining_payment_status = 'paid';
                         $appointment->payment_status = 'paid';
-                         $appointment->payment_method_id = 2; //wallet
-                    } else {
-                        $appointment->payment_status = 'partially_paid';
+                        $appointment->payment_method_id = 2; //wallet
+                        $appointment->remaining_payment_method_id = 2; //wallet
+                        $appointment->amount_due = 0.00;
+                        $appointment->save();
+                        $payed_amount = $appointment->wallet_amount;
+                    }else {   //without deposit case
+                        $appointment->wallet_amount = $appointment->amount_due;
+                        $appointment->payment_status = 'paid';
+                        $appointment->total_payed = $appointment->amount_due;
+                        $appointment->payment_method_id = 2; //wallet
+                        $appointment->save();
+                        $payed_amount = $appointment->wallet_amount;
                     }
-                    $appointment->deposit_payment_method_id = 2; //wallet
-                    $appointment->save();
-                    $payed_amount = $appointment->wallet_amount;
-                }elseif ($wallet->balance >= $appointment->amount_due) {  //for full payment card /wallet
-                    $appointment->wallet_amount = $appointment->amount_due;
-                    $appointment->payment_status = 'paid';
-                    $appointment->total_payed = $appointment->amount_due;
-                    $appointment->payment_method_id = 2; //wallet
-                    $appointment->save();
-                    $payed_amount = $appointment->wallet_amount;
-                }
+              }           
                 //total greater than balance
-                else {
-                    $appointment->wallet_amount = $wallet->balance;
+                else {                 
+                    if($type == 'deposit') {    //deposit case
+                        $appointment->wallet_amount = $wallet->balance;                 
+                        $appointment->total_payed = $wallet->balance;                       
+                        $appointment->deposit_payment_status = 'partially_paid';                      
+                        $appointment->payment_method_id = 3; //wallet and card                      
+                        $appointment->payment_status = 'partially_paid';                        
+                        $appointment->deposit_payment_method_id = 3; //wallet and card
+                        $appointment->amount_due = $appointment->amount_due - $wallet->balance;
+                        $appointment->save();
+                        $payed_amount = $appointment->wallet_amount;
+                    }elseif($type == 'remaining') { // remaining case
+                        $appointment->wallet_amount = $wallet->balance;                       
+                        $appointment->total_payed =  $wallet->balance;
+                        $appointment->remaining_payment_status = 'partially_paid';
+                        $appointment->payment_status = 'partially_paid';
+                        $appointment->payment_method_id = 3; //wallet and card
+                        $appointment->remaining_payment_method_id = 3; //wallet and card
+                        $appointment->amount_due = $appointment->amount_due - $wallet->balance;
+                        $appointment->save();
+                        $payed_amount = $appointment->wallet_amount;
+                    }else {  //without deposit case
+                        $appointment->wallet_amount = $wallet->balance;
+                        $appointment->payment_status = 'partially_paid';
+                        $appointment->total_payed = $wallet->balance;
+                        $appointment->payment_method_id = 3; //wallet and card
+                        $appointment->save();
+                        $payed_amount = $appointment->wallet_amount;
+                    }
+
+                    ///////////////////////////////////////
+
+                  /*  $appointment->wallet_amount = $wallet->balance;
                     $appointment->payment_status = 'partially_paid';
                     $appointment->total_payed = $wallet->balance;
                     $appointment->payment_method_id = 3; //wallet and card
                     $appointment->save();
-                    $payed_amount = $appointment->wallet_amount;
+                    $payed_amount = $appointment->wallet_amount;*/
                 }
 
                 //add wallet transaction
