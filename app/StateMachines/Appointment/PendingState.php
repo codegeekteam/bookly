@@ -11,9 +11,11 @@ use App\Models\Enums\TransactionType;
 use App\Models\PaymentLog;
 use App\Models\RefundLog;
 use App\Models\RefundSetting;
+use App\Models\User;
 use App\Notifications\AppointmentNotification;
 use App\Notifications\ConfirmAppointmentNotification;
 use App\Notifications\RejectAppointmentNotification;
+use App\Notifications\RequestCancellationAdminNotification;
 use App\Notifications\RequestCancellationCustomerNotification;
 use App\Traits\RefundTrait;
 use Carbon\Carbon;
@@ -335,8 +337,10 @@ class PendingState extends BaseAppointmentState
         ]);
           \Log::info('RequestCancellationNotification reached in confirm state cancellation request method');  
         //notification
+            $admin = User::find(1);
            try {
                $this->appointment->customer->user->notify(new RequestCancellationCustomerNotification($this->appointment));
+                $admin->notify(new RequestCancellationAdminNotification($this->appointment));
            } catch (\Exception $e) {
                Log::info($e);
            }
