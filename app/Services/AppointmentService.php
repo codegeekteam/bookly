@@ -614,10 +614,10 @@ class AppointmentService
         } 
 
         //customer wallet check
-           if ($has_any_deposit && $total_deposit_amount > 0) 
+           if ($has_any_deposit && $total_deposit_amount > 0 && $wallet_enabled) 
             {
                 \Log::info('customerWalletActions in deposit payment reached'); 
-               /* $this->customerWalletActions($customer, $appointment); */
+                $this->customerWalletActions($customer, $appointment); 
                 \Log::info('customerWalletActions executed'); 
            }elseif(!$has_any_deposit && $wallet_enabled) 
            {
