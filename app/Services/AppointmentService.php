@@ -672,8 +672,22 @@ class AppointmentService
         if ($wallet) {
             if ($wallet->balance > 0) {
                 $payed_amount = 0;
-                //the balance cover the total
-                if ($wallet->balance >= $appointment->amount_due) {
+                //the balance cover the total deposit
+                if (($wallet->balance >= $appointment->amount_due) && ($appointment->amount_due == $appointment->deposit_amount)){
+                    $appointment->wallet_amount = $appointment->amount_due;                  
+                    $appointment->total_payed = $appointment->amount_due;
+                    $appointment->card_amount = $appointment->amount_due;             
+                    $appointment->deposit_payment_status = 'paid';
+                    if ($appointment->remaining_amount == 0 || $appointment->remaining_amount == null) {
+                        $appointment->payment_status = 'paid';
+                         $appointment->payment_method_id = 2; //wallet
+                    } else {
+                        $appointment->payment_status = 'partially_paid';
+                    }
+                    $appointment->deposit_payment_method_id = 2; //wallet
+                    $appointment->save();
+                    $payed_amount = $appointment->wallet_amount;
+                }elseif ($wallet->balance >= $appointment->amount_due) {  //for full payment card /wallet
                     $appointment->wallet_amount = $appointment->amount_due;
                     $appointment->payment_status = 'paid';
                     $appointment->total_payed = $appointment->amount_due;
