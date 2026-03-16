@@ -342,7 +342,7 @@ class AppointmentService
         ?int $payment_method_id,
         ?int $loyalty_discount_customer_id,
         ?array $deposit_payment_response,
-        ?Boolean $wallet_enabled,
+        ?bool $wallet_enabled,
     ) {
         $loyalty_discount = null;
         $serviceProviderId = array_reduce($services, static function ($carry, $service) {
@@ -617,7 +617,7 @@ class AppointmentService
            if ($has_any_deposit && $total_deposit_amount > 0) 
             {
                 \Log::info('customerWalletActions in deposit payment reached'); 
-                $this->customerWalletActions($customer, $appointment); 
+               /* $this->customerWalletActions($customer, $appointment); */
                 \Log::info('customerWalletActions executed'); 
            }elseif(!$has_any_deposit && $wallet_enabled) 
            {
