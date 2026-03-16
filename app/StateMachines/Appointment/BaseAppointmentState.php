@@ -34,5 +34,20 @@ abstract class BaseAppointmentState
     {
         throw new \Exception('Invalid state transition');
     }
+
+    public function rescheduleRequest()
+    {
+        throw new \Exception('Invalid state transition');
+    }
+
+    public function paymentRequest()
+    {
+        throw new \Exception('Invalid state transition');
+    }
+
+    public function cancellationRequest()
+    {
+        throw new \Exception('Invalid state transition');
+    }
  
 }

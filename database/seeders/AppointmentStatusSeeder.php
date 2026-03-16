@@ -9,7 +9,7 @@ class AppointmentStatusSeeder extends Seeder
 {
     public function run(): void
     {
-        $statuses = ['pending', 'confirmed', 'rejected', 'cancelled', 'completed', 'reschedule_request', 'payment_request'];
+        $statuses = ['pending', 'confirmed', 'rejected', 'cancelled', 'completed', 'reschedule_request', 'payment_request', 'cancellation_request'];
 
         foreach ($statuses as $status) {
             // AppointmentStatus::factory()->create([
