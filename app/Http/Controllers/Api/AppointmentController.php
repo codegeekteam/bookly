@@ -715,4 +715,28 @@ class AppointmentController extends Controller
         }
     } 
 
+    public function remainingPaymentWallet(Appointment $appointment, AppointmentService $appointmentService)
+    {
+        try {
+
+            return $appointmentService->remainingPaymentWallet($appointment);
+
+        } catch (\Exception $exception) {
+            return $this->error($exception->getMessage());
+        }
+    }
+
+    public function fullPaymentWallet(Appointment $appointment, AppointmentService $appointmentService)
+    {
+        try {
+
+            return $appointmentService->fullPaymentWallet($appointment);
+
+        } catch (\Exception $exception) {
+            return $this->error($exception->getMessage());
+        }
+    }
+
+    
+
 }

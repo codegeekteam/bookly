@@ -127,7 +127,10 @@ Route::group(['middleware' => ['auth:sanctum',CheckBlockedMiddleware::class]], f
         Route::get('/sdk-token', [AppointmentController::class, 'getSDKToken']);
 
         Route::get('/available-dates', [AppointmentController::class, 'getAvailableDates']);
-         Route::get('/payment-requested', [AppointmentController::class, 'getPaymentRequestedAppointments']);
+        Route::get('/payment-requested', [AppointmentController::class, 'getPaymentRequestedAppointments']);
+
+        Route::post('/{appointment}/wallet-pay-remaining', [AppointmentController::class, 'remainingPaymentWallet']);
+        Route::post('/{appointment}/wallet-pay', [AppointmentController::class, 'fullPaymentWallet']);
     });
 
     Route::group(['prefix' => 'invoices'], function () {
@@ -135,7 +138,6 @@ Route::group(['middleware' => ['auth:sanctum',CheckBlockedMiddleware::class]], f
     });
 
     Route::group(['prefix' => 'providers'], function () {
-
         Route::post('/attached-services/{id}/update', [ServiceController::class, 'updateAttachedService']);
         Route::delete('/attached-services/{id}/delete', [ServiceController::class, 'destroy']);
         Route::post('/settings', [ServiceProviderController::class, 'changeServiceProviderSettings']);
@@ -240,8 +242,3 @@ Route::group(['middleware' => ['auth:sanctum',CheckBlockedMiddleware::class]], f
         Route::get('/conversations', [ChatController::class, 'getConversations']);
     });
 });
-
-// Route::post('/refund', [PayfortController::class, 'refund']);
-// Route::get('/callback-cancel', [PayfortController::class, 'callbackCancel']);
-// Route::get('/callback-reject', [PayfortController::class, 'callbackReject']);
-
