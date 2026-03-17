@@ -1924,4 +1924,21 @@ class AppointmentService
         return AppointmentResource::make($appointment->load('serviceProvider', 'services', 'appointmentServices', 'customer', 'promoCode', 'paymentMethod', 'depositPaymentMethod', 'remainingPaymentMethod', 'invoice'));
     }
 
+    public function remainingPaymentWallet(Appointment $appointment)
+    {
+        $customer = $appointment->customer;    
+        \Log::info('customerWalletActions in remaining payment reached'); 
+        $this->customerWalletActions($customer, $appointment, 'remaining'); 
+        \Log::info('customerWalletActions in remaining payment executed'); 
+    }
+
+    public function fullPaymentWallet(Appointment $appointment)
+    {
+        $customer = $appointment->customer;    
+        \Log::info('customerWalletActions in full payment wallet reached'); 
+        $this->customerWalletActions($customer, $appointment); 
+        \Log::info('customerWalletActions in  full payment wallet  executed'); 
+      
+    }
+
 }
