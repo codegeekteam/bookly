@@ -44,18 +44,15 @@ class RefundResource extends Resource
                          if (! $record->model) {
                             return '';
                         }
-                         if ($record->model instanceof \App\Models\GiftCard) {
-                      //  if ($record->model_type == 'App\Models\GiftCard') {
+                         if ($record->model instanceof \App\Models\GiftCard) {                     
                             return 'GiftCard : ' . $record->model->code;
                         }
 
-                         if ($record->model instanceof \App\Models\Appointment) {
-                      //  if ($record->model_type == 'App\Models\Appointment') {
+                        if ($record->model instanceof \App\Models\Appointment) {                     
                             return 'Appointment : # ' . $record->model->id;
                         }
 
-                         if ($record->model instanceof \App\Models\Subscription) {
-                        // if ($record->model_type == 'App\Models\Subscription') {
+                         if ($record->model instanceof \App\Models\Subscription) {              
                             return 'Subscription : # ' . $record->model->id;
                         }
 
