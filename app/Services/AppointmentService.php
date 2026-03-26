@@ -636,9 +636,7 @@ class AppointmentService
         //         " حجز موعد رقم : $appointment->id"
         //     );
         //commit changes
-        DB::commit();
-        $appointment->refresh();
-                    \Log::info('Appointment refresh ran');
+        DB::commit();      
         //clear cart
         (new CartService())->clearCart($customer); 
            //send notification if no deposit required
@@ -1144,8 +1142,7 @@ class AppointmentService
                 \Log::info('Process remaining Payment', ['appintment_payment_remaining_status' => $appointment->remaining_payment_status]);
             }
 
-            $appointment->save();
-          //  $appointment->refresh();
+            $appointment->save();        
                 \Log::info('Status id Value: ' . $appointment->status_id);
                 \Log::info('Status payment status Value: ' . $appointment->payment_status);
 
