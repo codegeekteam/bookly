@@ -61,8 +61,9 @@ class RefundResource extends Resource
             
                 TextColumn::make('amount')
                     ->label('Amount')            
-                    ->formatStateUsing(fn ($state) => $state / 100)
-                    ->money('SAR')
+                    ->formatStateUsing(fn ($state) => 'SAR' . $state / 100)
+                  //  ->money('SAR')
+                 // ->money('SAR', fn($record) => $record->amount / 100 )
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('created_at')
