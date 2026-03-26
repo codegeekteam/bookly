@@ -58,12 +58,13 @@ class RefundResource extends Resource
 
                         return 'Unknown';
                     }),
-
+            
                 TextColumn::make('amount')
-                    ->money('SAR')              
+                    ->label('Amount')
+                    ->formatStateUsing(fn ($state) => number_format($state / 100, 2, '.', ''))
+                    ->money('SAR')
                     ->searchable()
-                    ->label('Amount'),
-                    // ->sortable(),
+                    ->sortable(),
                 TextColumn::make('created_at')
                     ->label('Created Date')
                     ->dateTime('d M Y h:i A') // format optional
