@@ -126,7 +126,7 @@ class AdminCancelAppointmentNotification extends Notification implements ShouldQ
             ])
             ->withToken($fcm_token)
             ->sendNotification();
-    }
+    } 
 
     /**
      * Get the array representation of the notification.

@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Actions\Wallet\Mutations\CreateWalletTransactionMutation;
 use App\Enums\AppointmentStatus;
 use App\Filament\Resources\AppointmentResource\Pages;
+use App\Mail\AppointmentCancelledAdminMail;
 use App\Models\Appointment;
 use App\Models\Enums\TransactionType;
 use App\Models\OperationalHour;
@@ -33,6 +34,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\HtmlString;
 
 class AppointmentResource extends Resource
@@ -465,14 +467,17 @@ class AppointmentResource extends Resource
                             ->label('Goodwill Gesture (SAR)')
                             ->numeric(),                 
                         ])
-                    ->action(function (Appointment $record, array $data) {                                                                       
+                    ->action(function (Appointment $record, array $data) {  
+                        $cancellationReason = $data['cancellation_reason'] ?? null;
+                        $goodwillAmount = $data['goodwill_amount'] ?? 0;
+                        $refundOption = $data['refund_option'] ?? null;                                                                     
                         $record->update([
                             'status_id' => AppointmentStatus::Cancelled->value,
                             'changed_status_at' => now(),
-                            'admin_cancel_reason' => $data['cancellation_reason'],
-                            'goodwill_amount' => $data['goodwill_amount'] ?? 0,
+                            'admin_cancel_reason' => $cancellationReason,
+                            'goodwill_amount' => $goodwillAmount,
                         ]);                       
-                        if(($data['refund_option'] == 'bank') && ($record->payment_status !== 'unpaid')){
+                        if(($refundOption == 'bank') && ($record->payment_status !== 'unpaid')){
                             $paymentMethod = $record->paymentMethod;
                             $paymentLog = PaymentLog::where('appointment_id',$record->id)->first();
                             if($paymentLog && $paymentMethod && strtolower($paymentMethod->name) === 'card') {      
@@ -480,7 +485,7 @@ class AppointmentResource extends Resource
                                 \Log::info('Refund Initiate : '. $response);
                             }
                             \Log::info('Refund  skipped — no valid payment method');                    
-                        }elseif(($data['refund_option'] == 'wallet') && ($record->payment_status !== 'unpaid')) {
+                        }elseif(($refundOption == 'wallet') && ($record->payment_status !== 'unpaid')) {
                             DB::beginTransaction();
                             try {
                                 $cancellationPolicyService = new \App\Services\CancellationPolicyService();
@@ -576,9 +581,11 @@ class AppointmentResource extends Resource
 
                         if ($record->customer && $record->customer->user) {
                             $record->customer->user->notify(new AdminCancelAppointmentNotification($record, 'customer', $good_will));
+                            Mail::to($record->customer->user->email)->send(new AppointmentCancelledAdminMail($record, 'customer', $good_will));
                         }
                         if ($record->serviceProvider && $record->serviceProvider->user) {
                             $record->serviceProvider->user->notify(new AdminCancelAppointmentNotification($record, 'provider', false));
+                            Mail::to($record->serviceProvider->user->email)->send(new AppointmentCancelledAdminMail($record, 'provider', false));
                         }                              
                         Notification::make()
                             ->title('Appointment Cancelled')
