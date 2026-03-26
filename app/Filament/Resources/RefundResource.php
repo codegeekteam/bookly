@@ -38,21 +38,24 @@ class RefundResource extends Resource
                     ->label('ID')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('info')
+                TextColumn::make('model_id')
                     ->label('Info')
-                    ->formatStateUsing(function ($state, $record) {
-                        // if ($record->model instanceof \App\Models\GiftCard) {
-                        if ($record->model_type == 'App\Models\GiftCard') {
+                    ->formatStateUsing(function ($record) {
+                         if (! $record->model) {
+                            return '';
+                        }
+                         if ($record->model instanceof \App\Models\GiftCard) {
+                      //  if ($record->model_type == 'App\Models\GiftCard') {
                             return 'GiftCard : ' . $record->model->code;
                         }
 
-                        // if ($record->model instanceof \App\Models\Appointment) {
-                        if ($record->model_type == 'App\Models\Appointment') {
+                         if ($record->model instanceof \App\Models\Appointment) {
+                      //  if ($record->model_type == 'App\Models\Appointment') {
                             return 'Appointment : # ' . $record->model->id;
                         }
 
-                        // if ($record->model instanceof \App\Models\Subscription) {
-                         if ($record->model_type == 'App\Models\Subscription') {
+                         if ($record->model instanceof \App\Models\Subscription) {
+                        // if ($record->model_type == 'App\Models\Subscription') {
                             return 'Subscription : # ' . $record->model->id;
                         }
 
