@@ -75,17 +75,14 @@ class RefundResource extends Resource
 
                 TextColumn::make('status')
                     ->badge()
-                    ->formatStateUsing(fn ($state) => match ($state) {
-                        '18' => 'Success',
-                        '17' => 'Failed',
-                        '06' => 'Failed',
-                        '0'  => 'Pending',
+                    ->formatStateUsing(fn ($state) => match ($state) {                       
+                        '06' => 'Success',
+                        '00'  => 'Failed',
                         default => $state,
                     })
                     ->color(fn ($state) => match ($state) {
-                        '18' => 'success',
-                        '17' => 'danger',
-                        '06', '0' => 'warning',
+                        '06' => 'success',                      
+                        '00' => 'danger',
                         default => 'secondary',
                     })
                     ->label('Status'),
