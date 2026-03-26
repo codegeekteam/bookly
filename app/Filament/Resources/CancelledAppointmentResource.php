@@ -110,8 +110,8 @@ class CancelledAppointmentResource extends Resource
     {
         return [
             'index' => Pages\ListCancelledAppointments::route('/'),
-            'create' => Pages\CreateCancelledAppointment::route('/create'),
-            'edit' => Pages\EditCancelledAppointment::route('/{record}/edit'),
+           // 'create' => Pages\CreateCancelledAppointment::route('/create'),
+           // 'edit' => Pages\EditCancelledAppointment::route('/{record}/edit'),
         ];
     } 
     
