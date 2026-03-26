@@ -104,8 +104,7 @@ class ConfirmedState extends BaseAppointmentState
             'status_id' => AppointmentStatus::Rejected->value,
             'changed_status_at' => now(),
         ]);
-        DB::commit(); 
-         $appointment->refresh();
+        DB::commit();       
         $refund_type = RefundSetting::find(1); 
         if($refund_type->bank_account_refund == 1) {
             $paymentMethod = $appointment->paymentMethod;
@@ -212,8 +211,7 @@ class ConfirmedState extends BaseAppointmentState
             'changed_status_at' => now(),
         ]);
 
-        DB::commit();
-         $appointment->refresh();
+        DB::commit();     
 
         $bankRefund = false;
         $walletRefund = false;

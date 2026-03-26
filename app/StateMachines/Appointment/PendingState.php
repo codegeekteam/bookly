@@ -46,8 +46,7 @@ class PendingState extends BaseAppointmentState
         $this->appointment->update([
             'status_id' => AppointmentStatus::Confirmed->value,
             'changed_status_at' => now(),
-        ]);
-        $this->appointment->refresh();
+        ]);     
 
         if ($this->appointment->gift_card_id) {
             $this->appointment->giftCard->update([
@@ -94,8 +93,7 @@ class PendingState extends BaseAppointmentState
             'status_id' => AppointmentStatus::Rejected->value,
             'changed_status_at' => now(),
         ]);
-        DB::commit();
-        $appointment->refresh();
+        DB::commit();   
 
         $refund_type = RefundSetting::find(1); 
         if($refund_type->bank_account_refund == 1) {
@@ -192,9 +190,7 @@ class PendingState extends BaseAppointmentState
             'status_id' => AppointmentStatus::Cancelled->value,
             'changed_status_at' => now(),
         ]);
-        DB::commit();
-
-         $appointment->refresh();
+        DB::commit();     
 
         $bankRefund = false;
         $walletRefund = false;

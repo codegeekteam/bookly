@@ -470,13 +470,15 @@ class AppointmentResource extends Resource
                     ->action(function (Appointment $record, array $data) {  
                         $cancellationReason = $data['cancellation_reason'] ?? null;
                         $goodwillAmount = $data['goodwill_amount'] ?? 0;
-                        $refundOption = $data['refund_option'] ?? null;                                                                     
+                        $refundOption = $data['refund_option'] ?? null;
+                                                                                           
                         $record->update([
                             'status_id' => AppointmentStatus::Cancelled->value,
                             'changed_status_at' => now(),
                             'admin_cancel_reason' => $cancellationReason,
                             'goodwill_amount' => $goodwillAmount,
                         ]);                       
+              
                         if(($refundOption == 'bank') && ($record->payment_status !== 'unpaid')){
                             $paymentMethod = $record->paymentMethod;
                             $paymentLog = PaymentLog::where('appointment_id',$record->id)->first();
@@ -554,16 +556,17 @@ class AppointmentResource extends Resource
                                     $record->update([
                                         'loyalty_discount_customer_id' => null,
                                     ]);
-                                }
-                                DB::commit();
+                                }                           
+                                DB::commit();                          
                             } catch (\Throwable $e) {
                                 DB::rollBack();
                                 \Log::error("Wallet Refund Error: " . $e->getMessage());
                             }
                             $data['goodwill_amount'] = 0;
+                           
                         } 
                         
-                        $good_will  = false;
+                        $good_will  = false;                        
                         if($data['goodwill_amount'] > 0) { 
                             $good_will  = true;                 
                             $customerWallet = $record->customer->user->wallet;
