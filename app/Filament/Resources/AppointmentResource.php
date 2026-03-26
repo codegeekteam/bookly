@@ -492,11 +492,12 @@ class AppointmentResource extends Resource
                                 $refundInfo = $cancellationPolicyService->calculateRefund($record, false); //customer cancel
                                 // Handle refund based on policy
                                 if ($record->payment_status == 'paid' || $record->payment_status == 'partially_paid') {
-                                    $refundAmount = $refundInfo['refund_amount'];
+                                    $refundAmount = (float)$record->total_payed; //$refundInfo['refund_amount'];
                                      if($data['goodwill_amount'] > 0) {   
                                         $refundAmount += $data['goodwill_amount'];
                                      }               
-                                    if ($refundInfo['refund_percentage'] == 100 && $refundAmount > 0) {
+                                   // if ($refundInfo['refund_percentage'] == 100 && $refundAmount > 0) {
+                                    if ($refundAmount > 0) {
                                         // Refund to customer (deposit only for provider, full amount for customer)
                                         $customerWallet = $record->customer->user->wallet;
                                         $refundReason = $record->id .' - Refund Full';
