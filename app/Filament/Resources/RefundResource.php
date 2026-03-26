@@ -61,7 +61,12 @@ class RefundResource extends Resource
             
                 TextColumn::make('amount')
                     ->label('Amount')
-                    ->formatStateUsing(fn ($state) => number_format($state / 100, 2, '.', ''))
+                   // ->formatStateUsing(fn ($state) => number_format($state / 100, 2, '.', ''))
+                    ->formatStateUsing(function ($state) {
+                        // divide by 100, and format up to 2 decimal places
+                       // return number_format($state / 100, 2, '.', '');
+                        return $state/100;
+                    })
                     ->money('SAR')
                     ->searchable()
                     ->sortable(),
