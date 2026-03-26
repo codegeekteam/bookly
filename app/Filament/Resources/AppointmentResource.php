@@ -560,6 +560,7 @@ class AppointmentResource extends Resource
                                 DB::rollBack();
                                 \Log::error("Wallet Refund Error: " . $e->getMessage());
                             }
+                            $data['goodwill_amount'] = 0;
                         } 
                         
                         $good_will  = false;
