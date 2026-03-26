@@ -20,24 +20,23 @@ trait RefundTrait
         }
         //  $description = json_decode($appointment->service?->title, true);
         $total = 0;
-        if($type == 'reject') {
-        $total = $appointment->total_payed ?? 0;
-        }
-        if($type == 'cancel') {
-            // Determine who is cancelling
-        $isProviderCancelling = ($appointment->serviceProvider->user_id === auth()->id());
+        if($type == 'reject' || $type == 'admin_cancel') {
+            $total = $appointment->total_payed ?? 0;
+        }    
+        if($type == 'cancel') {           
+                    // Determine who is cancelling
+            $isProviderCancelling = ($appointment->serviceProvider->user_id === auth()->id());
 
-        // Calculate refund based on cancellation policy
-        $cancellationPolicyService = new \App\Services\CancellationPolicyService();
-        $refundInfo = $cancellationPolicyService->calculateRefund($appointment, $isProviderCancelling);
-            if ($appointment->payment_status == 'paid' || $appointment->payment_status == 'partially_paid') {
-                $refundAmount = $refundInfo['refund_amount'] ?? 0;
-                if ($refundInfo['refund_percentage'] == 100 && $refundAmount > 0) {        
-                    $total = $refundAmount;
+            // Calculate refund based on cancellation policy
+            $cancellationPolicyService = new \App\Services\CancellationPolicyService();
+            $refundInfo = $cancellationPolicyService->calculateRefund($appointment, $isProviderCancelling);
+                if ($appointment->payment_status == 'paid' || $appointment->payment_status == 'partially_paid') {
+                    $refundAmount = $refundInfo['refund_amount'] ?? 0;
+                    if ($refundInfo['refund_percentage'] == 100 && $refundAmount > 0) {        
+                        $total = $refundAmount;
+                    }
                 }
-            }
-        }
-
+            }        
         $amount = round($total) * 100; //converted to sub unit
 
         $base_url = config('services.payfort.refund_url').'/FortAPI/paymentApi';
