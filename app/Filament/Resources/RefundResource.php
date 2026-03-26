@@ -40,7 +40,7 @@ class RefundResource extends Resource
                     ->sortable(),
                 TextColumn::make('info')
                     ->label('Info')
-                    ->formatStateUsing(function ($record) {
+                    ->formatStateUsing(function ($state, $record) {
                         // if ($record->model instanceof \App\Models\GiftCard) {
                         if ($record->model_type == 'App\Models\GiftCard') {
                             return 'GiftCard : ' . $record->model->code;
@@ -75,14 +75,20 @@ class RefundResource extends Resource
 
                 TextColumn::make('status')
                     ->badge()
-                    ->colors([
-                        'success' => '18',   // success codes
-                        'danger' => '17',    // failed codes
-                        'warning' => '0',
-                    ])
-                    ->label('Status'), 
-                  
-                
+                    ->formatStateUsing(fn ($state) => match ($state) {
+                        '18' => 'Success',
+                        '17' => 'Failed',
+                        '06' => 'Failed',
+                        '0'  => 'Pending',
+                        default => $state,
+                    })
+                    ->color(fn ($state) => match ($state) {
+                        '18' => 'success',
+                        '17' => 'danger',
+                        '06', '0' => 'warning',
+                        default => 'secondary',
+                    })
+                    ->label('Status'),
             ]);          
     }
     
