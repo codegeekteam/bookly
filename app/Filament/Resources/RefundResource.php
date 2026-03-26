@@ -41,16 +41,19 @@ class RefundResource extends Resource
                 TextColumn::make('info')
                     ->label('Info')
                     ->formatStateUsing(function ($record) {
-                        if ($record->model instanceof \App\Models\GiftCard) {
-                            return 'GiftCard: ' . $record->model->code;
+                        // if ($record->model instanceof \App\Models\GiftCard) {
+                        if ($record->model_type == 'App\Models\GiftCard') {
+                            return 'GiftCard : ' . $record->model->code;
                         }
 
-                        if ($record->model instanceof \App\Models\Appointment) {
-                            return 'Appointment: ' . $record->model->id;
+                        // if ($record->model instanceof \App\Models\Appointment) {
+                        if ($record->model_type == 'App\Models\Appointment') {
+                            return 'Appointment : # ' . $record->model->id;
                         }
 
-                        if ($record->model instanceof \App\Models\Subscription) {
-                            return 'Subscription: ' . $record->model->id;
+                        // if ($record->model instanceof \App\Models\Subscription) {
+                         if ($record->model_type == 'App\Models\Subscription') {
+                            return 'Subscription : # ' . $record->model->id;
                         }
 
                         return 'Unknown';
@@ -94,8 +97,8 @@ class RefundResource extends Resource
     {
         return [
             'index' => Pages\ListRefunds::route('/'),
-            'create' => Pages\CreateRefund::route('/create'),
-            'edit' => Pages\EditRefund::route('/{record}/edit'),
+           // 'create' => Pages\CreateRefund::route('/create'),
+           // 'edit' => Pages\EditRefund::route('/{record}/edit'),
         ];
     }    
 }
