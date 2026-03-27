@@ -585,6 +585,18 @@ class AppointmentService
                         }
                         $appointment->save();
                         \Log::info('Inside Fort ID - Appointment save reached'); 
+                    }elseif($appointment->payment_method_id == 3) {  // wallet + card method
+                        $appointment->deposit_payment_status = 'paid';
+                        $appointment->card_amount = ($appointment->card_amount ?? 0) + $normalizedAmount;
+                        $appointment->total_payed = ($appointment->total_payed ?? 0) + $normalizedAmount;
+                        $appointment->amount_due = $appointment->amount_due  - $normalizedAmount;
+                               // Update overall status
+                        if ($appointment->remaining_amount == 0 || $appointment->remaining_amount == null) {
+                            $appointment->payment_status = 'paid';
+                        } else {
+                            $appointment->payment_status = 'partially_paid';
+                        }                        
+                        $appointment->save();
                     }
                     \Log::info('Process deposit Payment', ['appintment_payment_status' => $appointment->payment_status]);
                 }
@@ -710,7 +722,7 @@ class AppointmentService
                     if($type == 'deposit') {    //deposit case
                         $appointment->wallet_amount = $wallet->balance;                 
                         $appointment->total_payed = $wallet->balance;                       
-                        $appointment->deposit_payment_status = 'paid';                      
+                        $appointment->deposit_payment_status = 'paid';       //'pending';               
                         $appointment->payment_method_id = 3; //wallet and card                      
                         $appointment->payment_status = 'partially_paid';                        
                         $appointment->deposit_payment_method_id = 3; //wallet and card
