@@ -588,9 +588,10 @@ class AppointmentService
                         }
                         $appointment->save();
                         \Log::info('Inside Fort ID - Appointment save reached'); 
-                    }elseif($appointment->payment_method_id === 3) {  // wallet + card method
+                   // }elseif($appointment->payment_method_id === 3) {  // wallet + card method
                    // }elseif ($paymentMethod && strtolower($paymentMethod->name) === 'card and wallet') { 
-                        \Log::info('reached wallet card');
+                    }else {
+                        \Log::info('reached wallet card'. $appointment->payment_method_id);
                         $appointment->deposit_payment_status = 'paid';
                         $appointment->card_amount = ($appointment->card_amount ?? 0) + $normalizedAmount;
                         $appointment->total_payed = ($appointment->total_payed ?? 0) + $normalizedAmount;
