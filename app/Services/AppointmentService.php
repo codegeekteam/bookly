@@ -588,14 +588,17 @@ class AppointmentService
                         }
                         $appointment->save();
                         \Log::info('Inside Fort ID - Appointment save reached'); 
+                        \Log::info('normalized amt:'.$normalizedAmount);
                    // }elseif($appointment->payment_method_id === 3) {  // wallet + card method
                    // }elseif ($paymentMethod && strtolower($paymentMethod->name) === 'card and wallet') { 
                     }else {
-                        \Log::info('reached wallet card'. $appointment->payment_method_id);
+                        \Log::info('reached wallet card:'. $appointment->payment_method_id);
                         $appointment->deposit_payment_status = 'paid';
                         $appointment->card_amount = ($appointment->card_amount ?? 0) + $normalizedAmount;
-                        $appointment->total_payed = ($appointment->total_payed ?? 0) + $normalizedAmount;
-                        $appointment->amount_due = $appointment->amount_due  - $normalizedAmount;
+                        $appointment->total_payed = $appointment->deposit_amount; //($appointment->total_payed ?? 0) + $normalizedAmount;
+                       $amt_log = ($appointment->total_payed ?? 0) + $normalizedAmount;
+                        \Log::info('amt:'. $amt_log);
+                        $appointment->amount_due = 0;//$appointment->amount_due  - $normalizedAmount;
                                // Update overall status
                         if ($appointment->remaining_amount == 0 || $appointment->remaining_amount == null) {
                             $appointment->payment_status = 'paid';
@@ -612,7 +615,7 @@ class AppointmentService
 
         if ($payment_method_id) {
             $paymentMethod = PaymentMethod::find($payment_method_id);           
-
+\Log::info('pay_id:', $payment_method_id);
             //  Notify provider to mark booking complete if Cash payment
             if ($paymentMethod && strtolower($paymentMethod->name) === 'cash') { 
                 try {
