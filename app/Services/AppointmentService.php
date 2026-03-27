@@ -550,6 +550,7 @@ class AppointmentService
             \Log::info('Appointment save reached');    
             
         if ($deposit_payment_response && isset($deposit_payment_response['fort_id'])) {
+            \Log::info('wallet here in book');
             $data = $deposit_payment_response;
             $fortId = $data['fort_id'];
             if ($fortId) {

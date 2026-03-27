@@ -335,22 +335,23 @@ class AppointmentController extends Controller
         try {
             $fortId = $request->input('fort_id');
             if ($fortId) {
+                    \Log::info('wallet here in feedback');
                 $existing = PaymentLog::where('fort_id', $fortId)->first();
                 if ($existing) {
                     Log::warning("Duplicate Payfort callback ignored", ['fort_id' => $fortId]);
                     return response()->json(['message' => 'success'], 200);
                 }
             }
-            //  $paymentLog = PaymentLog::create([
-            //    'response_code' => $request->input('response_code'),
-            //    'status' => $request->input('status'),
-            //    'merchant_reference' => $request->input('merchant_reference'),
-            //    'amount' => $request->input('amount'),
-            //    'currency' => $request->input('currency'),
-            //    'appointment_id' => $request->input('appointment_id'),
-            //    'fort_id' => $request->input('fort_id'),
-            //    'response' => json_encode($request->input())
-            // ]);
+             $paymentLog = PaymentLog::create([
+               'response_code' => $request->input('response_code'),
+               'status' => $request->input('status'),
+               'merchant_reference' => $request->input('merchant_reference'),
+               'amount' => $request->input('amount'),
+               'currency' => $request->input('currency'),
+               'appointment_id' => $request->input('appointment_id'),
+               'fort_id' => $request->input('fort_id'),
+               'response' => json_encode($request->input())
+            ]);
             \Log::info('Payment log created', ['id' => $paymentLog->id]);
             return $appointmentService->getPayfortFeedback(
                 response_code: $request->input('response_code'),
