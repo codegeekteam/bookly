@@ -570,9 +570,11 @@ class AppointmentService
                     \Log::info('Payment log created', ['id' => $paymentLog->id]);
                 }  
                 //add deposit payment updates here
-                  $paymentMethod = PaymentMethod::find($appointment->payment_method_id);         
+                  $paymentMethod = PaymentMethod::find($appointment->payment_method_id); 
+                  \Log::info(strtolower($paymentMethod->name));      
                     $normalizedAmount = $data['amount'] / 100;
                 if ($appointment->deposit_amount) {
+                    \Log::info('inside deposit amt loop'); 
                     if ($normalizedAmount >= $appointment->deposit_amount) {
                         $appointment->deposit_payment_status = 'paid';
                         $appointment->card_amount = ($appointment->card_amount ?? 0) + $normalizedAmount;
@@ -586,8 +588,8 @@ class AppointmentService
                         }
                         $appointment->save();
                         \Log::info('Inside Fort ID - Appointment save reached'); 
-                  //  }elseif($appointment->payment_method_id === 3) {  // wallet + card method
-                    }elseif ($paymentMethod && strtolower($paymentMethod->name) === 'card and wallet') { 
+                    }elseif($appointment->payment_method_id === 3) {  // wallet + card method
+                   // }elseif ($paymentMethod && strtolower($paymentMethod->name) === 'card and wallet') { 
                         \Log::info('reached wallet card');
                         $appointment->deposit_payment_status = 'paid';
                         $appointment->card_amount = ($appointment->card_amount ?? 0) + $normalizedAmount;
