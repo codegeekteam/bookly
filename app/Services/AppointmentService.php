@@ -592,15 +592,15 @@ class AppointmentService
                         \Log::info('normalized amt:'.$normalizedAmount);
                    // }elseif($appointment->payment_method_id === 3) {  // wallet + card method
                    // }elseif ($paymentMethod && strtolower($paymentMethod->name) === 'card and wallet') { 
-                    }/*else {
+                    }elseif($wallet_enabled) {
                         \Log::info('reached wallet card:'. $appointment->payment_method_id);
                            $amt_log = ($appointment->total_payed ?? 0) + $normalizedAmount;
                         \Log::info('amt:'. $amt_log);
                         $appointment->deposit_payment_status = 'paid';
                         $appointment->card_amount = ($appointment->card_amount ?? 0) + $normalizedAmount;
-                        $appointment->total_payed = $appointment->deposit_amount; //($appointment->total_payed ?? 0) + $normalizedAmount;
+                        $appointment->total_payed = ($appointment->total_payed ?? 0) + $normalizedAmount;
                     
-                        $appointment->amount_due = 0;//$appointment->amount_due  - $normalizedAmount;
+                        $appointment->amount_due = $appointment->amount_due  - $normalizedAmount;
                                // Update overall status
                         if ($appointment->remaining_amount == 0 || $appointment->remaining_amount == null) {
                             $appointment->payment_status = 'paid';
@@ -608,7 +608,7 @@ class AppointmentService
                             $appointment->payment_status = 'partially_paid';
                         }                        
                         $appointment->save();
-                    }*/
+                    }
                     \Log::info('Process deposit Payment', ['appintment_payment_status' => $appointment->payment_status]);
                 }
 
@@ -637,12 +637,12 @@ class AppointmentService
         } 
 
         //customer wallet check
-           if ($has_any_deposit && $total_deposit_amount > 0 && $wallet_enabled) 
+        /*   if ($has_any_deposit && $total_deposit_amount > 0 && $wallet_enabled) 
             {
                 \Log::info('customerWalletActions in deposit payment reached'); 
-                $this->customerWalletActions($customer, $appointment, 'deposit'); 
+              //  $this->customerWalletActions($customer, $appointment, 'deposit'); 
                 \Log::info('customerWalletActions executed'); 
-           }elseif(!$has_any_deposit && $wallet_enabled) 
+           }else*/if(!$has_any_deposit && $wallet_enabled) 
            {
                 \Log::info('customerWalletActions in other payments reached'); 
                 $this->customerWalletActions($customer, $appointment); 
