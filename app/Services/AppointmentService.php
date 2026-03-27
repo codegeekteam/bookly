@@ -710,7 +710,7 @@ class AppointmentService
                     if($type == 'deposit') {    //deposit case
                         $appointment->wallet_amount = $wallet->balance;                 
                         $appointment->total_payed = $wallet->balance;                       
-                        $appointment->deposit_payment_status = 'partially_paid';                      
+                        $appointment->deposit_payment_status = 'paid';                      
                         $appointment->payment_method_id = 3; //wallet and card                      
                         $appointment->payment_status = 'partially_paid';                        
                         $appointment->deposit_payment_method_id = 3; //wallet and card
@@ -720,7 +720,7 @@ class AppointmentService
                     }elseif($type == 'remaining') { // remaining case
                         $appointment->wallet_amount = $wallet->balance;                       
                         $appointment->total_payed =  $wallet->balance;
-                        $appointment->remaining_payment_status = 'partially_paid';
+                        $appointment->remaining_payment_status = 'paid';
                         $appointment->payment_status = 'partially_paid';
                         $appointment->payment_method_id = 3; //wallet and card
                         $appointment->remaining_payment_method_id = 3; //wallet and card
