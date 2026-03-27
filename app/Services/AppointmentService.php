@@ -591,7 +591,7 @@ class AppointmentService
                         \Log::info('normalized amt:'.$normalizedAmount);
                    // }elseif($appointment->payment_method_id === 3) {  // wallet + card method
                    // }elseif ($paymentMethod && strtolower($paymentMethod->name) === 'card and wallet') { 
-                    }else {
+                    }/*else {
                         \Log::info('reached wallet card:'. $appointment->payment_method_id);
                            $amt_log = ($appointment->total_payed ?? 0) + $normalizedAmount;
                         \Log::info('amt:'. $amt_log);
@@ -607,7 +607,7 @@ class AppointmentService
                             $appointment->payment_status = 'partially_paid';
                         }                        
                         $appointment->save();
-                    }
+                    }*/
                     \Log::info('Process deposit Payment', ['appintment_payment_status' => $appointment->payment_status]);
                 }
 
