@@ -1135,6 +1135,22 @@ class AppointmentService
                     } else {
                         $appointment->payment_status = 'partially_paid';
                     }
+                }else {
+                    \Log::info('reached wallet card:'. $appointment->payment_method_id);
+                           $amt_log = ($appointment->total_payed ?? 0) + $normalizedAmount;
+                        \Log::info('amt:'. $amt_log);
+                        $appointment->deposit_payment_status = 'paid';
+                        $appointment->card_amount = ($appointment->card_amount ?? 0) + $normalizedAmount;
+                        $appointment->total_payed = ($appointment->total_payed ?? 0) + $normalizedAmount;
+                    
+                        $appointment->amount_due = $appointment->amount_due  - $normalizedAmount;
+                               // Update overall status
+                        if ($appointment->remaining_amount == 0 || $appointment->remaining_amount == null) {
+                            $appointment->payment_status = 'paid';
+                        } else {
+                            $appointment->payment_status = 'partially_paid';
+                        }                       
+                      
                 }
                 \Log::info('Process deposit Payment', ['appintment_payment_status' => $appointment->payment_status]);
             }
