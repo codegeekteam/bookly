@@ -335,8 +335,7 @@ class AppointmentController extends Controller
 
         try {
             $fortId = $request->input('fort_id');
-            if ($fortId) {
-                    \Log::info('wallet here in feedback');
+            if ($fortId) {                 
                 $existing = PaymentLog::where('fort_id', $fortId)->first();
                 if ($existing) {
                     Log::warning("Duplicate Payfort callback ignored", ['fort_id' => $fortId]);

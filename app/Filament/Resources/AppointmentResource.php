@@ -246,7 +246,7 @@ class AppointmentResource extends Resource
                             Placeholder::make('wallet_card_split')
                                 ->label('Details')
                                 ->content(function (?Appointment $record) {
-                                    return "Total amount paid through wallet: SAR {$record->wallet_amount}\Total amount paid through wallet: SAR {$record->card_amount}";
+                                    return "Total amount paid through wallet: SAR {$record->wallet_amount}\nTotal amount paid through card: SAR {$record->card_amount}";
                                 })
                                 ->visible(function (?Appointment $record) {
                                     return optional($record->depositPaymentMethod)->name === 'Card And Wallet';
