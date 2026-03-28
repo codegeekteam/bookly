@@ -241,17 +241,28 @@ class AppointmentResource extends Resource
                             ->disabled()
                             ->label('Deposit Payment Method')
                             ->placeholder('N/A'),
+
+                                 // 👇 Split-up display
+                            Placeholder::make('wallet_card_split')
+                                ->label('Details')
+                                ->content(function (?Appointment $record) {
+                                    return "Total amount paid through wallet: SAR {$record->wallet_amount}\Total amount paid through wallet: SAR {$record->card_amount}";
+                                })
+                                ->visible(function (?Appointment $record) {
+                                    return optional($record->depositPaymentMethod)->name === 'Card And Wallet';
+                                })
+                                ->columnSpanFull(),
                     ])
                     ->columns(3)
                     ->visible(fn (?Appointment $record): bool => $record?->deposit_amount > 0),
 
-                Section::make('Remaining Payment Details')
+                Section::make('Balance Payment Details')
                     ->schema([
                         TextInput::make('remaining_amount')
                             ->prefix('SAR')
                             ->numeric()
                             ->disabled()
-                            ->label('Remaining Amount')
+                            ->label('Balance Amount')
                             ->placeholder('No remaining amount'),
 
                         Select::make('remaining_payment_status')
@@ -261,13 +272,13 @@ class AppointmentResource extends Resource
                                 'failed' => 'Failed',
                             ])
                             ->disabled()
-                            ->label('Remaining Status')
+                            ->label('Balance Payment Status')
                             ->placeholder('N/A'),
 
                         Select::make('remaining_payment_method_id')
                             ->relationship('remainingPaymentMethod', 'name')
                             ->disabled()
-                            ->label('Remaining Payment Method')
+                            ->label('Balance Payment Method')
                             ->placeholder('N/A'),
                     ])
                     ->columns(3)
