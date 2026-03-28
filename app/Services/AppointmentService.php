@@ -724,11 +724,17 @@ class AppointmentService
                         $appointment->deposit_payment_status = 'paid';
                         if ($appointment->remaining_amount == 0 || $appointment->remaining_amount == null) {
                             $appointment->payment_status = 'paid';
-                            $appointment->payment_method_id = 2; //wallet
+                            // $appointment->payment_method_id = 2; //wallet
                         } else {
                             $appointment->payment_status = 'partially_paid';
                         }
-                        $appointment->deposit_payment_method_id = 2; //wallet
+                        if($appointment->deposit_amount == $appointment->amount_due) {
+                            $appointment->deposit_payment_method_id = 2; //wallet
+                            // $appointment->payment_method_id = 2; //wallet
+                        }else{
+                            $appointment->deposit_payment_method_id = 3; //wallet and card
+                            // $appointment->payment_method_id = 3; //wallet
+                        }
                         $appointment->amount_due = $appointment->remaining_amount;
                         $appointment->save();
                         $payed_amount = $appointment->wallet_amount;
@@ -740,8 +746,12 @@ class AppointmentService
                         $appointment->total_payed = ($appointment->total_payed ?? 0 ) + $appointment->amount_due;
                         $appointment->remaining_payment_status = 'paid';
                         $appointment->payment_status = 'paid';
-                        $appointment->payment_method_id = 2; //wallet
-                        $appointment->remaining_payment_method_id = 2; //wallet
+                         if($appointment->remaining_amount == $appointment->amount_due) {
+                            //  $appointment->payment_method_id = 2; //wallet
+                            $appointment->remaining_payment_method_id = 2; //wallet
+                         }else {
+                              $appointment->remaining_payment_method_id = 3; //wallet and card
+                         }
                         $appointment->amount_due = 0.00;
                         $appointment->save();
                         $payed_amount = $appointment->wallet_amount;
