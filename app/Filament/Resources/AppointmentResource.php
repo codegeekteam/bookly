@@ -244,9 +244,12 @@ class AppointmentResource extends Resource
 
                                  // 👇 Split-up display
                             Placeholder::make('wallet_card_split')
-                                ->label('Details')
+                               // ->label('Payment Information:')
                                 ->content(function (?Appointment $record) {
-                                    return "Total amount paid through wallet: SAR {$record->wallet_amount}\nTotal amount paid through card: SAR {$record->card_amount}";
+                                return new HtmlString("
+                                        <strong>Total amount paid through wallet:</strong> SAR {$record->wallet_amount} <br>
+                                        <strong>Total amount paid through card:</strong> SAR {$record->card_amount}
+                                    ");
                                 })
                                 ->visible(function (?Appointment $record) {
                                     return optional($record->depositPaymentMethod)->name === 'Card And Wallet';
@@ -280,6 +283,20 @@ class AppointmentResource extends Resource
                             ->disabled()
                             ->label('Balance Payment Method')
                             ->placeholder('N/A'),
+
+                               // 👇 Split-up display
+                            Placeholder::make('wallet_card_split')
+                               // ->label('Payment Information:')
+                                ->content(function (?Appointment $record) {
+                                return new HtmlString("
+                                        <strong>Total amount paid through wallet:</strong> SAR {$record->wallet_amount} <br>
+                                        <strong>Total amount paid through card:</strong> SAR {$record->card_amount}
+                                    ");
+                                })
+                                ->visible(function (?Appointment $record) {
+                                    return optional($record->remainingPaymentMethod)->name === 'Card And Wallet';
+                                })
+                                ->columnSpanFull(),
                     ])
                     ->columns(3)
                     ->visible(fn (?Appointment $record): bool => $record?->remaining_amount > 0),
