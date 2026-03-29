@@ -1227,7 +1227,42 @@ class AppointmentService
                 $appointment->payment_status = $isPaid ? 'paid' : 'partially_paid';
                 $appointment->card_amount = ($appointment->card_amount ?? 0) + $normalizedAmount;
                 $appointment->total_payed = $newTotal;
+                $appointment->amount_due = $appointment->amount_due  - $normalizedAmount;
                 \Log::info('Process remaining Payment', ['appintment_payment_remaining_status' => $appointment->remaining_payment_status]);
+
+                if($wallet_enabled) {
+                        \Log::info('reached wallet card:'. $appointment->payment_method_id);                        
+                         \Log::info('total_payed' . $appointment->total_payed);
+                         \Log::info('amount_due' . $appointment->amount_due);
+                         \Log::info('normalizedAmount' . $normalizedAmount);
+   
+                        $amt_log = ($appointment->total_payed ?? 0) + $normalizedAmount;
+                        \Log::info('amt:'. $amt_log);
+                        $appointment->remaining_payment_status = 'paid';
+                       // $appointment->card_amount = ($appointment->card_amount ?? 0) + $normalizedAmount;
+                     //   $appointment->total_payed = ($appointment->total_payed ?? 0) + $normalizedAmount;
+                    
+                     //   $appointment->amount_due = $appointment->amount_due  - $normalizedAmount;
+                               // Update overall status
+                        if ($appointment->remaining_amount == 0 || $appointment->remaining_amount == null) {
+                            $appointment->payment_status = 'paid';
+                        } else {
+                            $appointment->payment_status = 'partially_paid';
+                        }                        
+                        $appointment->save();
+                       
+                        \Log::info('total_payed' . $appointment->total_payed);
+                        \Log::info('amount_due' . $appointment->amount_due);
+                        $customer = $appointment->customer;
+                        if ($isRemainingPayment) 
+                        {
+                            \Log::info('customerWalletActions in deposit payment reached'); 
+                            $this->customerWalletActions($customer, $appointment, 'remaining'); 
+                            \Log::info('customerWalletActions executed'); 
+                        }else{
+                             $this->customerWalletActions($customer, $appointment); 
+                        }
+                    }
             }
 
             $appointment->save();        
