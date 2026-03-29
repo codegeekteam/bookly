@@ -188,26 +188,32 @@ class AppointmentResource extends Resource
 
                     Select::make('payment_method_id')
                         ->relationship('paymentMethod', 'name')
-                        ->disabled()
-                        ->label('Payment Method'),
+                        ->label(function (?Appointment $record) {
+                            if ($record && $record->remaining_amount !== null && $record->remaining_amount > 0) {
+                                return 'Balance Payment Method';
+                            }
+
+                            return 'Payment Method';
+                        })
+                        ->disabled(),                   
 
                     TextInput::make('total')
                         ->prefix('SAR')
                         ->numeric()
                         ->disabled()
-                        ->label('Total Amount'),
+                        ->label('Total Amount To Pay'),
 
                     TextInput::make('amount_due')
                         ->prefix('SAR')
                         ->numeric()
                         ->disabled()
-                        ->label('Amount Due'),
+                        ->label('Balance Amount To Pay'),
 
                     TextInput::make('total_payed')
                         ->prefix('SAR')
                         ->numeric()
                         ->disabled()
-                        ->label('Total Paid'),
+                        ->label('Amount Paid'),
 
                     TextInput::make('discount')
                         ->prefix('SAR')
@@ -243,19 +249,35 @@ class AppointmentResource extends Resource
                             ->placeholder('N/A'),
 
                                  // 👇 Split-up display
-                            Placeholder::make('wallet_card_split')
-                               // ->label('Payment Information:')
-                                ->content(function (?Appointment $record) {
-                                return new HtmlString("
-                                        <strong>Total amount paid through wallet:</strong> SAR {$record->wallet_amount} <br>
-                                        <strong>Total amount paid through card:</strong> SAR {$record->card_amount}
-                                    ");
-                                })
-                                ->visible(function (?Appointment $record) {
-                                    return optional($record->depositPaymentMethod)->name === 'Card And Wallet';
-                                })
-                                ->columnSpanFull(),
-                    ])
+                            // Placeholder::make('wallet_card_split')
+                            //    // ->label('Payment Information:')
+                            //     ->content(function (?Appointment $record) {
+                            //     return new HtmlString("
+                            //             <strong>Total amount paid through wallet:</strong> SAR {$record->wallet_amount} <br>
+                            //             <strong>Total amount paid through card:</strong> SAR {$record->card_amount}
+                            //         ");
+                            //     })
+                            //     ->visible(function (?Appointment $record) {
+                            //         return optional($record->depositPaymentMethod)->name === 'Card And Wallet';
+                            //     })
+                            //     ->columnSpanFull(),
+                        TextInput::make('card_amount')
+                            ->prefix('SAR')
+                            ->numeric()
+                            ->disabled()
+                            ->label('Amount From Card')
+                            ->placeholder('No remaining amount')
+                            ->visible(fn (?Appointment $record): bool => optional($record->depositPaymentMethod)->name === 'Card And Wallet'),
+                         TextInput::make('wallet_amount')
+                            ->prefix('SAR')
+                            ->numeric()
+                            ->disabled()
+                            ->label('Amount From Wallet')
+                            ->placeholder('No remaining amount')
+                            ->visible(fn (?Appointment $record): bool => optional($record->depositPaymentMethod)->name === 'Card And Wallet'),
+                    
+                    
+                            ])
                     ->columns(3)
                     ->visible(fn (?Appointment $record): bool => $record?->deposit_amount > 0),
 
@@ -285,19 +307,34 @@ class AppointmentResource extends Resource
                             ->placeholder('N/A'),
 
                                // 👇 Split-up display
-                            Placeholder::make('wallet_card_split')
-                               // ->label('Payment Information:')
-                                ->content(function (?Appointment $record) {
-                                return new HtmlString("
-                                        <strong>Total amount paid through wallet:</strong> SAR {$record->wallet_amount} <br>
-                                        <strong>Total amount paid through card:</strong> SAR {$record->card_amount}
-                                    ");
-                                })
-                                ->visible(function (?Appointment $record) {
-                                    return optional($record->remainingPaymentMethod)->name === 'Card And Wallet';
-                                })
-                                ->columnSpanFull(),
-                    ])
+                            // Placeholder::make('wallet_card_split')
+                            //    // ->label('Payment Information:')
+                            //     ->content(function (?Appointment $record) {
+                            //     return new HtmlString("
+                            //             <strong>Total amount paid through wallet:</strong> SAR {$record->wallet_amount} <br>
+                            //             <strong>Total amount paid through card:</strong> SAR {$record->card_amount}
+                            //         ");
+                            //     })
+                            //     ->visible(function (?Appointment $record) {
+                            //         return optional($record->remainingPaymentMethod)->name === 'Card And Wallet';
+                            //     })
+                            //     ->columnSpanFull(),
+                        TextInput::make('card_amount')
+                            ->prefix('SAR')
+                            ->numeric()
+                            ->disabled()
+                            ->label('Amount From Card')
+                            ->placeholder('No remaining amount')
+                            ->visible(fn (?Appointment $record): bool => optional($record->remainingPaymentMethod)->name === 'Card And Wallet'),
+                        TextInput::make('wallet_amount')
+                            ->prefix('SAR')
+                            ->numeric()
+                            ->disabled()
+                            ->label('Amount From Wallet')
+                            ->placeholder('No remaining amount')
+                            ->visible(fn (?Appointment $record): bool => optional($record->remainingPaymentMethod)->name === 'Card And Wallet'),
+                                          
+                        ])
                     ->columns(3)
                     ->visible(fn (?Appointment $record): bool => $record?->remaining_amount > 0),
 
