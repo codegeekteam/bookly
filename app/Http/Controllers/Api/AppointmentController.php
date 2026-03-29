@@ -331,6 +331,7 @@ class AppointmentController extends Controller
      */
     public function getPayfortFeedback(AppointmentService $appointmentService, Request $request)
     {
+        \Log::info('begin remaining');   
         \Log::info('Payfort callback raw:', $request->all());    
 
         try {
