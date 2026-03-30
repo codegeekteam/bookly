@@ -784,6 +784,7 @@ class AppointmentService
                         $payed_amount = $appointment->wallet_amount;
                          \Log::info('total_payed after wallet: ' . $appointment->total_payed);
                     }elseif($type == 'remaining') { // remaining case
+                    \Log::info('begin wallet remaining');
                        \Log::info('wallet bal < amt due remaining case');
                         \Log::info('total_payed before wallet: ' . $appointment->total_payed);
                         $appointment->wallet_amount = $wallet->balance;                       
@@ -1216,7 +1217,7 @@ class AppointmentService
                     }
                     
                 } */
-
+ \Log::info('card_amount before remaining' . $appointment->card_amount);
                 $newTotal = $normalizedAmount + ($appointment->total_payed ?? 0);
                 $isPaid = $newTotal >= $appointment->amount_due;
 
@@ -1229,8 +1230,8 @@ class AppointmentService
                 $appointment->total_payed = $newTotal;
                 $appointment->amount_due = $appointment->amount_due  - $normalizedAmount;
                 \Log::info('Process remaining Payment', ['appintment_payment_remaining_status' => $appointment->remaining_payment_status]);
-
-                if($wallet_enabled) {
+ \Log::info('card_amount after remaining' . $appointment->card_amount); 
+               /* if($wallet_enabled) {
                         \Log::info('reached wallet card:'. $appointment->payment_method_id);                        
                          \Log::info('total_payed' . $appointment->total_payed);
                          \Log::info('amount_due' . $appointment->amount_due);
@@ -1262,7 +1263,7 @@ class AppointmentService
                         }else{
                              $this->customerWalletActions($customer, $appointment); 
                         }
-                    }
+                    }*/
             }
 
             $appointment->save();        
