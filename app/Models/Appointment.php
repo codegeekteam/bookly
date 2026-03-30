@@ -53,7 +53,7 @@ class Appointment extends Model
         'admin_cancel_reason',
         'goodwill_amount',
         'reminder_sent',
-        'refund_method',
+        'refund_method',       
     ];
 
     protected $casts = [
