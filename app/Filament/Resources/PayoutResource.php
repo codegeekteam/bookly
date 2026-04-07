@@ -223,6 +223,7 @@ class PayoutResource extends Resource
                         $payoutService->markAsTransferred($record, $transferDate, $transactionId, $receipt);
 
                         Notification::make()
+                            ->safeViews('filament-notifications::notification')
                             ->title('Payout Transferred')
                             ->success()
                             ->body('The payout has been marked as transferred and email sent to provider.')
@@ -246,6 +247,7 @@ class PayoutResource extends Resource
                         $payoutService->cancelPayout($record, $data['note']);
 
                         Notification::make()
+                            ->safeViews('filament-notifications::notification')
                             ->title('Payout Cancelled')
                             ->warning()
                             ->body('The payout has been cancelled and amounts returned to pending.')
