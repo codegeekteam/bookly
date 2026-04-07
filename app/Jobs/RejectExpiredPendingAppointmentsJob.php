@@ -106,7 +106,7 @@ class RejectExpiredPendingAppointmentsJob implements ShouldQueue
                 //notification
                 try {
                     $appointment->customer->user->notify(new RejectAppointmentCustomerNotification($appointment));
-                    $appointment->customer->user->notify(new RejectAppointmentProviderNotification($appointment));
+                    $appointment->serviceProvider->user->notify(new RejectAppointmentProviderNotification($appointment));
                     Mail::to($appointment->customer->email)->send(new AppointmentAutoRejectCustomerMail($appointment));
                     Mail::to($appointment->serviceProvider->email)->send(new AppointmentAutoRejectProviderMail($appointment));
                 } catch (\Exception $e) {

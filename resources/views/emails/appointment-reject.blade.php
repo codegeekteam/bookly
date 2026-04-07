@@ -79,7 +79,8 @@
 
             <div class="info-line" style="text-align: right;">
                 <span class="label">تم الإلغاء :</span>
-                <span class="value">Appointment # {{ $appointment->id }} cancelled by customer. <br><span> تم إلغاء الموعد رقم {{ $appointment->id }} من قبل العميل. <span>
+                {{-- <span class="value">Appointment # {{ $appointment->id }} cancelled by customer. <br> تم إلغاء الموعد رقم {{ $appointment->id }} من قبل العميل. </span> --}}
+                <span class="value">تم إلغاء الموعد رقم {{ $appointment->id }} من قبل العميل. </span>
             </div>
        
         </div>

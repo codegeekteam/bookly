@@ -79,7 +79,9 @@
 
             <div class="info-line" style="text-align: right;">
                 <span class="label">تم الإلغاء :</span>
-                <span class="value">Appointment # {{ $appointment->id }} cancelled due to no action within 24 hours. <br>تم إلغاء الموعد رقم  {{ $appointment->id }} بسبب عدم اتخاذ أي إجراء خلال 24 ساعة.</span>
+          {{--    <span class="value">Appointment # {{ $appointment->id }} cancelled due to no action within 24 hours. <br>تم إلغاء الموعد رقم  {{ $appointment->id }} بسبب عدم اتخاذ أي إجراء خلال 24 ساعة.</span> --}}
+             <span class="value">تم إلغاء الموعد رقم  {{ $appointment->id }} بسبب عدم اتخاذ أي إجراء خلال 24 ساعة.</span>
+       
             </div>
        
         </div>
