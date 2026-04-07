@@ -28,12 +28,11 @@ class RejectExpiredPendingAppointmentsServicesJob implements ShouldQueue
     {
         $now = Carbon::now();
         $tenMinutesFromNow= $now->addMinutes(10)->format('H:i:s');
-        $twentyFourHoursFromNow = Carbon::now()->addHours(24);
         try {
             $expired_appointments = Appointment::where('status_id', AppointmentStatus::Pending->value)
-                ->whereHas('services', function ($query) use ($now,$twentyFourHoursFromNow) {
+                ->whereHas('services', function ($query) use ($now,$tenMinutesFromNow) {
                 $query->whereDate('date', $now->toDateString()) // Match the service date
-                ->where('start_time', '<=',$twentyFourHoursFromNow); // Check if within 10 minutes
+                ->where('start_time', '<=',$tenMinutesFromNow); // Check if within 10 minutes
             })->get();
             foreach ($expired_appointments as $appointment) {
                 $appointment->update([
