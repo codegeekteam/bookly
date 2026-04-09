@@ -10,12 +10,12 @@ use Filament\Notifications\Notification;
 
 class RefundSettings extends Page
 {
-    protected static ?string $navigationGroup = 'Refund';
-    protected static ?string $navigationLabel = 'Refund Settings';
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
-    protected static string $view = 'filament.pages.refund-settings';
+    // protected static ?string $navigationGroup = 'Refund';
+    // protected static ?string $navigationLabel = 'Refund Settings';
+    // protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    // protected static string $view = 'filament.pages.refund-settings';
 
-    public ?array $data = [];
+    public ?array $data = [];  
 
     public function mount(): void
     {
