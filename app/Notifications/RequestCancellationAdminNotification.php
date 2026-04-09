@@ -41,7 +41,7 @@ class RequestCancellationAdminNotification extends Notification implements Shoul
     {        
         $date = $this->appointment->services[0]->pivot->date ?? now();
         $serviceDate = Carbon::parse($date);
-        $messageText = 'Provider : ' . $this->appointment->serviceProvider->name . ' requested cancellation for the booking #' . $this->appointment->id . ' of ' . $this->appointment->customer->first_name . $this->appointment->customer->last_name . ' on ' . $serviceDate->format('l') . ' , ' . $serviceDate->format('d-m-Y') . '  ' . $this->appointment->services[0]->pivot->start_time ;
+        $messageText = 'Provider : ' . $this->appointment->serviceProvider->name . ' requested cancellation for the booking #' . $this->appointment->id . ' of ' . $this->appointment->customer->first_name . ' ' . $this->appointment->customer->last_name . ' on ' . $serviceDate->format('l') . ', ' . $serviceDate->format('d-m-Y') . ' ' . $this->appointment->services[0]->pivot->start_time ;
         return  $messageText;   
     }
 
@@ -56,7 +56,7 @@ class RequestCancellationAdminNotification extends Notification implements Shoul
     {      
         $date = $this->appointment->services[0]->pivot->date ?? now();
         $serviceDate = Carbon::parse($date);
-        $messageText = 'مقدم الخدمة: ' . $this->appointment->serviceProvider->name . ' طلب إلغاء الحجز رقم ' . $this->appointment->id . ' الخاص بـ ' . $this->appointment->customer->first_name . $this->appointment->customer->last_name . ' في يوم ' . $serviceDate->format('l') . '، بتاريخ ' . $serviceDate->format('d-m-Y') . '، في تمام الساعة ' . $this->appointment->services[0]->pivot->start_time ;
+        $messageText = 'مقدم الخدمة: ' . $this->appointment->serviceProvider->name . ' طلب إلغاء الحجز رقم ' . $this->appointment->id . ' الخاص بـ ' . $this->appointment->customer->first_name . ' ' . $this->appointment->customer->last_name . ' في يوم ' . $serviceDate->format('l') . '، بتاريخ ' . $serviceDate->format('d-m-Y') . '، في تمام الساعة ' . $this->appointment->services[0]->pivot->start_time ;
         return  $messageText;
    
     }

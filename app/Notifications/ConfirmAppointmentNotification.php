@@ -34,7 +34,7 @@ class ConfirmAppointmentNotification extends Notification implements ShouldQueue
     // Method to set the body dynamically
     private function getBody()
     {
-        return 'Your appointment # '.$this->appointment->id.' confirmed';
+        return 'Your appointment #'.$this->appointment->id.' confirmed';
     }
 
     // Method to set the title ar dynamically

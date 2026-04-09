@@ -9,20 +9,19 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class RejectAppointmentCustomerNotification extends Notification
+class RejectAppointmentAfterOneHourCustomerNotification extends Notification
 {
     use Queueable;
 
-    public $appointment;
+     public $appointment;
 
-  
     /**
      * Create a new notification instance.
      */
     public function __construct($appointment)
     {
-        $this->appointment = $appointment;
-        $this->onQueue('default');      
+         $this->appointment = $appointment;
+        $this->onQueue('default');  
     }
 
     /**
@@ -83,6 +82,8 @@ class RejectAppointmentCustomerNotification extends Notification
             ->withToken($fcm_token)
             ->sendNotification();
     }
+
+
 
     /**
      * Get the array representation of the notification.

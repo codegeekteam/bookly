@@ -27,7 +27,8 @@ class AppointmentAutoRejectCustomerMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Appointment cancelled - تم رفض الموعد',
+            // subject: 'Appointment cancelled - تم رفض الموعد',
+             subject: 'Appointment cancelled'
         );
     }
 

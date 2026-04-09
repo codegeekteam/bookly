@@ -35,7 +35,7 @@ class NewAppointmentNotification extends Notification implements ShouldQueue {
     // Method to set the body dynamically
     private function getBody()
     {
-        return 'New appointment booked # ' . $this->appointment->id;
+        return 'New appointment booked #' . $this->appointment->id;
     }
 
     // Method to set the title ar dynamically

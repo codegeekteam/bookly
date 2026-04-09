@@ -35,7 +35,7 @@ class RescheduleAppointmentNotification extends Notification implements ShouldQu
     // Method to set the body dynamically
     private function getBody()
     {
-        return 'Your appointment # ' . $this->appointment->id . ' cancelled';
+        return 'Your appointment #' . $this->appointment->id . ' cancelled';
     }
 
     // Method to set the title ar dynamically

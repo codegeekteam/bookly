@@ -4,8 +4,14 @@ namespace App\Jobs;
 
 use App\Actions\Wallet\Mutations\CreateWalletTransactionMutation;
 use App\Enums\AppointmentStatus;
+use App\Mail\AppointmentAutoRejectAfterOneHOurCustomerMail;
+use App\Mail\AppointmentAutoRejectAfterOneHOurProviderMail;
+use App\Mail\AppointmentRejectMail;
 use App\Models\Appointment;
+use App\Models\Enums\TransactionType;
 use App\Notifications\AppointmentNotification;
+use App\Notifications\RejectAppointmentAfterOneHourCustomerNotification;
+use App\Notifications\RejectAppointmentAfterOneHourProviderNotification;
 use App\Notifications\RejectAppointmentNotification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -13,8 +19,8 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Carbon;
-use App\Models\Enums\TransactionType;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class RejectExpiredPendingAppointmentsServicesJob implements ShouldQueue
 {
@@ -27,7 +33,8 @@ class RejectExpiredPendingAppointmentsServicesJob implements ShouldQueue
     public function handle(): void
     {
         $now = Carbon::now();
-        $tenMinutesFromNow= $now->addMinutes(10)->format('H:i:s');
+        // $tenMinutesFromNow= $now->addMinutes(10)->format('H:i:s');
+        $tenMinutesFromNow = $now->copy()->addHour()->format('H:i:s'); //oneHourFromNow
         try {
             $expired_appointments = Appointment::where('status_id', AppointmentStatus::Pending->value)
                 ->whereHas('services', function ($query) use ($now,$tenMinutesFromNow) {
@@ -39,7 +46,7 @@ class RejectExpiredPendingAppointmentsServicesJob implements ShouldQueue
                     'status_id' => AppointmentStatus::Rejected->value
                 ]);
                 //check total payed and return the amount to user wallet
-                if ($appointment->payment_status == 'paid' || $appointment->payment_status == 'partially_paid') {
+               /*    if ($appointment->payment_status == 'paid' || $appointment->payment_status == 'partially_paid') {
                     $wallet = $appointment->customer->user->wallet;
                     $total=$appointment->total_payed;
                     if($total>0){
@@ -66,10 +73,13 @@ class RejectExpiredPendingAppointmentsServicesJob implements ShouldQueue
                         $appointment->loyaltyDiscountCustomer->update(['is_used' => false]);
                     }
                     $appointment->update(['loyalty_discount_customer_id' => null]);
-                }
+                }*/
                 //notification
-                try {
-                    $appointment->customer->user->notify(new RejectAppointmentNotification($appointment));
+                try {           
+                        $appointment->customer->user->notify(new RejectAppointmentAfterOneHourCustomerNotification($appointment));
+                        $appointment->serviceProvider->user->notify(new RejectAppointmentAfterOneHourProviderNotification($appointment));
+                        Mail::to($appointment->customer->email)->send(new AppointmentAutoRejectAfterOneHOurCustomerMail($appointment));
+                        Mail::to($appointment->serviceProvider->email)->send(new AppointmentAutoRejectAfterOneHOurProviderMail($appointment));
                 } catch (\Exception $e) {
                     Log::info($e);
                 }

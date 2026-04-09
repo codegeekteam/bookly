@@ -43,14 +43,14 @@ class CancelAppointmentNotification extends Notification implements ShouldQueue 
         {
             $date = $this->appointment->services[0]->pivot->date ?? now();
             $serviceDate = Carbon::parse($date);
-            $messageText = 'Your booking #' . $this->appointment->id . ' with ' . $this->appointment->serviceProvider->name . ' on ' . $serviceDate->format('l') . ' , ' . $serviceDate->format('d-m-Y') . '  ' .$this->appointment->services[0]->pivot->start_time . ' has been cancelled. Refund will be processed within ' . config('app.refund_days') . ' days.';
+            $messageText = 'Your booking #' . $this->appointment->id . ' with ' . $this->appointment->serviceProvider->name . ' on ' . $serviceDate->format('l') . ', ' . $serviceDate->format('d-m-Y') . ' ' .$this->appointment->services[0]->pivot->start_time . ' has been cancelled. Refund will be processed within ' . config('app.refund_days') . ' days.';
             return  $messageText;
         } 
     
         if($this->type == 'provider'){
             $date = $this->appointment->services[0]->pivot->date ?? now();
             $serviceDate = Carbon::parse($date);
-            $messageText = 'Appointment #' . $this->appointment->id . ' of ' . $this->appointment->customer->first_name . " " . $this->appointment->customer->last_name . ' on ' . $serviceDate->format('l') . ' , ' . $serviceDate->format('d-m-Y') . '  ' .$this->appointment->services[0]->pivot->start_time . ' has been cancelled. ' ;
+            $messageText = 'Appointment #' . $this->appointment->id . ' of ' . $this->appointment->customer->first_name . " " . $this->appointment->customer->last_name . ' on ' . $serviceDate->format('l') . ', ' . $serviceDate->format('d-m-Y') . ' ' .$this->appointment->services[0]->pivot->start_time . ' has been cancelled.' ;
             return $messageText;
         }
     }
@@ -68,14 +68,14 @@ class CancelAppointmentNotification extends Notification implements ShouldQueue 
         {
             $date = $this->appointment->services[0]->pivot->date ?? now();
             $serviceDate = Carbon::parse($date);
-            $messageText = 'تم إلغاء حجزك رقم ' . $this->appointment->id . ' مع ' . $this->appointment->serviceProvider->name . ' في ' . $serviceDate->format('l') . ' , ' . $serviceDate->format('d-m-Y') . '  ' .$this->appointment->services[0]->pivot->start_time . '. سيتم استرداد المبلغ خلال ' . config('app.refund_days') . ' أيام.';
+            $messageText = 'تم إلغاء حجزك رقم ' . $this->appointment->id . ' مع ' . $this->appointment->serviceProvider->name . ' في ' . $serviceDate->format('l') . ', ' . $serviceDate->format('d-m-Y') . ' ' .$this->appointment->services[0]->pivot->start_time . '. سيتم استرداد المبلغ خلال ' . config('app.refund_days') . ' أيام.';
             return  $messageText;
         }
 
         if($this->type == 'provider'){
             $date = $this->appointment->services[0]->pivot->date ?? now();
             $serviceDate = Carbon::parse($date);
-            $messageText = 'تم إلغاء الموعد رقم ' . $this->appointment->id . ' الخاص بالعميل ' . $this->appointment->customer->first_name . " " . $this->appointment->customer->last_name . ' بتاريخ ' . $serviceDate->format('l') . '  ' . $serviceDate->format('d-m-Y') . ' , ' .$this->appointment->services[0]->pivot->start_time . '. ' ;
+            $messageText = 'تم إلغاء الموعد رقم ' . $this->appointment->id . ' الخاص بالعميل ' . $this->appointment->customer->first_name . " " . $this->appointment->customer->last_name . ' بتاريخ ' . $serviceDate->format('l') . ' ' . $serviceDate->format('d-m-Y') . ', ' .$this->appointment->services[0]->pivot->start_time . '.' ;
             return $messageText;
         }
     }

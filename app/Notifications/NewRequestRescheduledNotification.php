@@ -40,13 +40,13 @@ class NewRequestRescheduledNotification extends Notification implements ShouldQu
      // Method to set the title dynamically
     private function getTitle()
     {
-        return "Customer  rescheduled appointment";
+        return "Customer rescheduled appointment";
     }
 
     // Method to set the body dynamically
     private function getBody()
     {
-        return 'Appointment #' . $this->appointment->id . 'is rescheduled by customer. Date : '  . $this->reschedule_date . ', Timeslots : ' . $this->reschedule_time;
+        return 'Appointment #' . $this->appointment->id . ' is rescheduled by customer. Date : '  . $this->reschedule_date . ', Timeslots : ' . $this->reschedule_time;
     }
 
    // Method to set the title ar dynamically
