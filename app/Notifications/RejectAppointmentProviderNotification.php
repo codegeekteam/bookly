@@ -43,7 +43,7 @@ class RejectAppointmentProviderNotification extends Notification
     // Method to set the body dynamically
     private function getBody()
     {
-        return 'Appointment # ' . $this->appointment->id .  ' cancelled due to no action within 24 hours.';
+        return 'Appointment #' . $this->appointment->id .  ' cancelled due to no action within 24 hours.';
     }
 
     // Method to set the title ar dynamically

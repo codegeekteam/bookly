@@ -10,14 +10,14 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class AppointmentAutoRejectProviderMail extends Mailable
+class AppointmentAutoRejectAfterOneHOurCustomerMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(public Appointment $appointment)
+    public function __construct( public Appointment $appointment)
     {
     }
 
@@ -37,8 +37,12 @@ class AppointmentAutoRejectProviderMail extends Mailable
      */
     public function content(): Content
     {
+        $serviceDate = $this->appointment->services[0]->pivot->date ?? now(); 
         return new Content(
-            view: 'emails.appointment-auto-reject-provider',
+             view: 'emails.appointment-auto-reject-after-one-hour-customer',
+              with: [
+                        'serviceDate' => $serviceDate
+                    ]
         );
     }
 

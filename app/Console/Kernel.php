@@ -17,13 +17,13 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // $schedule->command('inspire')->hourly();
-        $schedule->job(new RejectExpiredPendingAppointmentsJob())->hourly();  
-      /*  $schedule->job(new RejectUnpaidAppointmentsJob())->everyMinute();
-        $schedule->job(new RejectExpiredPendingAppointmentsServicesJob())->everyFiveMinutes(); */
+        $schedule->job(new RejectExpiredPendingAppointmentsJob())->everyTenMinutes(); //hourly();  
+      /*  $schedule->job(new RejectUnpaidAppointmentsJob())->everyMinute();*/
+        $schedule->job(new RejectExpiredPendingAppointmentsServicesJob())->everyTenMinutes(); 
         $schedule->job(new DeleteExpiredCartItemsJob())->everyFiveMinutes();
         $schedule->command('app:remider-appointment')->everyFiveMinutes()->withoutOverlapping(); //reminder sending
         // Group eligible payouts on scheduled payout days (runs daily at 6 AM)
-        $schedule->command('app:group-payouts')->hourly(); //->dailyAt('06:00');      
+        $schedule->command('app:group-payouts')->everyTenMinutes(); //hourly(); //->dailyAt('06:00');      
     }
 
     /**

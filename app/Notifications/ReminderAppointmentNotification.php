@@ -39,7 +39,7 @@ class ReminderAppointmentNotification extends Notification implements ShouldQueu
     // Method to set the body dynamically
     private function getBody()
     {
-        return 'Please confirm or reject the  appointment # '.$this->appointment->id.' with in ' . config('app.sub_hours') . ' hr. You cannot confirm or reject it after ' . config('app.sub_hours') . ' hour.';
+        return 'Please confirm or reject the  appointment #'.$this->appointment->id.' with in ' . config('app.sub_hours') . ' hr. You cannot confirm or reject it after ' . config('app.sub_hours') . ' hour.';
     }
 
     // Method to set the title ar dynamically

@@ -42,7 +42,7 @@ class PayoutCanceledNotification extends Notification implements ShouldQueue
     // Method to set the body dynamically
     private function getBody()
     {
-        return 'Payout Transferred # ' . $this->payout->id;
+        return 'Payout Transferred #' . $this->payout->id;
     }
 
     // Method to set the title ar dynamically

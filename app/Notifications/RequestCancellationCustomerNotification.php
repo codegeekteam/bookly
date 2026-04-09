@@ -45,7 +45,7 @@ class RequestCancellationCustomerNotification extends Notification implements Sh
         // {
             $date = $this->appointment->services[0]->pivot->date ?? now();
             $serviceDate = Carbon::parse($date);
-            $messageText = 'Provider initiated cancellation for your booking #' . $this->appointment->id . ' with ' . $this->appointment->serviceProvider->name . ' on ' . $serviceDate->format('l') . ' , ' . $serviceDate->format('d-m-Y') . '  ' .$this->appointment->services[0]->pivot->start_time . '. The refund will be processed once the cancellation is completed by the administrator.';
+            $messageText = 'Provider initiated cancellation for your booking #' . $this->appointment->id . ' with ' . $this->appointment->serviceProvider->name . ' on ' . $serviceDate->format('l') . ', ' . $serviceDate->format('d-m-Y') . ' ' .$this->appointment->services[0]->pivot->start_time . '. The refund will be processed once the cancellation is completed by the administrator.';
             return  $messageText;
         // } 
     

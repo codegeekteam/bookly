@@ -33,7 +33,7 @@ class RequestPaymentNotification extends Notification implements ShouldQueue
 
     private function getBody()
     {
-        return 'Your service has been completed. Please proceed with payment for appointment # ' 
+        return 'Your service has been completed. Please proceed with payment for appointment #' 
             . $this->appointment->id;
     }
 

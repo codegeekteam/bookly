@@ -39,7 +39,7 @@ class AppointmentCompleteNotification extends Notification implements ShouldQueu
     // Method to set the body dynamically
     private function getBody()
     {
-        return 'Please complete the service and mark appointment # ' . $this->appointment->id . ' as complete';
+        return 'Please complete the service and mark appointment #' . $this->appointment->id . ' as complete';
     }
 
     // Method to set the title ar dynamically

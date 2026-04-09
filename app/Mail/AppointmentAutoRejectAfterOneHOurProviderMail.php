@@ -10,14 +10,14 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class AppointmentAutoRejectProviderMail extends Mailable
+class AppointmentAutoRejectAfterOneHOurProviderMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(public Appointment $appointment)
+     public function __construct(public Appointment $appointment)
     {
     }
 
@@ -28,7 +28,7 @@ class AppointmentAutoRejectProviderMail extends Mailable
     {
         return new Envelope(
             // subject: 'Appointment cancelled - تم رفض الموعد',
-             subject: 'Appointment cancelled',
+            subject: 'Appointment cancelled',
         );
     }
 
@@ -38,7 +38,7 @@ class AppointmentAutoRejectProviderMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.appointment-auto-reject-provider',
+             view: 'emails.appointment-auto-reject-after-one-hour-provider',
         );
     }
 

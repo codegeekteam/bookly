@@ -1,64 +1,74 @@
 <?php
 
 namespace App\Notifications;
+
 use App\Services\FirebaseNotification;
-use GGInnovative\Larafirebase\Messages\FirebaseMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
 
-class RejectRescheduleAppointmentNotification extends Notification implements ShouldQueue {
-
+class RejectAppointmentAfterOneHourProviderNotification extends Notification
+{
     use Queueable;
 
-    public $appointment;
+     public $appointment;
 
+    /**
+     * Create a new notification instance.
+     */
     public function __construct($appointment)
     {
         $this->appointment = $appointment;
-        $this->onQueue('default');
+        $this->onQueue('default');      
     }
 
 
-    public function via($notifiable): array
+    /**
+     * Get the notification's delivery channels.
+     *
+     * @return array<int, string>
+     */
+    public function via(object $notifiable): array
     {
-        return ['database','firebase'];
+         return ['database','firebase'];
     }
 
     // Method to set the title dynamically
     private function getTitle()
     {
-        return "Appointment reschedule request rejected";
+        return "Appointment cancelled";
     }
 
     // Method to set the body dynamically
     private function getBody()
     {
-        return 'Appointment reschedule request rejected to your appointment #'.$this->appointment->id;
+        return 'Appointment #' . $this->appointment->id .  ' cancelled due to no action within 24 hours.';
     }
 
     // Method to set the title ar dynamically
     private function getTitleAr()
     {
-        return "تم رفض تعديل موعد";
+        return "تم رفض الموعد";
     }
 
     // Method to set the body ar dynamically
     private function getBodyAr()
     {
-        return 'تم رفض تعديل موعد :  ' . $this->appointment->id ;
+        return 'تم إلغاء الموعد رقم ' . $this->appointment->id . ' بسبب عدم اتخاذ أي إجراء خلال 24 ساعة.';
     }
 
-    // Method to get token
+        // Method to get token
     private function getToken()
-    {
-        return $this->appointment->serviceProvider->user->firebase_token;
+    {        
+        return $this->appointment->serviceProvider->user->firebase_token;       
+      
     }
+
 
     public function toFirebase($notifiable)
     {
-        $fcm_token = $this->getToken(); //$notifiable->firebase_token;
+        $fcm_token = $this->getToken();  //$notifiable->firebase_token;
         return (new FirebaseNotification)
             ->withTitle($this->getTitle())
             ->withBody($this->getBody())
@@ -70,18 +80,20 @@ class RejectRescheduleAppointmentNotification extends Notification implements Sh
             ->sendNotification();
     }
 
-        public function toArray(object $notifiable): array
-        {
-            return [
-                'title' => $this->getTitle(),
+    /**
+     * Get the array representation of the notification.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(object $notifiable): array
+    {
+        return [
+               'title' => $this->getTitle(),
                 'body' => $this->getBody(),
                 'title_ar' => $this->getTitleAr(),
                 'body_ar' =>$this->getBodyAr(),
                 'redirect_id' => (string) $this->appointment->id,
                 'redirect_action' => 'appointments',
-                //'image_url' => $this->order->items->first()->product->thumbnail,
-            ];
-
-        }
-
+        ];
+    }
 }
