@@ -23,6 +23,7 @@ use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class PendingState extends BaseAppointmentState
 {
@@ -95,9 +96,10 @@ class PendingState extends BaseAppointmentState
         ]);
         DB::commit();   
 
-        $refund_type = RefundSetting::find(1); 
-        if($refund_type->bank_account_refund == 1) {
-            $paymentMethod = $appointment->paymentMethod;
+      //  $refund_type = RefundSetting::find(1); 
+       // if($refund_type->bank_account_refund == 1) { 
+       $paymentMethod = $appointment->paymentMethod;
+       if(Str::lower($paymentMethod) === 'card') {             
             $paymentLog = PaymentLog::where('appointment_id',$appointment->id)->first();
             if($paymentLog && $paymentMethod && strtolower($paymentMethod->name) === 'card') {  
                  \Log::info('Calling initiate Refund in  pending state reject method');    
@@ -105,7 +107,8 @@ class PendingState extends BaseAppointmentState
                  \Log::info('Refund Initiate : '. $response);
             }
           \Log::info('Refund  skipped — no valid payment method');
-        }elseif($refund_type->wallet_refund == 1){
+        // }elseif($refund_type->wallet_refund == 1){
+        }elseif(Str::lower($paymentMethod) === 'wallet' || Str::lower($paymentMethod) === 'card and wallet'){
             DB::beginTransaction();
             //return money to user wallet
             if ($appointment->payment_status == 'paid' || $appointment->payment_status == 'partially_paid') {
