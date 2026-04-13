@@ -23,5 +23,18 @@ class NotificationService
         $notifications=$user->notifications()->whereNull('read_at')->update(['read_at'=>Carbon::now()]);
         return response()->json(['message' => 'notifications mark as read'], 200);
     }
+    
+    public function read_single(User $user, $id)
+    {
+        $notifications=$user->notifications()->whereNull('read_at')->where('id', $id)->update(['read_at'=>Carbon::now()]);
+        return response()->json(['message' => 'notification mark as read'], 200);
+    }
+
+    public function unreadNotificationsCount(User $user)
+    {
+        $notifications=$user->notifications()->whereNull('read_at')->count();
+        // return NotificationResource::collection($notifications);
+        return response()->json(['total unread notifications' => $notifications ?? 0]);
+    }
 
 }

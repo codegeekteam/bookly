@@ -57,4 +57,59 @@ class NotificationController extends Controller
             return $this->error($e->getMessage());
         }
     }
+
+    
+
+     /**
+     * read sprecific notification
+     *
+     * endpoint to read logged in user one notification
+     *
+     * @type POST
+     *
+     * @url api/user/read-notification/{id}
+     * @group notifications
+     *
+     * @authenticated
+     *
+     *
+     * @response 200 { "message": 'notification mark as read }
+     *
+     */
+    public function readSingleNotification(NotificationService $notificationService, $id)
+    {
+        try {
+
+            return $notificationService->read_single(auth()->user(), $id);
+
+        } catch (\Exception $e) {
+            return $this->error($e->getMessage());
+        }
+    }
+
+    
+     /**
+     * get unread notifications count
+     *
+     * endpoint to get logged in user total number of unread notifications
+     *
+     * @type GET
+     *
+     * @url api/user/has-unread-notification
+     *
+     * @group notifications
+     *
+     * @response 200 { 'total unread notifications' : 20}
+     */
+    public function unreadNotificationsCount(NotificationService $notificationService)
+    {
+        try {
+
+            return $notificationService->unreadNotificationsCount(auth()->user());
+
+        } catch (\Exception $e) {
+            return $this->error($e->getMessage());
+        }
+    }
+
 }
