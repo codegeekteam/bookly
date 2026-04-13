@@ -92,6 +92,8 @@ Route::group(['middleware' => ['auth:sanctum',CheckBlockedMiddleware::class]], f
         Route::post('/', [AuthController::class, 'update']);
         Route::get('/notifications', [NotificationController::class, 'index']);
         Route::post('/read-all-notifications', [NotificationController::class, 'readAll']);
+        Route::post('/read-notification/{id}', [NotificationController::class, 'readSingleNotification']);
+        Route::get('/has-unread-notification', [NotificationController::class, 'unreadNotificationsCount']);
     });
 
     Route::group(['prefix' => 'reviews'], function () {
