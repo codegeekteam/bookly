@@ -45,7 +45,7 @@ class RejectExpiredPendingAppointmentsJob implements ShouldQueue
                                     ]);                          
                      
                 //check total payed and return the amount to user wallet
-                if ($appointment->payment_status == 'paid' || $appointment->payment_status == 'partially_paid') {
+                if ($appointment->payment_status == 'paid' || $appointment->payment_status == 'partially_paid') { 
                     $paymentMethod = $appointment->paymentMethod;
                     $paymentLog = PaymentLog::where('appointment_id', $appointment->id)->first();
                     if($paymentLog && $paymentMethod && strtolower($paymentMethod->name) === 'card') {      

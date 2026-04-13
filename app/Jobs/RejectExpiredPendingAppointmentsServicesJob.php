@@ -9,6 +9,7 @@ use App\Mail\AppointmentAutoRejectAfterOneHOurProviderMail;
 use App\Mail\AppointmentRejectMail;
 use App\Models\Appointment;
 use App\Models\Enums\TransactionType;
+use App\Models\PaymentLog;
 use App\Notifications\AppointmentNotification;
 use App\Notifications\RejectAppointmentAfterOneHourCustomerNotification;
 use App\Notifications\RejectAppointmentAfterOneHourProviderNotification;
@@ -45,8 +46,17 @@ class RejectExpiredPendingAppointmentsServicesJob implements ShouldQueue
                 $appointment->update([
                     'status_id' => AppointmentStatus::Rejected->value
                 ]);
-                //check total payed and return the amount to user wallet
-               /*    if ($appointment->payment_status == 'paid' || $appointment->payment_status == 'partially_paid') {
+                //check total payed and return the amount to card
+                if ($appointment->payment_status == 'paid' || $appointment->payment_status == 'partially_paid') {
+                      $paymentMethod = $appointment->paymentMethod;
+                    $paymentLog = PaymentLog::where('appointment_id', $appointment->id)->first();
+                    if($paymentLog && $paymentMethod && strtolower($paymentMethod->name) === 'card') {      
+                        $response = $this->initiateRefund($appointment, 'reject');
+                        \Log::info('Refund Initiate in auto reject after appointment start time : '. $response);
+                    }
+                    \Log::info('Refund  skipped — no valid payment method'); 
+                        //return money to user wallet
+                        /*  if (strtolower($paymentMethod->name) === 'wallet') {
                     $wallet = $appointment->customer->user->wallet;
                     $total=$appointment->total_payed;
                     if($total>0){

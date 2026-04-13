@@ -34,7 +34,11 @@ class NotificationService
     {
         $notifications=$user->notifications()->whereNull('read_at')->count();
         // return NotificationResource::collection($notifications);
-        return response()->json(['total unread notifications' => $notifications ?? 0]);
+       // return response()->json(['total unread notifications' => $notifications ?? 0]);
+        if($notifications > 0) {
+            return response()->json(['has-unread' => true ]);  
+        }
+        return response()->json(['has-unread' => false ]);
     }
 
 }
