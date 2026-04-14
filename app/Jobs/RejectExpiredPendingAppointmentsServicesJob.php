@@ -84,6 +84,8 @@ class RejectExpiredPendingAppointmentsServicesJob implements ShouldQueue
                     }
                     $appointment->update(['loyalty_discount_customer_id' => null]);
                 }*/
+                    
+                }
                 //notification
                 try {           
                         $appointment->customer->user->notify(new RejectAppointmentAfterOneHourCustomerNotification($appointment));
@@ -94,7 +96,7 @@ class RejectExpiredPendingAppointmentsServicesJob implements ShouldQueue
                     Log::info($e);
                 }
             }
-        } catch (\Exception $e) {
+        }catch (\Exception $e) {
             \Log::error('Error while rejecting expired pending appointments: ' . $e->getMessage());
             // Optionally rethrow the exception if you want to log it and fail the job
             throw $e;
