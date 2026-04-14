@@ -28,7 +28,7 @@ class AppointmentAutoRejectCustomerMail extends Mailable
     {
         return new Envelope(
             // subject: 'Appointment cancelled - تم رفض الموعد',
-             subject: 'Appointment cancelled'
+             subject: 'Appointment Cancelled'
         );
     }
 
