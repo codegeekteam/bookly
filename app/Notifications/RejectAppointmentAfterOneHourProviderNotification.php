@@ -37,7 +37,7 @@ class RejectAppointmentAfterOneHourProviderNotification extends Notification
     // Method to set the title dynamically
     private function getTitle()
     {
-        return "Appointment cancelled";
+        return "Appointment Cancelled";
     }
 
     // Method to set the body dynamically

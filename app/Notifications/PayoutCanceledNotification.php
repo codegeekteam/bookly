@@ -36,37 +36,52 @@ class PayoutCanceledNotification extends Notification implements ShouldQueue
      // Method to set the title dynamically
     private function getTitle()
     {
-        return "Payout Transferred";
+        return "Payout Cancelled";
     }
 
     // Method to set the body dynamically
     private function getBody()
     {
-        return 'Payout Transferred #' . $this->payout->id;
+        return 'Payout Cancelled #' . $this->payout->id;
     }
 
     // Method to set the title ar dynamically
     private function getTitleAr()
     {
-        return "تم تحويل الدفع";
+        return "تم إلغاء الصرف";
     }
 
     // Method to set the body ar dynamically
     private function getBodyAr()
     {
-        return 'تم تحويل المبلغ #' . $this->payout->id;
+        return 'تم إلغاء الدفعة #' . $this->payout->id;
     }
 
     // Method to get token
     private function getToken()
     {
-        return $this->payout->serviceProvider->user->firebase_token;
+       // return $this->payout->serviceProvider->user->firebase_token;
+       $token = $this->payout->serviceProvider->user->firebase_token;
+
+    if (!$token || trim($token) === '') {
+        \Log::error('Missing Firebase token', [
+            'user_id' => $this->payout->serviceProvider->user->id ?? null,
+        ]);
+        return null;
+    }
+
+    return trim($token);
+
     }
 
 
     public function toFirebase($notifiable)
     {
         $fcm_token = $this->getToken(); //$notifiable->firebase_token;
+        if (!$fcm_token) {
+    \Log::error('FCM send aborted: empty token');
+    return;
+}
         \Log::info('FCM Token: ' . $notifiable->firebase_token);
         return (new FirebaseNotification)
             ->withTitle($this->getTitle())

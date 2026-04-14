@@ -40,7 +40,7 @@ class NewRequestRescheduledNotification extends Notification implements ShouldQu
      // Method to set the title dynamically
     private function getTitle()
     {
-        return "Customer rescheduled appointment";
+        return "Customer Rescheduled Aappointment";
     }
 
     // Method to set the body dynamically

@@ -28,7 +28,7 @@ class ConfirmAppointmentNotification extends Notification implements ShouldQueue
     // Method to set the title dynamically
     private function getTitle()
     {
-        return 'Appointment confirmed';
+        return 'Appointment Confirmed';
     }
 
     // Method to set the body dynamically

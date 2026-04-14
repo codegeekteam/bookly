@@ -31,7 +31,7 @@ class RejectAppointmentNotification extends Notification implements ShouldQueue 
     // Method to set the title dynamically
     private function getTitle()
     {
-        return "Appointment rejected";
+        return "Appointment Rejected";
     }
 
     // Method to set the body dynamically

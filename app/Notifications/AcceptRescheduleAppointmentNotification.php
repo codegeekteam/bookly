@@ -29,7 +29,7 @@ class AcceptRescheduleAppointmentNotification extends Notification implements Sh
     // Method to set the title dynamically
     private function getTitle()
     {
-        return "Appointment reschedule request accepted";
+        return "Appointment Reschedule Request Accepted";
     }
 
     // Method to set the body dynamically

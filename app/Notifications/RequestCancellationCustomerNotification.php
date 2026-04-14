@@ -35,7 +35,7 @@ class RequestCancellationCustomerNotification extends Notification implements Sh
      // Method to set the title dynamically
     private function getTitle()
     {
-        return "Appointment cancellation requested";
+        return "Appointment Cancellation Requested";
     }
 
     // Method to set the body dynamically

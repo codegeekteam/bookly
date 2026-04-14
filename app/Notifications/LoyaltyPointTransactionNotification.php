@@ -32,7 +32,7 @@ class LoyaltyPointTransactionNotification extends Notification implements Should
     // Method to set the title dynamically
     private function getTitle()
     {
-        return "Your Loyalty Points updated";
+        return "Your Loyalty Points Updated";
     }
 
     // Method to set the title ar dynamically

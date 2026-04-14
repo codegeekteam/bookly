@@ -33,7 +33,7 @@ class RequestCancellationAdminNotification extends Notification implements Shoul
 
       private function getTitle()
     {
-        return "Appointment cancellation requested";
+        return "Appointment Cancellation Requested";
     }
 
     // Method to set the body dynamically
