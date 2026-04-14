@@ -8,7 +8,9 @@ use App\Models\AttachedService;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Customer;
+use App\Models\ServiceProvider;
 use Illuminate\Support\Facades\DB;
+
 use function Symfony\Component\HttpFoundation\Session\Storage\Handler\beginTransaction;
 
 class CartService
@@ -38,7 +40,7 @@ class CartService
         if(!$cart){
             $cart = Cart::create(['customer_id' => $customer->id]);
         }
-        $attachedService = AttachedService::find($attachedServiceId);
+        $attachedService = AttachedService::find($attachedServiceId); 
         if(!$attachedService){
             throw new \Exception(__('Service not found'));
         }
@@ -55,11 +57,19 @@ class CartService
             if (!$employee) {
                 throw new \Exception(__('Employee not found or cannot perform this service'));
             }
+        }       
+      
+        ////////////////////
+        $provider = ServiceProvider::find($attachedService->service_provider_id);         
+        $is_daily_limit_reached = !($provider->max_appointments_per_day == null) && ($cart->cartItems->count() > $provider->max_appointments_per_day);
+        if ($is_daily_limit_reached) {
+            throw new \Exception(__('More than' . $provider->max_appointments_per_day . ' services not allowed'));
         }
+        ///////////////////////////
 
         DB::beginTransaction();
-        foreach ($time_slots as $time_slot) {
-            foreach ($cart->cartItems as $cartItem) {
+        foreach ($time_slots as $time_slot) {            
+            foreach ($cart->cartItems as $cartItem) {               
                 if ($cartItem->attachedService->service_provider_id !== $attachedService->service_provider_id) {
                     throw new \Exception(__('You can only add services from the same provider'));
                 }
@@ -68,7 +78,7 @@ class CartService
                 }
                 if ($cartItem->picked_date != $picked_date ) {
                     throw new \Exception(__('Please book for the same date: ' . $cartItem->picked_date));
-                }
+                }               
             }
 
             // Create a cart item for each time slot
