@@ -60,13 +60,28 @@ class PayoutCanceledNotification extends Notification implements ShouldQueue
     // Method to get token
     private function getToken()
     {
-        return $this->payout->serviceProvider->user->firebase_token;
+       // return $this->payout->serviceProvider->user->firebase_token;
+       $token = $this->payout->serviceProvider->user->firebase_token;
+
+    if (!$token || trim($token) === '') {
+        \Log::error('Missing Firebase token', [
+            'user_id' => $this->payout->serviceProvider->user->id ?? null,
+        ]);
+        return null;
+    }
+
+    return trim($token);
+
     }
 
 
     public function toFirebase($notifiable)
     {
         $fcm_token = $this->getToken(); //$notifiable->firebase_token;
+        if (!$fcm_token) {
+    \Log::error('FCM send aborted: empty token');
+    return;
+}
         \Log::info('FCM Token: ' . $notifiable->firebase_token);
         return (new FirebaseNotification)
             ->withTitle($this->getTitle())
