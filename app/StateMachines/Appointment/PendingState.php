@@ -83,11 +83,11 @@ class PendingState extends BaseAppointmentState
 
         $appointment_date = Carbon::create($appointment->services->first()->pivot->date)->setTimeFromTimeString($appointment->services->first()->pivot->start_time);
 
-        $is_appointment_past_limit = $appointment_date->diffInMinutes(Carbon::now()) < 360;
+        // $is_appointment_past_limit = $appointment_date->diffInMinutes(Carbon::now()) < 360;
 
-        if ($is_appointment_past_limit) {
-            throw new Exception('Appointment cannot be rejected less than 6 hours before the appointment');
-        }
+        // if ($is_appointment_past_limit) {
+        //     throw new Exception('Appointment cannot be rejected less than 6 hours before the appointment');
+        // }
 
         DB::beginTransaction();
         $appointment->update([
