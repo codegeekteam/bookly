@@ -28,7 +28,7 @@ class RequestPaymentNotification extends Notification implements ShouldQueue
 
     private function getTitle()
     {
-        return 'Payment request for completed service';
+        return 'Payment Request for Completed Service';
     }
 
     private function getBody()

@@ -36,25 +36,25 @@ class PayoutCanceledNotification extends Notification implements ShouldQueue
      // Method to set the title dynamically
     private function getTitle()
     {
-        return "Payout Transferred";
+        return "Payout Cancelled";
     }
 
     // Method to set the body dynamically
     private function getBody()
     {
-        return 'Payout Transferred #' . $this->payout->id;
+        return 'Payout Cancelled #' . $this->payout->id;
     }
 
     // Method to set the title ar dynamically
     private function getTitleAr()
     {
-        return "تم تحويل الدفع";
+        return "تم إلغاء الصرف";
     }
 
     // Method to set the body ar dynamically
     private function getBodyAr()
     {
-        return 'تم تحويل المبلغ #' . $this->payout->id;
+        return 'تم إلغاء الدفعة #' . $this->payout->id;
     }
 
     // Method to get token

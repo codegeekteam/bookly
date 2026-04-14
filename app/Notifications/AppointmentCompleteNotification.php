@@ -33,7 +33,7 @@ class AppointmentCompleteNotification extends Notification implements ShouldQueu
     // Method to set the title dynamically
     private function getTitle()
     {
-        return "New appointment Complete service";
+        return "New Appointment Complete Service";
     }
 
     // Method to set the body dynamically

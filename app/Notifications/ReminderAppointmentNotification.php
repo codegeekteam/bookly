@@ -33,7 +33,7 @@ class ReminderAppointmentNotification extends Notification implements ShouldQueu
      // Method to set the title dynamically
     private function getTitle()
     {
-        return 'Appointment confirm/reject reminder';
+        return 'Appointment Confirm/Reject Reminder';
     }
 
     // Method to set the body dynamically
