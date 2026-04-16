@@ -14,6 +14,7 @@ use App\Notifications\AppointmentNotification;
 use App\Notifications\RejectAppointmentAfterOneHourCustomerNotification;
 use App\Notifications\RejectAppointmentAfterOneHourProviderNotification;
 use App\Notifications\RejectAppointmentNotification;
+use App\Traits\RefundTrait;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -25,7 +26,9 @@ use Illuminate\Support\Facades\Mail;
 
 class RejectExpiredPendingAppointmentsServicesJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, RefundTrait;
+
+
 
     public function __construct()
     {

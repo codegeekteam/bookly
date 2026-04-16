@@ -195,7 +195,7 @@ class AppointmentService
 
         // 11. Format remaining slots to a readable format (e.g., 01:00 pm)
         $slots = array_map(fn($slot) => Carbon::parse($slot)->format('h:i a'), $slots);
-\Log::info('slots:',$slots);
+
         ////////////////////////////////////////////
         //maximum limit reached, skip this date
         $is_daily_limit_reached = !($provider->max_appointments_per_day == null) && ($booked_appointments->count() >= $provider->max_appointments_per_day);
@@ -203,7 +203,7 @@ class AppointmentService
             $slots = [];
         }
         ///////////////////////////////////////////////
-\Log::info('slots after daily limit check:',$slots);
+
         // 12. Return the final list of available slots
         return ['slots' => $slots];
     }
@@ -695,7 +695,7 @@ class AppointmentService
         }else{
             $deposit_payment_method_id = $appointment->deposit_payment_method_id ?? 1;
             $depositPaymentMethod = PaymentMethod::find($deposit_payment_method_id);
-            if($depositPaymentMethod && strtolower($depositPaymentMethod->name) === 'card') {  //By Sreeja         
+            if($depositPaymentMethod && strtolower($depositPaymentMethod->name) === 'card' || $depositPaymentMethod && strtolower($depositPaymentMethod->name) === 'wallet') {  //By Sreeja         
                 \Log::info('reached new notification deposit payment case');
                 try {
                     $appointment->serviceProvider->user->notify(new NewAppointmentNotification($appointment));
@@ -1413,13 +1413,13 @@ class AppointmentService
                             ->whereIn('status_id', [1, 2, 6]);
                     })
                     ->count();  // Get count of booked appointments
-\Log::info('before daily limit check in available dates api');
+
                 //maximum limit reached, skip this date
                  $is_daily_limit_reached = !($provider->max_appointments_per_day == null) && ($booked_count >= $provider->max_appointments_per_day);
                  if ($is_daily_limit_reached) {
                      continue;
                  }
-\Log::info('after daily limit check in available dates api');
+
                 // If booked count matches expected slots, skip this date
                 if ($booked_count >= count($slots)) {
                     continue;
@@ -1443,7 +1443,7 @@ class AppointmentService
                 }
             }
         }
-
+\Log::info('executed checks');
         return [
             'available_dates' => $available_dates,
         ];
