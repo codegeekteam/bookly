@@ -61,7 +61,7 @@ class CartService
       
         ////////////////////
         $provider = ServiceProvider::find($attachedService->service_provider_id);         
-        $is_daily_limit_reached = !($provider->max_appointments_per_day == null) && ($cart->cartItems->count() > $provider->max_appointments_per_day);
+        $is_daily_limit_reached = !($provider->max_appointments_per_day == null) && ($cart->cartItems->count() >= $provider->max_appointments_per_day);
         if ($is_daily_limit_reached) {
             throw new \Exception(__('More than' . $provider->max_appointments_per_day . ' services not allowed'));
         }
