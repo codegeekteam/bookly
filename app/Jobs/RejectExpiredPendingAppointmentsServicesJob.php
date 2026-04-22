@@ -37,8 +37,8 @@ class RejectExpiredPendingAppointmentsServicesJob implements ShouldQueue
     public function handle(): void
     {
         $now = Carbon::now();
-        // $tenMinutesFromNow= $now->addMinutes(10)->format('H:i:s');
-        $tenMinutesFromNow = $now->copy()->addHour()->format('H:i:s'); //oneHourFromNow
+         $tenMinutesFromNow= $now->addMinutes(10)->format('H:i:s');
+      //  $tenMinutesFromNow = $now->copy()->addHour()->format('H:i:s'); //oneHourFromNow
         try {
             $expired_appointments = Appointment::where('status_id', AppointmentStatus::Pending->value)
                 ->whereHas('services', function ($query) use ($now,$tenMinutesFromNow) {
@@ -59,7 +59,7 @@ class RejectExpiredPendingAppointmentsServicesJob implements ShouldQueue
                     }
                     \Log::info('Refund  skipped — no valid payment method'); 
                         //return money to user wallet
-                        /*  if (strtolower($paymentMethod->name) === 'wallet') {
+                if (strtolower($paymentMethod->name) === 'wallet' || Str::lower($paymentMethod) === 'card and wallet') {
                     $wallet = $appointment->customer->user->wallet;
                     $total=$appointment->total_payed;
                     if($total>0){
@@ -86,10 +86,11 @@ class RejectExpiredPendingAppointmentsServicesJob implements ShouldQueue
                         $appointment->loyaltyDiscountCustomer->update(['is_used' => false]);
                     }
                     $appointment->update(['loyalty_discount_customer_id' => null]);
-                }*/
+                }
                     
                 }
                 //notification
+                \Log::info('reached notification in after start reject');
                 try {           
                         $appointment->customer->user->notify(new RejectAppointmentAfterOneHourCustomerNotification($appointment));
                         $appointment->serviceProvider->user->notify(new RejectAppointmentAfterOneHourProviderNotification($appointment));

@@ -9,7 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class RejectAppointmentCustomerNotification extends Notification
+class RejectAppointmentCustomerNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -46,7 +46,7 @@ class RejectAppointmentCustomerNotification extends Notification
     {
         $date = $this->appointment->services[0]->pivot->date ?? now();
         $serviceDate = Carbon::parse($date);
-        return 'Your appointment #' . $this->appointment->id .  ' with ' . $this->appointment->serviceProvider->name . ' on ' . $serviceDate->format('l') . ' & ' . $serviceDate->format('d-m-Y') . ' & ' .$this->appointment->services[0]->pivot->start_time . ' has been cancelled due to no action. You will be refunded the full deposit amount of  SAR ' . $this->appointment->deposit_amount . ' to your bank account within ' . config('app.refund_days') . ' days';
+        return 'Your appointment #' . $this->appointment->id .  ' with ' . $this->appointment->serviceProvider->name . ' on ' . $serviceDate->format('l') . ' & ' . $serviceDate->format('d-m-Y') . ' & ' . $this->appointment->services[0]->pivot->start_time . ' has been cancelled due to no action. You will be refunded the full deposit amount of  SAR ' . $this->appointment->deposit_amount . ' to your bank account within ' . config('app.refund_days') . ' days';
     }
 
     // Method to set the title ar dynamically
