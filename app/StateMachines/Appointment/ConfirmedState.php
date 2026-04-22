@@ -219,9 +219,12 @@ class ConfirmedState extends BaseAppointmentState
         $walletRefund = false;
         $method = $appointment->refund_method;
         if (!$method) {
-            $refund_type = RefundSetting::find(1);
-            $bankRefund   = $refund_type->bank_account_refund == 1;
-            $walletRefund = $refund_type->wallet_refund == 1;
+            // $refund_type = RefundSetting::find(1);
+            // $bankRefund   = $refund_type->bank_account_refund == 1;
+            // $walletRefund = $refund_type->wallet_refund == 1;
+            $paymentMethod = $appointment->paymentMethod;         
+            $bankRefund   = Str::lower($paymentMethod) === 'card' ;
+            $walletRefund = Str::lower($paymentMethod) === 'wallet' || Str::lower($paymentMethod) === 'card and wallet' ;    
         } else {
             $bankRefund   = $method === 'bank';
             $walletRefund = $method === 'wallet';
