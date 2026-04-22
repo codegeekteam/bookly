@@ -33,7 +33,8 @@ class PendingState extends BaseAppointmentState
     {
         $timeLimitHours = config('app.limit_hours');
         if(auth()->id() === $this->appointment->serviceProvider->user_id) {
-            if ($this->appointment->created_at->lt(now()->subHours($timeLimitHours))) {
+            // if ($this->appointment->created_at->lt(now()->subHours($timeLimitHours))) {
+            if ($this->appointment->created_at->lt(now()->subMinutes($timeLimitHours))) { //remve after testing
                 throw new Exception('The time limit of {$timeLimitHours} hours exceeded. Cannot confirm this appointment');
             }
         }
@@ -70,7 +71,8 @@ class PendingState extends BaseAppointmentState
     {
         $timeLimitHours = config('app.limit_hours');
         if(auth()->id() === $this->appointment->serviceProvider->user_id) {
-            if ($this->appointment->created_at->lt(now()->subHours($timeLimitHours))) {
+           // if ($this->appointment->created_at->lt(now()->subHours($timeLimitHours))) {
+           if ($this->appointment->created_at->lt(now()->subMinutes($timeLimitHours))) { //remve after testing
                 throw new Exception('The time limit of {$timeLimitHours} hours exceeded. Cannot reject this appointment');
             }
         }
@@ -315,7 +317,8 @@ class PendingState extends BaseAppointmentState
         }
 
         $timeLimitHours = config('app.limit_hours');   
-        if ($appointment->created_at->lt(now()->subHours($timeLimitHours))) {
+       // if ($appointment->created_at->lt(now()->subHours($timeLimitHours))) {
+        if ($appointment->created_at->lt(now()->subMinutes($timeLimitHours))) { //remve after testing
             throw new Exception('The time limit of {$timeLimitHours} hours exceeded. Cannot reschedule this appointment');
         }
         
