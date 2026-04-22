@@ -39,7 +39,7 @@ use Illuminate\Support\HtmlString;
 
 class AppointmentResource extends Resource
 {
-    use RefundTrait;
+   // use RefundTrait;
 
     protected static ?string $model = Appointment::class;
 
@@ -522,7 +522,8 @@ class AppointmentResource extends Resource
                             $paymentMethod = $record->paymentMethod;
                             $paymentLog = PaymentLog::where('appointment_id',$record->id)->first();
                             if($paymentLog && $paymentMethod && strtolower($paymentMethod->name) === 'card') {      
-                                $response = $this->initiateRefund($record, 'admin_cancel');
+                              //  $response = $this->initiateRefund($record, 'admin_cancel');
+                                $response = app(RefundService::class)->initiateRefund($record, 'admin_cancel');
                                 \Log::info('Refund Initiate : '. $response);
                             }
                             \Log::info('Refund  skipped — no valid payment method');                    
