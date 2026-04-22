@@ -20,6 +20,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class RejectExpiredPendingAppointmentsJob implements ShouldQueue
 {
@@ -57,7 +58,7 @@ class RejectExpiredPendingAppointmentsJob implements ShouldQueue
                     \Log::info('Refund  skipped — no valid payment method'); 
                       //return money to user wallet
                       //    if (strtolower($paymentMethod->name) === 'wallet') {
-                        if (strtolower($paymentMethod->name) === 'wallet' || Str::lower($paymentMethod) === 'card and wallet') {
+                        if (strtolower($paymentMethod->name) === 'wallet' || strtolower($paymentMethod) === 'card and wallet') {
                             $wallet = $appointment->customer->user->wallet;
                             $total = $appointment->total_payed;
                             if ($total > 0) {
