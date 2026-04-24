@@ -206,14 +206,16 @@ class ServiceProvider extends Model implements HasMedia
                 $total += $appointment->created_at->diffInMinutes($appointment->changed_status_at);
             }
 
-            if ($count === 0) {
-                return 'Usually responds within minutes';
-            }
-            if ($total > 60) {
-                return 'Usually responds within '.round($total / $count / 60).' hours';
-            }
+            // if ($count === 0) {
+            //     return 'Usually responds within minutes';
+            // }
+            // if ($total > 60) {
+            //     return 'Usually responds within '.round($total / $count / 60).' hours';
+            // }
 
-            return 'Usually responds within '.round($total / $count).' minutes';
+            // return 'Usually responds within '.round($total / $count).' minutes';
+
+            return 'Usually responds within 24 hours';
         });
     }
 
