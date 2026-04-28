@@ -38,7 +38,8 @@ class RejectExpiredPendingAppointmentsServicesJob implements ShouldQueue
     public function handle(): void
     {
         $now = Carbon::now();
-         $tenMinutesFromNow= $now->addMinutes(10)->format('H:i:s');
+        $timeLimitHours = (config('app.limit_hours') ?? 24);
+         $tenMinutesFromNow= $now->addMinutes($timeLimitHours)->format('H:i:s');
       //  $tenMinutesFromNow = $now->copy()->addHour()->format('H:i:s'); //oneHourFromNow
         try {
             $expired_appointments = Appointment::where('status_id', AppointmentStatus::Pending->value)
