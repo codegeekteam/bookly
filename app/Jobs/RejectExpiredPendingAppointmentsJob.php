@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use App\Models\Enums\TransactionType;
 
 class RejectExpiredPendingAppointmentsJob implements ShouldQueue
 {
@@ -59,11 +60,13 @@ class RejectExpiredPendingAppointmentsJob implements ShouldQueue
                         \Log::info('Refund Initiate in auto reject after 24 hrs : '. $response);
                     }
                     \Log::info('Refund  skipped — no valid payment method'); 
+                       \Log::info('payment method:'. $paymentMethod->name); 
                       //return money to user wallet
                       //    if (strtolower($paymentMethod->name) === 'wallet') {
                         if (strtolower($paymentMethod->name) === 'wallet' || strtolower($paymentMethod->name) === 'card and wallet') {
                             $wallet = $appointment->customer->user->wallet;
                             $total = $appointment->total_payed;
+                              \Log::info('Total:'. $total); 
                             if ($total > 0) {
                                 (new CreateWalletTransactionMutation())->handle(
                                     $wallet,
