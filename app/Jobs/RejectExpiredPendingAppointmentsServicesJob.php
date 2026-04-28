@@ -63,9 +63,12 @@ class RejectExpiredPendingAppointmentsServicesJob implements ShouldQueue
                     }
                     \Log::info('Refund  skipped — no valid payment method'); 
                         //return money to user wallet
-                if (strtolower($paymentMethod->name) === 'wallet' || strtolower($paymentMethod) === 'card and wallet') {
+                        \Log::info('payment method:'. $paymentMethod->name); 
+                if (strtolower($paymentMethod->name) === 'wallet' || strtolower($paymentMethod->name) === 'card and wallet') {
+                    
                     $wallet = $appointment->customer->user->wallet;
                     $total=$appointment->total_payed;
+                     \Log::info('Total:'. $total); 
                     if($total>0){
                         (new CreateWalletTransactionMutation())->handle(
                             $wallet,

@@ -50,6 +50,9 @@ class RejectExpiredPendingAppointmentsJob implements ShouldQueue
                 //check total payed and return the amount to user wallet
                 if ($appointment->payment_status == 'paid' || $appointment->payment_status == 'partially_paid') { 
                     $paymentMethod = $appointment->paymentMethod;
+                    if($appointment->payment_status == 'partially_paid' && $appointment->deposit_payment_status == 'paid') {
+                        $paymentMethod = $appointment->depositPaymentMethod;
+                    }
                     $paymentLog = PaymentLog::where('appointment_id', $appointment->id)->first();
                     if($paymentLog && $paymentMethod && strtolower($paymentMethod->name) === 'card') {      
                         $response = $this->initiateRefund($appointment, 'reject');
@@ -58,7 +61,7 @@ class RejectExpiredPendingAppointmentsJob implements ShouldQueue
                     \Log::info('Refund  skipped — no valid payment method'); 
                       //return money to user wallet
                       //    if (strtolower($paymentMethod->name) === 'wallet') {
-                        if (strtolower($paymentMethod->name) === 'wallet' || strtolower($paymentMethod) === 'card and wallet') {
+                        if (strtolower($paymentMethod->name) === 'wallet' || strtolower($paymentMethod->name) === 'card and wallet') {
                             $wallet = $appointment->customer->user->wallet;
                             $total = $appointment->total_payed;
                             if ($total > 0) {
