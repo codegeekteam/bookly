@@ -118,7 +118,7 @@ class ConfirmedState extends BaseAppointmentState
             }
             \Log::info('Refund  skipped — no valid payment method');
        // }elseif($refund_type->wallet_refund == 1){
-         }elseif(Str::lower($paymentMethod) === 'wallet' || Str::lower($paymentMethod) === 'card and wallet'){
+         }elseif(Str::lower($paymentMethod->name) === 'wallet' || Str::lower($paymentMethod->name) === 'card and wallet'){
             DB::beginTransaction();
             //return money to user wallet
             if ($appointment->payment_status == 'paid' || $appointment->payment_status == 'partially_paid') {
