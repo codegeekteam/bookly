@@ -224,7 +224,7 @@ class ServiceProviderService
             ->count();
     }
 
-    public function countOfBookingsPerDay(ServiceProvider $serviceProvider, ?string $date_from, ?string $date_to)
+   /* public function countOfBookingsPerDay(ServiceProvider $serviceProvider, ?string $date_from, ?string $date_to)
     {
         $date_from = $date_from ? Carbon::parse($date_from)->format('Y-m-d') : Carbon::now()->format('Y-m-d');
         $date_to = $date_to ? Carbon::parse($date_to)->format('Y-m-d') : Carbon::parse($date_from)->addWeek()->format('Y-m-d');
@@ -275,9 +275,9 @@ class ServiceProviderService
         }
 
         return $response;
-    }
+    } */
 
-  /*  public function countOfBookingsPerDay(ServiceProvider $serviceProvider, ?string $date_from, ?string $date_to)
+    public function countOfBookingsPerDay(ServiceProvider $serviceProvider, ?string $date_from, ?string $date_to)
     {
         $date_from = $date_from ? Carbon::parse($date_from)->format('Y-m-d') : Carbon::now()->format('Y-m-d');
         $date_to = $date_to ? Carbon::parse($date_to)->format('Y-m-d') : Carbon::parse($date_from)->addWeek()->format('Y-m-d');
@@ -285,7 +285,8 @@ class ServiceProviderService
         if ($date_from > $date_to) {
             throw new \Exception('date_from must be less than date_to');
         }
-
+\Log::info('From date'.$date_from);
+\Log::info('To date'.$date_to);
         $query = $serviceProvider->appointments()
             ->with('appointmentServices')
            // ->where('status_id', AppointmentStatus::Confirmed->value)
@@ -314,7 +315,7 @@ class ServiceProviderService
                 }
             }
         }
-
+\Log::info('Response',['result' => $result]);
         // Prepare the response format
         $response = [];
         foreach ($result as $date => $appointments) {
@@ -330,9 +331,9 @@ class ServiceProviderService
                 }
             }
         }     
-
+\Log::info('Response',$response);
         return $response;
-    } */
+    }
 
     public function getTotalEarnings(ServiceProvider $serviceProvider, ?string $period)
     {
