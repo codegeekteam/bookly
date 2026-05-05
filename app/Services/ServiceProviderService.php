@@ -277,16 +277,23 @@ class ServiceProviderService
         return $response;
     } */
 
-    public function countOfBookingsPerDay(ServiceProvider $serviceProvider, ?string $date_from, ?string $date_to)
+    public function countOfBookingsPerDay(ServiceProvider $serviceProvider, ?string $date_from, ?string $date_to,  ?string $timeframe = null, ?int $year = null,  ?int $month = null,  ?int $week = null)
     {
-        $date_from = $date_from ? Carbon::parse($date_from)->format('Y-m-d') : Carbon::now()->format('Y-m-d');
-        $date_to = $date_to ? Carbon::parse($date_to)->format('Y-m-d') : Carbon::parse($date_from)->addWeek()->format('Y-m-d');
+        /////////////////////////////////
+         [$date_from, $date_to] = $this->resolveDateRange($date_from, $date_to, $timeframe, $year, $month, $week);
+         //////////////////////////////////
+        
+        // $date_today = Carbon::now()->format('Y-m-d');
+        // $date_from = $date_from ? Carbon::parse($date_from)->format('Y-m-d') : Carbon::parse($date_today)->subWeek()->format('Y-m-d');
+        // $date_to = $date_to ? Carbon::parse($date_to)->format('Y-m-d') : Carbon::parse($date_from)->addWeek()->format('Y-m-d');
 
-        if ($date_from > $date_to) {
-            throw new \Exception('date_from must be less than date_to');
-        }
-\Log::info('From date'.$date_from);
-\Log::info('To date'.$date_to);
+        
+
+        // if ($date_from > $date_to) {
+        //     throw new \Exception('date_from must be less than date_to');
+        // }
+        \Log::info('From date'.$date_from);
+        \Log::info('To date'.$date_to);
         $query = $serviceProvider->appointments()
             ->with('appointmentServices')
            // ->where('status_id', AppointmentStatus::Confirmed->value)
@@ -324,7 +331,7 @@ class ServiceProviderService
                     $response[] = [
                         'date' => $date,
                         'time' => $time,
-                        'status' => $status,
+                        'status' => AppointmentStatus::from($status)->name, //$status,
                         'count' => $data['count'],
                         'appointment_ids' => $data['appointment_ids'],
                     ];
@@ -407,5 +414,70 @@ class ServiceProviderService
             ->take(2)
             ->values();
 
+    }
+
+    private function resolveDateRange(?string $date_from, ?string $date_to,  ?string $timeframe,  ?int $year, ?int $month, ?int $week): array {
+        $today = Carbon::today();
+
+        if ($timeframe) {
+            $timeframe = strtolower($timeframe);
+
+            switch ($timeframe) {
+
+                case 'today':
+                    return [$today->copy()->startOfDay(), $today->copy()->endOfDay()];
+
+                case 'yesterday':
+                    return [
+                        $today->copy()->subDay()->startOfDay(),
+                        $today->copy()->subDay()->endOfDay()
+                    ];
+
+                case 'week':
+                    if ($year && $week) {
+                        $start = Carbon::now()->setISODate($year, $week)->startOfWeek();
+                        $end = $start->copy()->endOfWeek();
+                    } else {
+                        $start = $today->copy()->startOfWeek();
+                        $end = $today->copy()->endOfWeek();
+                    }
+                    return [$start, $end];
+
+                case 'month':
+                    $year = $year ?? $today->year;
+                    $month = $month ?? $today->month;
+
+                    $start = Carbon::create($year, $month)->startOfMonth();
+                    $end = $start->copy()->endOfMonth();
+
+                    return [$start, $end];
+
+                case 'year':
+                    $year = $year ?? $today->year;
+
+                    $start = Carbon::create($year, 1, 1)->startOfYear();
+                    $end = $start->copy()->endOfYear();
+
+                    return [$start, $end];
+
+                default:
+                    throw new \Exception('Invalid timeframe');
+            }
+        }
+
+        // fallback to manual dates
+        $start = $date_from
+            ? Carbon::parse($date_from)->startOfDay()
+            : $today->copy()->subWeek()->startOfDay();
+
+        $end = $date_to
+            ? Carbon::parse($date_to)->endOfDay()
+            : $start->copy()->addWeek()->endOfDay();
+
+        if ($start->gt($end)) {
+            throw new \Exception('date_from must be less than date_to');
+        }
+
+        return [$start, $end];
     }
 }

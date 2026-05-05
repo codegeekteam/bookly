@@ -252,16 +252,35 @@ class ServiceProviderController extends Controller
      *
      * @queryParam date_from string date from if not added it will be set to current date
      * @queryParam date_to string date to  if not added it will be set a day after date from by a week
+     * @queryParam timeframe string types like today, yesterday,week,month,year
+     * @queryParam year integer year value, used in cases timeframe : week, month, year. Example value 2026
+     * @queryParam month integer month value, used in case timeframe: month. Example value 12
+     * @queryParam week integer week value, used in case timeframe: week. Example value 4
      *
      * @response 200 { "2021-10-12": 2, "2021-10-13": 1 }
      */
+
+    /*Sample calls
+    api/providers/dashboard/appointments/per-day/count?timeframe=today
+    api/providers/dashboard/appointments/per-day/count?timeframe=yesterday
+    api/providers/dashboard/appointments/per-day/count?timeframe=week&year=2024&week=12
+    api/providers/dashboard/appointments/per-day/count?timeframe=month                   //current month
+    api/providers/dashboard/appointments/per-day/count?timeframe=month&year=2023&month=5 //custome month
+    api/providers/dashboard/appointments/per-day/count?timeframe=year                    // current year
+    api/providers/dashboard/appointments/per-day/count?timeframe=year&year=2022         //custom year
+    Sample calls ends here*/
+    
     public function countOfBookingsPerDay(ServiceProviderService $serviceProviderService, Request $request)
     {
         try {
             return $serviceProviderService->countOfBookingsPerDay(
                 serviceProvider: auth()->user()->serviceProvider,
                 date_from: $request->date_from,
-                date_to: $request->date_to
+                date_to: $request->date_to,
+                timeframe: $request->timeframe,
+                year: $request->year,
+                month: $request->month,
+                week: $request->week,
             );
 
         } catch (\Exception $e) {
