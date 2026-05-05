@@ -224,6 +224,59 @@ class ServiceProviderService
             ->count();
     }
 
+    // public function countOfBookingsPerDay(ServiceProvider $serviceProvider, ?string $date_from, ?string $date_to)
+    // {
+    //     $date_from = $date_from ? Carbon::parse($date_from)->format('Y-m-d') : Carbon::now()->format('Y-m-d');
+    //     $date_to = $date_to ? Carbon::parse($date_to)->format('Y-m-d') : Carbon::parse($date_from)->addWeek()->format('Y-m-d');
+
+    //     if ($date_from > $date_to) {
+    //         throw new \Exception('date_from must be less than date_to');
+    //     }
+
+    //     $query = $serviceProvider->appointments()
+    //         ->with('appointmentServices')
+    //         ->where('status_id', AppointmentStatus::Confirmed->value)
+    //         ->whereHas('appointmentServices', function ($query) use ($date_from, $date_to) {
+    //             return $query->whereBetween('date', [$date_from, $date_to]);
+    //         })
+    //         ->get();
+
+    //     $result = [];
+
+    //     // Group appointments by date and time
+    //     foreach ($query as $appointment) {
+    //         foreach ($appointment->appointmentServices as $service) {
+    //             $date = Carbon::parse($service->date)->format('d/m/Y');
+    //             $time = Carbon::parse($service->start_time)->format('H:i');
+    //             if (! isset($result[$date][$time])) {
+    //                 $result[$date][$time] = [
+    //                     'count' => 0,
+    //                     'appointment_ids' => []
+    //                 ];
+    //             }
+    //             $result[$date][$time]['count']++;
+    //             if (!in_array($appointment->id, $result[$date][$time]['appointment_ids'])) {
+    //                 $result[$date][$time]['appointment_ids'][] = $appointment->id;
+    //             }
+    //         }
+    //     }
+
+    //     // Prepare the response format
+    //     $response = [];
+    //     foreach ($result as $date => $appointments) {
+    //         foreach ($appointments as $time => $data) {
+    //             $response[] = [
+    //                 'date' => $date,
+    //                 'time' => $time,
+    //                 'count' => $data['count'],
+    //                 'appointment_ids' => $data['appointment_ids'],
+    //             ];
+    //         }
+    //     }
+
+    //     return $response;
+    // }
+
     public function countOfBookingsPerDay(ServiceProvider $serviceProvider, ?string $date_from, ?string $date_to)
     {
         $date_from = $date_from ? Carbon::parse($date_from)->format('Y-m-d') : Carbon::now()->format('Y-m-d');
@@ -235,7 +288,7 @@ class ServiceProviderService
 
         $query = $serviceProvider->appointments()
             ->with('appointmentServices')
-            ->where('status_id', AppointmentStatus::Confirmed->value)
+           // ->where('status_id', AppointmentStatus::Confirmed->value)
             ->whereHas('appointmentServices', function ($query) use ($date_from, $date_to) {
                 return $query->whereBetween('date', [$date_from, $date_to]);
             })
@@ -245,18 +298,19 @@ class ServiceProviderService
 
         // Group appointments by date and time
         foreach ($query as $appointment) {
+            $status = $appointment->status_id ?? null;
             foreach ($appointment->appointmentServices as $service) {
                 $date = Carbon::parse($service->date)->format('d/m/Y');
                 $time = Carbon::parse($service->start_time)->format('H:i');
-                if (! isset($result[$date][$time])) {
-                    $result[$date][$time] = [
+                if (! isset($result[$date][$time][$status])) {
+                    $result[$date][$time][$status] = [
                         'count' => 0,
                         'appointment_ids' => []
                     ];
                 }
-                $result[$date][$time]['count']++;
-                if (!in_array($appointment->id, $result[$date][$time]['appointment_ids'])) {
-                    $result[$date][$time]['appointment_ids'][] = $appointment->id;
+                $result[$date][$time][$status]['count']++;
+                if (!in_array($appointment->id, $result[$date][$time][$status]['appointment_ids'])) {
+                    $result[$date][$time][$status]['appointment_ids'][] = $appointment->id;
                 }
             }
         }
@@ -264,15 +318,18 @@ class ServiceProviderService
         // Prepare the response format
         $response = [];
         foreach ($result as $date => $appointments) {
-            foreach ($appointments as $time => $data) {
-                $response[] = [
-                    'date' => $date,
-                    'time' => $time,
-                    'count' => $data['count'],
-                    'appointment_ids' => $data['appointment_ids'],
-                ];
+            foreach ($appointments as $time => $statuses) {
+                foreach ($statuses as $status => $data) {
+                    $response[] = [
+                        'date' => $date,
+                        'time' => $time,
+                        'status' => $status,
+                        'count' => $data['count'],
+                        'appointment_ids' => $data['appointment_ids'],
+                    ];
+                }
             }
-        }
+        }     
 
         return $response;
     }
