@@ -40,7 +40,7 @@ class ServiceProviderApprovedNotification extends Notification
         if($active) {
              return 'Account Activativation Message';
         }else {
-             return 'Account Deactivativation Message.';
+             return 'Account Deactivativation Message';
         }
     }
 
