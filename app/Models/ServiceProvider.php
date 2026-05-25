@@ -228,4 +228,18 @@ class ServiceProvider extends Model implements HasMedia
     {
         return $this->hasMany(BankDetails::class, 'user_id', 'user_id');
     }
+
+    // protected static function booted()
+    // {
+    //     static::updating(function ($provider) {
+
+    //         // Prevent active providers from becoming inactive again
+    //         if (
+    //             $provider->getOriginal('is_active') == true &&
+    //             $provider->is_active == false
+    //         ) {
+    //             $provider->is_active = true;
+    //         }
+    //     });
+    // }
 }

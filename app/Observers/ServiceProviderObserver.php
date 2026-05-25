@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\ServiceProvider;
 use App\Models\User;
+use App\Notifications\ServiceProviderApprovedNotification;
 
 class ServiceProviderObserver
 {
@@ -27,7 +28,20 @@ class ServiceProviderObserver
      */
     public function updated(ServiceProvider $serviceProvider): void
     {
-        //
+           if ($serviceProvider->wasChanged('is_active') && $serviceProvider->getOriginal('is_active') == false && $serviceProvider->is_active == true)
+            {
+                if ($serviceProvider->user) 
+                {
+                    $serviceProvider->user->notify(new ServiceProviderApprovedNotification($serviceProvider, true));
+                }
+            }
+            if ($serviceProvider->wasChanged('is_active') && $serviceProvider->getOriginal('is_active') == true && $serviceProvider->is_active == false)
+            {
+                if ($serviceProvider->user) 
+                {
+                    $serviceProvider->user->notify(new ServiceProviderApprovedNotification($serviceProvider, false));
+                }
+            }
     }
 
     /**
