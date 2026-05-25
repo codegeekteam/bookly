@@ -14,12 +14,17 @@ use Illuminate\Support\Str;
 
 class Service
 {
-    protected function findOrCreateUser($phone_number, $access_type)
+    protected function findOrCreateUser($phone_number, $access_type): array
     {
-        $account = '';
+          \Log::info('reached service');
+        $account = null;  
+        $create_flag = false;     
         if ($access_type == 'provider') {
-            $account = ServiceProvider::where('phone_number',
-                $phone_number)->first() ?? ServiceProvider::create(['phone_number' => $phone_number]);
+            $account = ServiceProvider::where('phone_number', $phone_number)->first();
+            if($account == null) {
+              $account =  ServiceProvider::create(['phone_number' => $phone_number, 'is_active' => 0]); 
+              $create_flag = true;         
+            }
 
         }
         if ($access_type == 'employee') {
@@ -33,12 +38,16 @@ class Service
         }
         if ($account == '') {
             throw new \Exception(__('Invalid access type', [], request()->header('lang') ?? 'en'));
-        }
+        }     
         if ($account->is_blocked == 1) {
             throw new \Exception(__('your account is blocked contact admin', [], request()->header('lang') ?? 'en'));
         }
-
-        return $account;
+   \Log::info('account'. $account);
+         return [
+                    'account' => $account,
+                    'create_flag' => $create_flag
+                ];
+               
     }
 
     public function generateReferCode()
