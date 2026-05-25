@@ -77,7 +77,7 @@
                 <span class="value">#{{ $account->id }}</span>
             </div>
 
-            <div class="info-line" style="text-align: right;">
+          {{--  <div class="info-line" style="text-align: right;">
                 <span class="label">مقدم الخدمة:</span>
                 <span class="value">{{ $account->name }}</span>
             </div>
@@ -85,7 +85,7 @@
             <div class="info-line" style="text-align: right;">
                 <span class="label">البريد الإلكتروني لمقدم الخدمة</span>
                 <span class="value">{{ $account->email }}</span>
-            </div>
+            </div>--}}
 
             @if($account->phone_number)
             <div class="info-line" style="text-align: right;">
