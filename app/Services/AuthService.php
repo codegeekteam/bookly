@@ -16,7 +16,7 @@ use Illuminate\Support\Str;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
 use App\Models\Enums\TransactionType;
-use App\MAil\RegisterServiceProviderMail;
+use App\Mail\RegisterServiceProviderMail;
 use Illuminate\Support\Facades\Mail;
 
 class AuthService extends Service
