@@ -5,6 +5,7 @@ namespace App\Observers;
 use App\Models\ServiceProvider;
 use App\Models\User;
 use App\Notifications\ServiceProviderApprovedNotification;
+use Illuminate\Support\Facades\DB;
 
 class ServiceProviderObserver
 {
@@ -32,13 +33,15 @@ class ServiceProviderObserver
             {
                 if ($serviceProvider->user) 
                 {
-                    $serviceProvider->user->notify(new ServiceProviderApprovedNotification($serviceProvider, true));
+                   $serviceProvider->user->notify(new ServiceProviderApprovedNotification($serviceProvider, true));
                 }
             }
             if ($serviceProvider->wasChanged('is_active') && $serviceProvider->getOriginal('is_active') == true && $serviceProvider->is_active == false)
             {
                 if ($serviceProvider->user) 
-                {
+                {                   
+                    // revoke sanctum tokens
+                    $serviceProvider->user->tokens()->delete();                 
                     $serviceProvider->user->notify(new ServiceProviderApprovedNotification($serviceProvider, false));
                 }
             }
