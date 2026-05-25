@@ -84,13 +84,18 @@ class ServiceProviderResource extends Resource
                             ->placeholder(__('Select Provider Type'))
                             ->preload()
                             ->searchable(),
+                      Toggle::make('is_active')
+                            ->label(__('Approved / Active')),
+                          /*    ->helperText(__('Activate provider after admin approval'))
+                            ->default(false)
+                            ->visible(fn ($record) => !$record || !$record->is_active)
+                            ->disabled(fn ($record) => $record?->is_active),*/
                         Toggle::make('is_blocked')
-                            ->label(__('Blocked')),
+                            ->label(__('Blocked'))
+                            ->visible(fn ($record) => $record?->is_active),                                              
                         Toggle::make('published')
                             ->label(__('Published'))
-                            ->default(true),
-                        /*Toggle::make('is_active')
-                            ->label(__('Active')),*/
+                            ->default(true),                    
                     ])->columns(2),
 
                 Section::make(__('Legal Details'))
