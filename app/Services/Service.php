@@ -16,7 +16,6 @@ class Service
 {
     protected function findOrCreateUser($phone_number, $access_type): array
     {
-          \Log::info('reached service');
         $account = null;  
         $create_flag = false;     
         if ($access_type == 'provider') {
@@ -41,8 +40,7 @@ class Service
         }     
         if ($account->is_blocked == 1) {
             throw new \Exception(__('your account is blocked contact admin', [], request()->header('lang') ?? 'en'));
-        }
-   \Log::info('account'. $account);
+        }   
          return [
                     'account' => $account,
                     'create_flag' => $create_flag

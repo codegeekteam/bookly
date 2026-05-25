@@ -29,11 +29,7 @@ class AuthController extends Controller
     public function login(LoginRequest $request, AuthService $authService)
     {
         try {
-             \Log::info('reached login controller');
-             $message = $authService->login($request->phone_number, $request->access_type);
-             \Log::info('message'. $message);
-
-            // return $this->success('OTP sent');
+             $message = $authService->login($request->phone_number, $request->access_type);    
              return $this->success($message);
         } catch (\Exception $e) {
             return $this->error($e->getMessage());

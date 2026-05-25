@@ -26,13 +26,11 @@ class AuthService extends Service
      */
     public function login(string $phone_number, string $access_type): string
     {
-          \Log::info('reached login service auth');
         $data = $this->findOrCreateUser($phone_number, $access_type);  
         $account = $data['account'];
-        $create_flag = $data['create_flag'];
-        \Log::info('data', $data);
+        $create_flag = $data['create_flag'];       
         if($access_type == 'provider' && $account->is_active == 0 && $create_flag == true) {     //SP register  
-            $admin = User::find(1); $email = 'sreeja.bs@gmail.com' ;//$admin ? $admin->email : 'admin@admin.com';
+            $admin = User::find(1); $email = $admin ? $admin->email : 'admin@admin.com';
             Mail::to($email)->send(New RegisterServiceProviderMail($account));    
             return __('Your signup request has been received. Our team will review your details and contact you soon to activate your account');
         }elseif($access_type == 'provider' && $account->is_active == 0 && $create_flag == false) {  //SP login attempt
