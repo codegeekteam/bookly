@@ -16,17 +16,31 @@ use Illuminate\Support\Str;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
 use App\Models\Enums\TransactionType;
+use App\MAil\RegisterServiceProviderMail;
+use Illuminate\Support\Facades\Mail;
 
 class AuthService extends Service
 {
     /**
      * @throws Exception
      */
-    public function login(string $phone_number, string $access_type): void
+    public function login(string $phone_number, string $access_type): string
     {
-        $account = $this->findOrCreateUser($phone_number, $access_type);
-
-        $this->SendOTP($account);
+          \Log::info('reached login service auth');
+        $data = $this->findOrCreateUser($phone_number, $access_type);  
+        $account = $data['account'];
+        $create_flag = $data['create_flag'];
+        \Log::info('data', $data);
+        if($access_type == 'provider' && $account->is_active == 0 && $create_flag == true) {     //SP register  
+            $admin = User::find(1); $email = 'sreeja.bs@gmail.com' ;//$admin ? $admin->email : 'admin@admin.com';
+            Mail::to($email)->send(New RegisterServiceProviderMail($account));    
+            return __('Your signup request has been received. Our team will review your details and contact you soon to activate your account');
+        }elseif($access_type == 'provider' && $account->is_active == 0 && $create_flag == false) {  //SP login attempt
+              return __('Account Pending Approval');
+        }else{
+            $this->SendOTP($account);
+            return 'OTP sent';
+        }        
     }
 
     private function SendOTP($account): void
