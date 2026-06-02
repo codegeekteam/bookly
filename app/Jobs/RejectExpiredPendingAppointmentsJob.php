@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use App\Models\Enums\TransactionType;
+use App\Models\Enums\TransactionSource;
 
 class RejectExpiredPendingAppointmentsJob implements ShouldQueue
 {
@@ -72,6 +73,7 @@ class RejectExpiredPendingAppointmentsJob implements ShouldQueue
                                     $wallet,
                                     $total,
                                     TransactionType::IN,
+                                    TransactionSource::REFUND,
                                     "Appointment #$appointment->id rejected",
                                     false,
                                     " رفض موعد رقم : $appointment->id"

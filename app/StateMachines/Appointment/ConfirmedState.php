@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use App\Models\Enums\TransactionSource;
 
 class ConfirmedState extends BaseAppointmentState
 {
@@ -129,6 +130,7 @@ class ConfirmedState extends BaseAppointmentState
                         $wallet,
                         $total,
                         TransactionType::IN,
+                        TransactionSource::REFUND,
                         "Appointment #$appointment->id rejected",
                         false,
                         " رفض موعد رقم : $appointment->id"
@@ -262,6 +264,7 @@ class ConfirmedState extends BaseAppointmentState
                         $customerWallet,
                         $refundAmount,
                         TransactionType::IN,
+                        TransactionSource::REFUND,
                         $refundReason,
                         false,
                         $refundReasonAr

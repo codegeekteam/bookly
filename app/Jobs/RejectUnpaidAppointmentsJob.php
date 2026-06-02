@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
 use App\Models\Enums\TransactionType;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
+use App\Models\Enums\TransactionSource;
 
 class RejectUnpaidAppointmentsJob implements ShouldQueue
 {
@@ -42,6 +43,7 @@ class RejectUnpaidAppointmentsJob implements ShouldQueue
                         $wallet,
                         $total,
                         TransactionType::IN,
+                        TransactionSource::REFUND,
                         "Appointment #$appointment->id rejected",
                         false,
                         " رفض موعد رقم : $appointment->id"
@@ -63,7 +65,7 @@ class RejectUnpaidAppointmentsJob implements ShouldQueue
                 }
                 //notification
                 try {
-                    $appointment->customer->user->notify(new RejectAppointmentNotification($appointment));
+                    $appointment->customer->user->notify(new RejectAppointmentNotification($appointment, 'customer'));
                 } catch (\Exception $e) {
                     Log::info($e);
                 }

@@ -36,6 +36,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\HtmlString;
+use App\Models\Enums\TransactionSource;
+use App\Services\RefundService;
 
 class AppointmentResource extends Resource
 {
@@ -534,11 +536,7 @@ class AppointmentResource extends Resource
                                 $refundInfo = $cancellationPolicyService->calculateRefund($record, false); //customer cancel
                                 // Handle refund based on policy
                                 if ($record->payment_status == 'paid' || $record->payment_status == 'partially_paid') {
-                                    $refundAmount = (float)$record->total_payed; //$refundInfo['refund_amount'];
-                                     if($data['goodwill_amount'] > 0) {   
-                                        $refundAmount += $data['goodwill_amount'];
-                                     }               
-                                   // if ($refundInfo['refund_percentage'] == 100 && $refundAmount > 0) {
+                                    $refundAmount = (float)$record->total_payed; //$refundInfo['refund_amount'];                                            
                                     if ($refundAmount > 0) {
                                         // Refund to customer (deposit only for provider, full amount for customer)
                                         $customerWallet = $record->customer->user->wallet;
@@ -550,10 +548,26 @@ class AppointmentResource extends Resource
                                             $customerWallet,
                                             $refundAmount,
                                             TransactionType::IN,
+                                            TransactionSource::REFUND,
                                             $refundReason,
                                             false,
                                             $refundReasonAr
                                         );
+
+                                        if($data['goodwill_amount'] > 0) {   
+                                            // $refundReason = $record->id .' - Goodwill Amount';
+                                            // $refundReasonAr = "$record->id -  مبلغ الشهرة";                                        
+                                            // (new CreateWalletTransactionMutation())->handle(
+                                            //     $customerWallet,
+                                            //     $data['goodwill_amount'],
+                                            //     TransactionType::IN,
+                                            //     TransactionSource::GOODWILL,
+                                            //     $refundReason,
+                                            //     false,
+                                            //     $refundReasonAr
+                                            // );
+                                            $refundAmount += $data['goodwill_amount'];
+                                        }
 
                                         // Manually deduct from provider's pending balance (observer doesn't handle this correctly)
                                         $providerWallet = $record->serviceProvider->user->wallet;
@@ -618,6 +632,7 @@ class AppointmentResource extends Resource
                                     $customerWallet,
                                     $data['goodwill_amount'],
                                     TransactionType::IN,
+                                    TransactionSource::GOODWILL,
                                     $refundReason,
                                     false,
                                     $refundReasonAr

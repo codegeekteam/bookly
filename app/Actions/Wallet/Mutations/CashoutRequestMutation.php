@@ -5,6 +5,7 @@ namespace App\Actions\Wallet\Mutations;
 use App\Http\Requests\WalletCashoutRequest;
 use App\Models\CashoutRequest;
 use App\Models\Enums\TransactionType;
+use App\Models\Enums\TransactionSource;
 use App\Models\Wallet;
 use Illuminate\Validation\ValidationException;
 
@@ -44,7 +45,7 @@ class CashoutRequestMutation
         ]);
 
         (new CreateWalletTransactionMutation())
-            ->handle($wallet, $amount, TransactionType::OUT, 'Payout request');
+            ->handle($wallet, $amount, TransactionType::OUT, TransactionSource::WITHDRAWAL , 'Payout request');
 
         return $cashout;
 
