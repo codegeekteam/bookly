@@ -5,6 +5,7 @@ namespace App\Observers;
 use App\Models\Enums\TransactionType;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
+use App\Models\Enums\TransactionSource;
 
 class WalletTransactionObserver
 {
@@ -13,18 +14,29 @@ class WalletTransactionObserver
      */
     public function created(WalletTransaction $walletTransaction): void
     {
-        $wallet = Wallet::find($walletTransaction->wallet_id);
+        $wallet = Wallet::find($walletTransaction->wallet_id);        
         if ($walletTransaction->type === TransactionType::IN) {
             if ($wallet->user->serviceProvider) {
                 $wallet->pending_balance += $walletTransaction->amount;
             } else {
-                $wallet->balance += $walletTransaction->amount;
+                //customer user               
+                if ($walletTransaction->source === TransactionSource::REFUND) { 
+                    $wallet->refund_balance += $walletTransaction->amount;                 
+                }
+
+                if ($walletTransaction->source === TransactionSource::GOODWILL) { 
+                     $wallet->goodwill_balance += $walletTransaction->amount;
+                }             
+                $wallet->balance += $walletTransaction->amount;             
+                
             }
-        } else {
+        } else {          
             $wallet->balance -= $walletTransaction->amount;
         }
         $wallet->save();
+
     }
+
 
     /**
      * Handle the WalletTransaction "updated" event.

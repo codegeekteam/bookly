@@ -4,6 +4,7 @@ namespace App\Actions\Wallet\Mutations;
 
 use App\Http\Resources\WalletTransactionResource;
 use App\Models\Enums\TransactionType;
+use App\Models\Enums\TransactionSource;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
 use App\Notifications\WalletTransactionNotification;
@@ -12,12 +13,15 @@ use Illuminate\Validation\ValidationException;
 
 class CreateWalletTransactionMutation
 {
-    public function handle(?Wallet $wallet, float $amount, TransactionType $type, string $description,$sendNotification=false,$description_ar=null): WalletTransactionResource
+    public function handle(?Wallet $wallet, float $amount, TransactionType $type, TransactionSource $source,string $description,$sendNotification=false,$description_ar=null): WalletTransactionResource
     {
         if (! $wallet) {
             $wallet = Wallet::create([
                 'user_id' => auth('sanctum')->id(),
                 'balance' => 0,
+                'deposit_balance' => 0,
+                'refund_balance' => 0,
+                'goodwill_balance' => 0,
             ]);
         }
         if (($type === TransactionType::OUT) && $wallet->balance < $amount) {
@@ -30,6 +34,7 @@ class CreateWalletTransactionMutation
             'wallet_id' => $wallet->id,
             'amount' => $amount,
             'type' => $type,
+            'source' => $source,
             'description' => $description,
             'description_ar' => $description_ar,
         ]);

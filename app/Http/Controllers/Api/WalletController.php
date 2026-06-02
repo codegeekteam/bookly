@@ -13,6 +13,7 @@ use App\Http\Resources\WalletResource;
 use App\Http\Resources\WalletTransactionResource;
 use App\Models\CashoutRequest;
 use App\Models\Enums\TransactionType;
+use App\Models\Enums\TransactionSource;
 use Illuminate\Http\Request;
 
 class WalletController extends Controller
@@ -100,6 +101,7 @@ class WalletController extends Controller
             auth()->user()->wallet,
             $request->get('amount'),
             TransactionType::IN,
+            TransactionSource::PURCHASE,
             'Add balance'
         );
 

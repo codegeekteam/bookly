@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Models\Enums\TransactionSource;
 
 class GiftCardService
 {
@@ -147,6 +148,7 @@ class GiftCardService
                 $user->wallet,
                 $giftCard->amount,
                 TransactionType::IN,
+                TransactionSource::PURCHASE,
                 "redeem gift card : $giftCard->code amount : $giftCard->amount ",
                 false,
                 "استرداد بطاقة الهدايا: $giftCard->code، المبلغ: $giftCard->amount"

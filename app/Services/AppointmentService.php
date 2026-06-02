@@ -44,6 +44,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use phpDocumentor\Reflection\Types\Boolean;
+use App\Models\Enums\TransactionSource;
 
 class AppointmentService
 {
@@ -676,6 +677,7 @@ class AppointmentService
         //         $provider->user->wallet,
         //         $appointment->amount_due,
         //         TransactionType::IN,
+        //          TransactionSource::REFUND,
         //         "Appointment #$appointment->id booking",
         //         false,
         //         " حجز موعد رقم : $appointment->id"
@@ -826,6 +828,7 @@ class AppointmentService
                         $wallet,
                         $payed_amount,
                         TransactionType::OUT,
+                        TransactionSource::BOOKING,
                         "Appointment #$appointment->id booking using your wallet",
                         false,
                         " حجز موعد رقم : $appointment->id"
@@ -1573,7 +1576,7 @@ class AppointmentService
         $description = 'Congrats! Your referral was a success! 🎉 You\'ve earned [ ' . $amount . ' ] in your wallet. Check it out and keep sharing for more rewards!';
         $description_ar = 'تهانينا! لقد نجح الإحالة الخاصة بك! 🎉 لقد حصلت على [ ' . $amount . ' ] في محفظتك. تحقق منها واستمر في المشاركة للحصول على المزيد من المكافآت!';
         $wallet = $referral->user->wallet;
-        (new CreateWalletTransactionMutation())->handle($wallet, $amount, TransactionType::IN, $description, true, $description_ar);
+        (new CreateWalletTransactionMutation())->handle($wallet, $amount, TransactionType::IN, TransactionSource::PURCHASE, $description, true, $description_ar);
     }
 
     public function incrementCustomerPoints($customer, $total)

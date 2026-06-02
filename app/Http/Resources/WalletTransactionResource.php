@@ -21,6 +21,7 @@ class WalletTransactionResource extends JsonResource
             'wallet_id' => $this->wallet_id,
             'amount' => $this->amount.'' ,
             'type' => $this->type,
+            'source' => $this->source,
             'description' => $this->getDescription($request),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

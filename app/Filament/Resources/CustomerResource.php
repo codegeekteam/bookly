@@ -21,8 +21,9 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
-
 use App\Models\Enums\TransactionType;
+use App\Models\Enums\TransactionSource;
+
 class CustomerResource extends Resource
 {
     protected static ?string $model = Customer::class;
@@ -186,6 +187,7 @@ class CustomerResource extends Resource
                             $wallet,
                             $data['amount'],
                             TransactionType::IN,
+                            TransactionSource::PURCHASE,
                             $data['description'],
                             true,
                             $data['description_ar']
