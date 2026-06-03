@@ -15,6 +15,9 @@ class GetWalletQuery
             $wallet = Wallet::create([
                 'user_id' => auth()->id(),
                 'balance' => 0,
+                'deposit_balance' => 0,
+                'refund_balance' => 0,
+                'goodwill_balance' => 0,
             ]);
         }
 
