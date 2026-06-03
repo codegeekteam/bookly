@@ -33,6 +33,7 @@ class ServiceProviderObserver
             {
                 if ($serviceProvider->user) 
                 {
+                    \Log::info('debug log notify sp:ServiceProviderApprovedNotification');
                    $serviceProvider->user->notify(new ServiceProviderApprovedNotification($serviceProvider, true));
                 }
             }
@@ -40,9 +41,11 @@ class ServiceProviderObserver
             {
                 if ($serviceProvider->user) 
                 {                   
-                    // revoke sanctum tokens
-                    $serviceProvider->user->tokens()->delete();                 
+                    
+                    \Log::info('debug log notify sp in deactivate:ServiceProviderApprovedNotification');               
                     $serviceProvider->user->notify(new ServiceProviderApprovedNotification($serviceProvider, false));
+                    // revoke sanctum tokens
+                    $serviceProvider->user->tokens()->delete();  
                 }
             }
     }
