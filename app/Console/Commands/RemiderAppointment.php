@@ -33,8 +33,8 @@ class RemiderAppointment extends Command
 
         Appointment::where('status_id', AppointmentStatus::Pending->value)
             ->where('reminder_sent', false)
-            // ->where('created_at', '<', now()->subHours($timeLimitHours))
-            ->where('created_at', '<', now()->subMinutes($timeLimitHours)) //for testing
+             ->where('created_at', '<', now()->subHours($timeLimitHours))
+           // ->where('created_at', '<', now()->subMinutes($timeLimitHours)) //for testing
             ->chunkById(100, function ($appointments) {
 
                 foreach ($appointments as $appointment) {
