@@ -428,6 +428,11 @@ class ServiceProviderService
                     return [$today->copy()->startOfDay(), $today->copy()->endOfDay()];
 
                 case 'yesterday':
+                    $arr = [
+                        $today->copy()->subDay()->startOfDay(),
+                        $today->copy()->subDay()->endOfDay()
+                    ];
+                    \Log::info('yesterday', $arr);
                     return [
                         $today->copy()->subDay()->startOfDay(),
                         $today->copy()->subDay()->endOfDay()
