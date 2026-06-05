@@ -17,15 +17,23 @@ class AppointmentResource extends JsonResource
     public function toArray(Request $request): array
     {
         // Fetch attached services for the provider
-        $attached_services = AttachedService::where('service_provider_id', $this->serviceProvider->id)
-            ->whereIn('service_id', $this->services->pluck('id'))
-            ->get();
+        // $attached_services = AttachedService::where('service_provider_id', $this->serviceProvider->id)
+        //     ->whereIn('service_id', $this->services->pluck('id'))
+        //     ->get();
+        $attached_services = $this->serviceProvider
+                    ->attachedServices
+                    ->whereIn('service_id', $this->services->pluck('id'));
 
         // Extract date from the first service's pivot
         $date = $this->services->first()?->pivot?->date;
 
         // Retrieve all delivery types
-        $deliveryTypes = DeliveryType::all();
+        // $deliveryTypes = DeliveryType::all();
+       $deliveryTypes = cache()->remember(
+            'delivery_types',
+            3600,
+            fn() => DeliveryType::all()
+        );      
 
         return [
             'id' => $this->id,
@@ -40,7 +48,7 @@ class AppointmentResource extends JsonResource
             'remaining_to_pay' => $this->calculateRemainingToPay(),
             'total' => $this->getTotal(),
             'provider' => $this->getProvider(),
-            'has_review' => $this->status?->title !== 'completed' ? null : $this->review()->exists(),
+            'has_review' => $this->status?->title !== 'completed' ? null : $this->review !== null, //$this->review()->exists(),
             'comment' => $this->comment,
             'status' => $this->status?->title,
             'created_at' => $this->created_at,
@@ -48,7 +56,7 @@ class AppointmentResource extends JsonResource
             'payment_status' => $this->payment_status,
             'conversation_id' => $this->conversation?->id,
             'has_active_chat' => $this->conversation && $this->conversation->is_active,
-            'unread_messages_count' => $this->getUnreadMessagesCount($request),
+            'unread_messages_count' => $this->unread_messages_count,  //$this->getUnreadMessagesCount($request),
             'invoice_url' => $this->invoice ? $this->invoice->getPdfUrl() : null,
             'cancellation_policy' => $this->getCancellationPolicy(),
             'admin_cancel_reason' => $this->admin_cancel_reason ?? '',

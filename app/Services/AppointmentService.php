@@ -276,18 +276,84 @@ class AppointmentService
     function get(
         User $user
     ) {
-        if ($user->serviceProvider) {
-            $appointments = $user->serviceProvider->appointments;
+        if ($user->serviceProvider) {            
+          //  $appointments = $user->serviceProvider->appointments;            
+            $receiverType = 'provider';
+            $receiverId = $user->serviceProvider->id;
+            $appointments = $user->serviceProvider
+                ->appointments()
+                ->with([
+                        'conversation',
+                        'serviceProvider',
+                        'serviceProvider.attachedServices',
+                        'serviceProvider.attachedServices.service',
+                        'services',
+                        'appointmentServices',
+                        'appointmentServices.employee',
+                        'appointmentServices.address',
+                        'customer',
+                        'promoCode',
+                        'paymentMethod',
+                        'depositPaymentMethod',
+                        'remainingPaymentMethod',
+                        'invoice',
+                        'review',
+                        'status',
+                        'previousStatus',
+                ])
+                ->withCount([
+                    'conversation.messages as unread_messages_count' => function ($query) use ($receiverType, $receiverId) {
+                        $query->unreadFor($receiverType, $receiverId);
+                    }
+                ])
+                ->orderByDesc('id')
+                ->paginate(20);
+            // if ($appointments->count() > 0) {
+            //     return new AppointmentCollection($appointments->load('serviceProvider', 'services', 'appointmentServices', 'customer', 'PromoCode', 'paymentMethod', 'invoice')->sortByDesc('id'));
+            // }
             if ($appointments->count() > 0) {
-                return new AppointmentCollection($appointments->load('serviceProvider', 'services', 'appointmentServices', 'customer', 'PromoCode', 'paymentMethod', 'invoice')->sortByDesc('id'));
+                return new AppointmentCollection($appointments);
             }
 
             return response()->json([]);
         }
         if ($user->customer) {
-            $appointments = $user->customer->appointments;
+           // $appointments = $user->customer->appointments;
+            $receiverType = 'customer';
+             $receiverId = $user->customer->id;          
+            $appointments = $user->customer
+                ->appointments()
+                ->with([
+                        'conversation',
+                        'serviceProvider',
+                        'serviceProvider.attachedServices',
+                        'serviceProvider.attachedServices.service',
+                        'services',
+                        'appointmentServices',
+                        'appointmentServices.employee',
+                        'appointmentServices.address',
+                        'customer',
+                        'promoCode',
+                        'paymentMethod',
+                        'depositPaymentMethod',
+                        'remainingPaymentMethod',
+                        'invoice',
+                        'review',
+                        'status',
+                        'previousStatus',
+                ])
+                ->withCount([
+                    'conversation.messages as unread_messages_count' => function ($query) use ($receiverType, $receiverId) {
+                        $query->unreadFor($receiverType, $receiverId);
+                    }
+                ])
+                ->orderByDesc('id')
+                ->paginate(20);
+            // if ($appointments->count() > 0) {
+            //     return new AppointmentCollection($appointments->load('serviceProvider', 'services', 'appointmentServices', 'customer', 'PromoCode', 'paymentMethod', 'invoice')->sortByDesc('id'));
+            // }
             if ($appointments->count() > 0) {
-                return new AppointmentCollection($appointments->load('serviceProvider', 'services', 'appointmentServices', 'customer', 'PromoCode', 'paymentMethod', 'invoice')->sortByDesc('id'));
+                return new AppointmentCollection($appointments);
             }
 
             return response()->json([]);
@@ -360,8 +426,11 @@ class AppointmentService
 
         // Validate booking lead times
         foreach ($services as $service) {
-            $dateOnly = Carbon::parse($service['date'])->format('Y-m-d');
-            $bookingDateTime = Carbon::parse($dateOnly . ' ' . $service['time_slot']);
+            // $dateOnly = Carbon::parse($service['date'])->format('Y-m-d');
+            // $bookingDateTime = Carbon::parse($dateOnly . ' ' . $service['time_slot']);
+            $date = Carbon::parse($service['date']);
+            $dateOnly = $date->format('Y-m-d');
+            $bookingDateTime = $date->copy()->setTimeFromTimeString($service['time_slot']);
 
             // Check minimum booking lead time
             if ($provider->minimum_booking_lead_time_hours !== null) {
@@ -387,16 +456,28 @@ class AppointmentService
                 }
             }
         }
-
+    // operational hours shifted to outside loop - query optimization 
+    $operationalHours = $provider->operationalHours
+                                 ->groupBy(['day_of_week', 'service_id']);
         foreach ($services as $i => $service) {
-            $dateOnly = Carbon::parse($service['date'])->format('Y-m-d');
-            $duration = $provider->operationalHours()
-                ->where('day_of_week', Carbon::parse($service['date'])->format('l'))
-                ->where('service_id', $service['service_id'])
-                ->first()->duration_in_minutes;
+            // $dateOnly = Carbon::parse($service['date'])->format('Y-m-d');
+            // $duration = $provider->operationalHours()
+            //     ->where('day_of_week', Carbon::parse($service['date'])->format('l'))
+            //     ->where('service_id', $service['service_id'])
+            //     ->first()->duration_in_minutes;
 
-            $services[$i]['start_time'] = Carbon::parse($dateOnly . ' ' . $service['time_slot']);
-            $services[$i]['end_time'] = Carbon::parse($dateOnly . ' ' . $service['time_slot'])->addMinutes($duration);
+            // $services[$i]['start_time'] = Carbon::parse($dateOnly . ' ' . $service['time_slot']);
+            // $services[$i]['end_time'] = Carbon::parse($dateOnly . ' ' . $service['time_slot'])->addMinutes($duration);
+
+                $date = Carbon::parse($service['date']);
+                $day = $date->format('l');
+
+                $duration = $operationalHours[$day][$service['service_id']][0]->duration_in_minutes ?? 0;
+
+                $start = $date->copy()->setTimeFromTimeString($service['time_slot']);
+
+                $services[$i]['start_time'] = $start;
+                $services[$i]['end_time'] = $start->copy()->addMinutes($duration);
         }
         if ($promo_code && $loyalty_discount_customer_id) {
             throw ValidationException::withMessages([
@@ -456,6 +537,11 @@ class AppointmentService
         \Log::info('amount_due' . $appointment->amount_due);
          \Log::info('payment_method_id' . $appointment->payment_method_id);
 
+         //optimize query - shifted from inside loop to outsede
+         $attachedServices = AttachedService::where('service_provider_id', $provider->id)
+        ->whereIn('service_id', array_column($services, 'service_id'))
+        ->get()
+        ->keyBy('service_id');
         //save services and calculate the total
         foreach ($services as $service) {
             $appointment->services()->attach($service['service_id'], [
@@ -469,9 +555,10 @@ class AppointmentService
             ]);
 
             // Calculate the price for this service and add to total
-            $attachedService = AttachedService::where('service_provider_id', $provider->id)
-                ->where('service_id', $service['service_id'])
-                ->first();
+            // $attachedService = AttachedService::where('service_provider_id', $provider->id)
+            //     ->where('service_id', $service['service_id'])
+            //     ->first();
+            $attachedService = $attachedServices[$service['service_id']] ?? null;
 
         \Log::info('attached service', ['attachedService' => $attachedService]);
             if ($attachedService) {
@@ -1685,24 +1772,59 @@ class AppointmentService
             throw new Exception(__('User not found'));
         }
 
+        // $appointments = $relation->appointments()
+        //     ->where('status_id', AppointmentStatus::PaymentRequest->value)
+        //     ->where('payment_status', '!=', 'paid')
+        //     ->with([
+        //         'serviceProvider',
+        //         'services',
+        //         'appointmentServices',
+        //         'customer',
+        //         'PromoCode',
+        //         'paymentMethod',
+        //         'invoice',
+        //     ])
+        //     ->orderByDesc('id')
+        //     ->get();
+        $receiverType = $user->serviceProvider  ? 'provider' : 'customer';
+        $receiverId = $relation->id;
         $appointments = $relation->appointments()
             ->where('status_id', AppointmentStatus::PaymentRequest->value)
             ->where('payment_status', '!=', 'paid')
             ->with([
-                'serviceProvider',
-                'services',
-                'appointmentServices',
-                'customer',
-                'PromoCode',
-                'paymentMethod',
-                'invoice',
+                   'conversation',
+                    'serviceProvider',
+                    'serviceProvider.attachedServices',
+                    'serviceProvider.attachedServices.service',
+                    'services',
+                    'appointmentServices',
+                    'appointmentServices.employee',
+                    'appointmentServices.address',
+                    'customer',
+                    'promoCode',
+                    'paymentMethod',
+                    'depositPaymentMethod',
+                    'remainingPaymentMethod',
+                    'invoice',
+                    'review',
+                    'status',
+                    'previousStatus',
+            ])
+            ->withCount([
+                'conversation.messages as unread_messages_count' => function ($query) use ($receiverType, $receiverId) {
+                    $query->unreadFor($receiverType, $receiverId);
+                }
             ])
             ->orderByDesc('id')
-            ->get();
+            ->paginate(20);
 
-        return $appointments->isNotEmpty()
-            ? new AppointmentCollection($appointments)
-            : response()->json([]);
+        // return $appointments->isNotEmpty()
+        //     ? new AppointmentCollection($appointments)
+        //     : response()->json([]);
+        if ($appointments->count() > 0) {
+            return new AppointmentCollection($appointments);
+        }
+        return response()->json([]);
     }
 
      /**

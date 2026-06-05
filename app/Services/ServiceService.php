@@ -125,7 +125,7 @@ class ServiceService
                 $query->where('is_active', true)
                     ->where('is_blocked', false)
                     ->whereNull('deleted_at');
-            });
+            });     
 
         if ($service_id != null) {
             $data = $data->where('service_id', $service_id);

@@ -9,8 +9,17 @@ class CustomerCampaignService
 {
     public function getCampaign()
     {
-        $campaign = CustomerCampaign::where('is_active', true)->first();
-
+        $campaign = CustomerCampaign::with(
+            [   'services',    
+                'services.attachedServices',
+                'services.categories',
+                'providers',    
+                'providers.address',
+                'providers.reviews',
+                'providers.attachedServices',
+                'providers.providerType',
+                'providers.user.activeSubscription',])
+                ->where('is_active', true)->first();
         if (! $campaign) {
             return response()->json(['message' => 'no active campaign'], 404);
         }
