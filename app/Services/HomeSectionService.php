@@ -18,7 +18,7 @@ class HomeSectionService
                 'providers.operationalHours',     
                 'providers.reviews',
                 'providers.user.activeSubscription',
-                'providers.address',
+                'providers.addresses',
                 'providers.user.activeSubscription',
             ])
             ->get();
