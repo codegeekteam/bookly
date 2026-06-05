@@ -22,11 +22,7 @@ class HomeSectionService
                // 'providers.addresses',
             ])
             ->get();
-$start = microtime(true);
 
-$json = HomeSectionResource::collection($sections)->response()->getData(true);
-
-dump('Serialization', microtime(true) - $start);
         return HomeSectionResource::collection($sections);
     }
 
