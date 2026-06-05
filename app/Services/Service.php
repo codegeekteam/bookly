@@ -65,7 +65,7 @@ class Service
                                             'attachedServices',
                                             'user.activeSubscription',
                                             'providerType',
-                                            'address'
+                                            'addresses'
                                         ])            
                                     ->where('phone_number', $phone_number)
                                     ->first();
