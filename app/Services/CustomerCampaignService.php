@@ -14,7 +14,7 @@ class CustomerCampaignService
                 'services.attachedServices',
                 'services.categories',
                 'providers',    
-                'providers.address',
+                'providers.addresses',
                 'providers.reviews',
                 'providers.attachedServices',
                 'providers.providerType',
