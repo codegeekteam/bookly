@@ -60,7 +60,15 @@ class Service
     {
         $account = '';
         if ($access_type == 'provider') {
-            $account = ServiceProvider::where('phone_number', $phone_number)->first();
+            $account = ServiceProvider::with([
+                                            'reviews',
+                                            'attachedServices',
+                                            'user.activeSubscription',
+                                            'providerType',
+                                            'address'
+                                        ])            
+                                    ->where('phone_number', $phone_number)
+                                    ->first();
         }
 
         if ($access_type == 'employee') {

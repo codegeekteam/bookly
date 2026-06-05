@@ -11,15 +11,16 @@ class ServiceProviderService
 {
     public function getProviders($request)
     {
-        $latitude = $request->latitude;
-        $longitude = $request->longitude;
+        // $latitude = $request->latitude;
+        // $longitude = $request->longitude;
 
         $query = ServiceProvider::query()
-            ->with('addresses')
-           /* ->when($request->filled('rating'), function($query) use ($request) {
-                $query->where('average_rating', '>=', (int)$request->rating);
-            })*/
-            ->when($request->filled('rating'), function ($query) use ($request) {
+            ->with('addresses')  
+            ->where('is_active', true)
+            ->where('published', true);  
+            
+         if ($request->filled('rating')) {
+           /* ->when($request->filled('rating'), function ($query) use ($request) {
                 $query->whereHas('reviews', function ($q) {
                     $q->select('service_provider_id')
                     ->selectRaw('AVG(rate) as avg_rating')
@@ -28,22 +29,29 @@ class ServiceProviderService
                 ->whereRaw('(SELECT AVG(rate) FROM reviews WHERE reviews.service_provider_id = service_providers.id) >= ?', [
                     (int) $request->rating
                 ]);
-            })
-            ->when($request->has('keyword'), function ($query) use ($request) {
+            })*/
+            $query->withAvg('reviews', 'rate')
+              ->having('reviews_avg_rate', '>=', (int)$request->rating);
+
+         }
+        if ($request->filled('keyword')) {
+              $query->where('name', 'like', "%{$request->keyword}%");
+              /*      ->when($request->has('keyword'), function ($query) use ($request) {
                 $keyword = '%'.$request->keyword.'%';
                 $query->where('name', 'LIKE', $keyword);
-            })
-           ->where('is_active', true)
-           ->where('published', true);
-
-
-        // If latitude and longitude are provided, sort by distance
-        if ($latitude && $longitude) {
+            })*/
+        }   
+      
+   // If latitude and longitude are provided, sort by distance
+      //  if ($latitude && $longitude) {
+          if ($request->latitude && $request->longitude) {
+             $latitude = $request->latitude;
+            $longitude = $request->longitude;
             $providers = $query->get()->map(function ($provider) use ($latitude, $longitude) {
                 // Get the provider's default address or first address
-                $address = $provider->addresses()
+                $address = $provider->addresses //addresses()
                     ->where('is_default', true)
-                    ->first() ?? $provider->addresses()->first();
+                    ->first() ?? $provider->addresses->first(); //$provider->addresses()->first();
 
                 if ($address && $address->latitude && $address->longitude) {
                     // Calculate distance using Haversine formula
