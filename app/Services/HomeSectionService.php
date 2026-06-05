@@ -10,7 +10,6 @@ class HomeSectionService
 {
     public function index()
     {
-        DB::enableQueryLog();
         $sections=HomeSection::with(
             [   'providers' => function ($q) {
                     $q->withAvg('reviews', 'rate');
@@ -23,7 +22,11 @@ class HomeSectionService
                // 'providers.addresses',
             ])
             ->get();
-            dd(DB::getQueryLog());
+$start = microtime(true);
+
+$json = HomeSectionResource::collection($sections)->response()->getData(true);
+
+dump('Serialization', microtime(true) - $start);
         return HomeSectionResource::collection($sections);
     }
 
