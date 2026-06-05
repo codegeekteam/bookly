@@ -301,11 +301,11 @@ class AppointmentService
                         'status',
                         'previousStatus',
                 ])
-                ->withCount([
-                    'conversation.messages as unread_messages_count' => function ($query) use ($receiverType, $receiverId) {
-                        $query->unreadFor($receiverType, $receiverId);
-                    }
-                ])
+                // ->withCount([
+                //     'conversation.messages as unread_messages_count' => function ($query) use ($receiverType, $receiverId) {
+                //         $query->unreadFor($receiverType, $receiverId);
+                //     }
+                // ])
                 ->orderByDesc('id')
                 ->paginate(20);
             // if ($appointments->count() > 0) {
@@ -342,11 +342,11 @@ class AppointmentService
                         'status',
                         'previousStatus',
                 ])
-                ->withCount([
-                    'conversation.messages as unread_messages_count' => function ($query) use ($receiverType, $receiverId) {
-                        $query->unreadFor($receiverType, $receiverId);
-                    }
-                ])
+                // ->withCount([
+                //     'conversation.messages as unread_messages_count' => function ($query) use ($receiverType, $receiverId) {
+                //         $query->unreadFor($receiverType, $receiverId);
+                //     }
+                // ])
                 ->orderByDesc('id')
                 ->paginate(20);
             // if ($appointments->count() > 0) {
@@ -1810,11 +1810,11 @@ class AppointmentService
                     'status',
                     'previousStatus',
             ])
-            ->withCount([
-                'conversation.messages as unread_messages_count' => function ($query) use ($receiverType, $receiverId) {
-                    $query->unreadFor($receiverType, $receiverId);
-                }
-            ])
+            // ->withCount([
+            //     'conversation.messages as unread_messages_count' => function ($query) use ($receiverType, $receiverId) {
+            //         $query->unreadFor($receiverType, $receiverId);
+            //     }
+            // ])
             ->orderByDesc('id')
             ->paginate(20);
 
