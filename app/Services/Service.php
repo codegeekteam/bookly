@@ -40,7 +40,8 @@ class Service
         }     
         if ($account->is_blocked == 1) {
             throw new \Exception(__('your account is blocked contact admin', [], request()->header('lang') ?? 'en'));
-        }   
+        } 
+          
          return [
                     'account' => $account,
                     'create_flag' => $create_flag

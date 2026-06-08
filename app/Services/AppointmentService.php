@@ -307,7 +307,8 @@ class AppointmentService
                 //     }
                 // ])
                 ->orderByDesc('id')
-                ->paginate(20);
+                // ->paginate(20);
+                 ->get();
             // if ($appointments->count() > 0) {
             //     return new AppointmentCollection($appointments->load('serviceProvider', 'services', 'appointmentServices', 'customer', 'PromoCode', 'paymentMethod', 'invoice')->sortByDesc('id'));
             // }
@@ -348,7 +349,8 @@ class AppointmentService
                 //     }
                 // ])
                 ->orderByDesc('id')
-                ->paginate(20);
+                // ->paginate(20);
+                 ->get();
             // if ($appointments->count() > 0) {
             //     return new AppointmentCollection($appointments->load('serviceProvider', 'services', 'appointmentServices', 'customer', 'PromoCode', 'paymentMethod', 'invoice')->sortByDesc('id'));
             // }
@@ -1816,7 +1818,8 @@ class AppointmentService
             //     }
             // ])
             ->orderByDesc('id')
-            ->paginate(20);
+            // ->paginate(20);
+            ->get();
 
         // return $appointments->isNotEmpty()
         //     ? new AppointmentCollection($appointments)
