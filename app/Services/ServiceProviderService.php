@@ -19,8 +19,8 @@ class ServiceProviderService
             ->where('is_active', true)
             ->where('published', true);  
             
-         if ($request->filled('rating')) {
-           /* ->when($request->filled('rating'), function ($query) use ($request) {
+        
+            ->when($request->filled('rating'), function ($query) use ($request) {
                 $query->whereHas('reviews', function ($q) {
                     $q->select('service_provider_id')
                     ->selectRaw('AVG(rate) as avg_rating')
@@ -29,18 +29,20 @@ class ServiceProviderService
                 ->whereRaw('(SELECT AVG(rate) FROM reviews WHERE reviews.service_provider_id = service_providers.id) >= ?', [
                     (int) $request->rating
                 ]);
-            })*/
+            })
+        /*         if ($request->filled('rating')) {
             $query->withAvg('reviews', 'rate')
               ->having('reviews_avg_rate', '>=', (int)$request->rating);
 
-         }
-        if ($request->filled('keyword')) {
+         }*/
+        /* if ($request->filled('keyword')) {
               $query->where('name', 'like', "%{$request->keyword}%");
-              /*      ->when($request->has('keyword'), function ($query) use ($request) {
+               }  */
+            ->when($request->has('keyword'), function ($query) use ($request) {
                 $keyword = '%'.$request->keyword.'%';
                 $query->where('name', 'LIKE', $keyword);
-            })*/
-        }   
+            })
+        
       
    // If latitude and longitude are provided, sort by distance
       //  if ($latitude && $longitude) {
