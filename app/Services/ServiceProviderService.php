@@ -17,8 +17,7 @@ class ServiceProviderService
         $query = ServiceProvider::query()
             ->with('addresses')  
             ->where('is_active', true)
-            ->where('published', true);  
-            
+            ->where('published', true)           
         
             ->when($request->filled('rating'), function ($query) use ($request) {
                 $query->whereHas('reviews', function ($q) {
@@ -41,7 +40,7 @@ class ServiceProviderService
             ->when($request->has('keyword'), function ($query) use ($request) {
                 $keyword = '%'.$request->keyword.'%';
                 $query->where('name', 'LIKE', $keyword);
-            })
+            });
         
       
    // If latitude and longitude are provided, sort by distance
