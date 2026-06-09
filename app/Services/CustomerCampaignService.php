@@ -14,9 +14,9 @@ class CustomerCampaignService
                 'services.attachedServices',
                 'services.categories',
                 'providers',    
-               // 'providers.addresses',
+                'providers.addresses',
                 'providers.reviews',
-              //  'providers.attachedServices',
+                'providers.attachedServices',
               //  'providers.providerType',
               //  'providers.user.activeSubscription',
             ])
