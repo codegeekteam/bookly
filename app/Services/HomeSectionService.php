@@ -11,14 +11,14 @@ class HomeSectionService
     public function index()
     {
         $sections=HomeSection::with(
-            [   'providers' => function ($q) {
+            [   'providers' /*=> function ($q) {
                     $q->withAvg('reviews', 'rate');
-                },
-                'providers.attachedServices',
-                'providers.providerType',
-                'providers.operationalHours',     
+                }*/,
+               // 'providers.attachedServices',
+              //  'providers.providerType',
+              //  'providers.operationalHours',     
                 'providers.reviews',
-                'providers.user.activeSubscription',
+             //   'providers.user.activeSubscription',
                // 'providers.addresses',
             ])
             ->get();
