@@ -10,7 +10,8 @@ class CustomerCampaignService
     public function getCampaign()
     {
         $campaign = CustomerCampaign::with(
-            [   'services',    
+            [   
+                'services',    
                 'services.attachedServices',
                 'services.categories',
                 'providers',    
