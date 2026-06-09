@@ -22,8 +22,8 @@ class CustomerCampaignResource extends JsonResource
             'banners' => $media->isNotEmpty()
                 ? $media->map(fn ($banner) => $banner->getUrl())
                 : [asset('assets/default.jpg')],
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+           // 'created_at' => $this->created_at,
+           // 'updated_at' => $this->updated_at,
         ];
     }
 }
