@@ -18,8 +18,8 @@ class CustomerCampaignService
                 'providers.addresses',
                 'providers.reviews',
                 'providers.attachedServices',
-              //  'providers.providerType',
-              //  'providers.user.activeSubscription',
+                'providers.providerType',
+                'providers.user.activeSubscription',
             ])
             ->where('is_active', true)->first();
         if (! $campaign) {
