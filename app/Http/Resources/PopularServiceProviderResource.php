@@ -33,8 +33,8 @@ class PopularServiceProviderResource extends JsonResource
             'average_rate' => round($this->reviews->avg('rate'), 1) ?? null, //round($this->reviews_avg_rate, 1) ?? null, 
             'images' => $this->getImagesAttribute(),
             'profile_picture' => $this->getFirstMediaUrl('service_provider_profile_image') ?: asset('assets/default.jpg'),
-           'services' => AttachedServiceResource::collection($this->attachedServices) ?? null,
-          /*  'provider_type' => $this->providerType?->title,
+          /* 'services' => AttachedServiceResource::collection($this->attachedServices) ?? null,
+            'provider_type' => $this->providerType?->title,
             'max_appointments_per_day' => $this->max_appointments_per_day,
             'deposit_type' => $this->deposit_type,
             'deposit_amount' => $this->deposit_amount,*/
