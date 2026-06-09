@@ -10,13 +10,14 @@ class CustomerCampaignService
     public function getCampaign()
     {
         $campaign = CustomerCampaign::with(
-            [   'services',    
+            [   
+                'services',    
                 'services.attachedServices',
                 'services.categories',
                 'providers',    
-               // 'providers.addresses',
+                'providers.addresses',
                 'providers.reviews',
-              //  'providers.attachedServices',
+                'providers.attachedServices',
               //  'providers.providerType',
               //  'providers.user.activeSubscription',
             ])
