@@ -18,8 +18,8 @@ class PopularServiceProviderResource extends JsonResource
            $data = [
             'id' => $this->id,
             'name' => $this->name,
-            'provider_rating' => $this->average_rating,
-           /* 'is_blocked' => $this->is_blocked,
+           /* 'provider_rating' => $this->average_rating,
+            'is_blocked' => $this->is_blocked,
             'is_active' => $this->is_active,           
             'email' => $this->email,
             'phone_number' => $this->phone_number,*/
