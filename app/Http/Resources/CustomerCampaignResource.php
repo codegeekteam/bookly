@@ -12,8 +12,10 @@ class CustomerCampaignResource extends JsonResource
     {
         $media = $this->getMedia('banners');
         return [
-            'hot_services' => ServiceResource::collection($this->services),
-            'popular_providers' => ServiceProviderResource::collection($this->providers),
+           // 'hot_services' => ServiceResource::collection($this->services),
+           'hot_Services' => HotServiceResource::collection($this->services),
+          //  'popular_providers' => ServiceProviderResource::collection($this->providers),
+          'popular_providers' => PopularServiceProviderResource::collection($this->providers),
             // 'banners' => $this->getFirstMediaUrl('banners') ? $this->getMedia('banners')->map(function ($banner) {
             //     return $banner->getUrl();
             // }) : [asset('assets/default.jpg')],

@@ -14,12 +14,13 @@ class CustomerCampaignService
                 'services.attachedServices',
                 'services.categories',
                 'providers',    
-                'providers.addresses',
+               // 'providers.addresses',
                 'providers.reviews',
-                'providers.attachedServices',
-                'providers.providerType',
-                'providers.user.activeSubscription',])
-                ->where('is_active', true)->first();
+              //  'providers.attachedServices',
+              //  'providers.providerType',
+              //  'providers.user.activeSubscription',
+            ])
+            ->where('is_active', true)->first();
         if (! $campaign) {
             return response()->json(['message' => 'no active campaign'], 404);
         }

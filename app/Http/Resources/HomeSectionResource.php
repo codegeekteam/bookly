@@ -14,7 +14,8 @@ class HomeSectionResource extends JsonResource
             'id' => $this->id,
             'title' => $this->title,
             // Map the providers relationship
-            'providers' => ServiceProviderResource::collection($this->providers),
+            //'providers' => ServiceProviderResource::collection($this->providers),
+            'providers' => PopularServiceProviderResource::collection($this->providers),
         ];
     }
 }
