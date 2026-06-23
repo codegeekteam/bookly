@@ -15,7 +15,7 @@ final class CheckBlockedMiddleware
         // Check the `is_blocked` field in the related tables
         if (
             ($user->customer && $user->customer->is_blocked) ||
-            ($user->serviceProvider && $user->serviceProvider->is_blocked) ||
+            ($user->serviceProvider && $user->serviceProvider->is_blocked && !($user->serviceProvider->is_active)) ||
             ($user->employee && $user->employee->is_blocked)
         ) {
             return response()->json(['message' => __('Your account is blocked, please contact admin')], 401);
