@@ -38,9 +38,9 @@ class AuthService extends Service
             });   
             return __('Your signup request has been received. Our team will review your details and contact you soon to activate your account');
         }
-        // elseif($access_type == 'provider' && $account->is_active == 0 && $create_flag == false) {  //SP login attempt
-        //       return __('Account Pending Approval');
-        // }
+        elseif($access_type == 'provider' && $account->is_active == 0 && $create_flag == false) {  //SP login attempt
+              return __('Account Pending Approval');
+        }
         else{
             $this->SendOTP($account);
             return 'OTP sent';
