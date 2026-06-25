@@ -35,6 +35,7 @@ class ServiceProvider extends Model implements HasMedia
         'cancellation_hours_before',
         'minimum_booking_lead_time_hours',
         'maximum_booking_lead_time_months',
+        'user_mode'
     ];
 
     protected $casts = [
