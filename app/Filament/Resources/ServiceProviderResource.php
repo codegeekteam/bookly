@@ -83,19 +83,20 @@ class ServiceProviderResource extends Resource
                             ->label(__('Provider Type'))
                             ->placeholder(__('Select Provider Type'))
                             ->preload()
-                            ->searchable(),
-                      Toggle::make('is_active')
+                            ->searchable(),          
+                        Toggle::make('is_blocked')
+                            ->label(__('Blocked'))
+                            ->visible(fn ($record) => $record?->is_active),                                             
+                  
+                        Toggle::make('is_active')
                             ->label(__('Approved / Active')),
                           /*    ->helperText(__('Activate provider after admin approval'))
                             ->default(false)
                             ->visible(fn ($record) => !$record || !$record->is_active)
-                            ->disabled(fn ($record) => $record?->is_active),*/
-                        Toggle::make('is_blocked')
-                            ->label(__('Blocked'))
-                            ->visible(fn ($record) => $record?->is_active),                                              
+                            ->disabled(fn ($record) => $record?->is_active),*/ 
                         Toggle::make('published')
                             ->label(__('Published'))
-                            ->default(true),                    
+                            ->default(true),                   
                     ])->columns(2),
 
                 Section::make(__('Legal Details'))
@@ -228,11 +229,15 @@ class ServiceProviderResource extends Resource
                     ->label('S.No.')
                     ->rowIndex(),
 
+                // ToggleColumn::make('is_active')
+                //     ->label(__('Approved'))
+                //     ->sortable(),
+
                 TextColumn::make('name')
                     ->label(__('Name'))
                     ->default(fn ($record) => $record->name ?? $record->phone_number)
                     ->searchable()
-                    ->sortable(),
+                    ->sortable(),               
 
                 TextColumn::make('email')
                     ->label(__('Email'))
@@ -283,6 +288,10 @@ class ServiceProviderResource extends Resource
 
                 ToggleColumn::make('published')
                     ->label(__('Published'))
+                    ->sortable(),
+
+                ToggleColumn::make('is_active')
+                    ->label(__('Approved'))
                     ->sortable(),
 
             ])->filters([
