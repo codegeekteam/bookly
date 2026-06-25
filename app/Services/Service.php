@@ -21,8 +21,10 @@ class Service
         if ($access_type == 'provider') {
             $account = ServiceProvider::where('phone_number', $phone_number)->first();
             if($account == null) {
-              $account =  ServiceProvider::create(['phone_number' => $phone_number, 'is_active' => 0]); 
+              $account =  ServiceProvider::create(['phone_number' => $phone_number, 'is_active' => 0, 'user_mode' => 'register']); 
               $create_flag = true;         
+            }elseif($account->user_mode === 'register') {
+                $account->update(['user_mode' => 'login']);
             }
 
         }
