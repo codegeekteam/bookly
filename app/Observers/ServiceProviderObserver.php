@@ -6,6 +6,7 @@ use App\Models\ServiceProvider;
 use App\Models\User;
 use App\Notifications\ServiceProviderApprovedNotification;
 use Illuminate\Support\Facades\DB;
+use App\Mail\ServiceProviderApprovedMail;
 
 class ServiceProviderObserver
 {
@@ -34,6 +35,7 @@ class ServiceProviderObserver
                 if ($serviceProvider->user) 
                 {
                     \Log::info('debug log notify sp:ServiceProviderApprovedNotification');
+                    Mail::to($serviceProvider->email)->send(New ServiceProviderApprovedMail($serviceProvider, true)); 
                    $serviceProvider->user->notify(new ServiceProviderApprovedNotification($serviceProvider, true));
                 }
             }
@@ -42,7 +44,8 @@ class ServiceProviderObserver
                 if ($serviceProvider->user) 
                 {                   
                     
-                    \Log::info('debug log notify sp in deactivate:ServiceProviderApprovedNotification');               
+                    \Log::info('debug log notify sp in deactivate:ServiceProviderApprovedNotification'); 
+                    Mail::to($serviceProvider->email)->send(New ServiceProviderApprovedMail($serviceProvider, false));               
                     $serviceProvider->user->notify(new ServiceProviderApprovedNotification($serviceProvider, false));
                     // revoke sanctum tokens
                     $serviceProvider->user->tokens()->delete();  
