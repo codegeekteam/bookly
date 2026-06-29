@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Notifications\ServiceProviderApprovedNotification;
 use Illuminate\Support\Facades\DB;
 use App\Mail\ServiceProviderApprovedMail;
+use Illuminate\Support\Facades\Mail;
 
 class ServiceProviderObserver
 {
