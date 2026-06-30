@@ -1,4 +1,4 @@
 <?php 
 return [
-    'mail' => 'info@book-ly.com'
+    'mail' => 'info@book-ly.com',
 ];
