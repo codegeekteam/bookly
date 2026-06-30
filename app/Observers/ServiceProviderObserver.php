@@ -49,12 +49,13 @@ class ServiceProviderObserver
                     $email = $serviceProvider->email;
                     \Log::info('SP MAIL ID: '.$email);
                     \Log::info('debug log notify sp in deactivate:ServiceProviderApprovedNotification'); 
+                    $serviceProvider->user->notify(new ServiceProviderApprovedNotification($serviceProvider, false));
                     // revoke sanctum tokens
                     $serviceProvider->user->tokens()->delete(); 
                     if($email) {
                          Mail::to($email)->queue(New ServiceProviderApprovedMail($serviceProvider, false)); 
                     }                                 
-                  //  $serviceProvider->user->notify(new ServiceProviderApprovedNotification($serviceProvider, false));
+                 
                      
                 }
             }
