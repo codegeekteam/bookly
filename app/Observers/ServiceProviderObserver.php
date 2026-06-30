@@ -47,7 +47,7 @@ class ServiceProviderObserver
                 if ($serviceProvider->user) 
                 {                   
                     $email = $serviceProvider->email;
-                    \Log::info($email);
+                    \Log::info('SP MAIL ID: '.$email);
                     \Log::info('debug log notify sp in deactivate:ServiceProviderApprovedNotification'); 
                     // revoke sanctum tokens
                     $serviceProvider->user->tokens()->delete(); 
