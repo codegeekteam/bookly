@@ -30,9 +30,11 @@ class AuthService extends Service
         $account = $data['account'];
         $create_flag = $data['create_flag'];       
         if($access_type == 'provider' && $account->is_active == 0 && $create_flag == true) {     //SP register  
-            $admin = User::find(1); $email = config('admin.mail'); 
+           // $admin = User::find(1);
+             $admin_email = config('admin.mail'); 
+             \Log::info('admin mail:' . $admin_email);
          //  $email = cache()->remember('admin_email', 3600, fn () => optional(User::find(1))->email ?? 'admin@admin.com');
-            Mail::to($email)->send(New RegisterServiceProviderMail($account)); 
+            Mail::to($admin_email)->send(New RegisterServiceProviderMail($account)); 
             // dispatch(function () use ($email, $account) {
             //     Mail::to($email)->send(new RegisterServiceProviderMail($account));
             // });   
