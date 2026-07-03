@@ -35,7 +35,6 @@ class ServiceProviderObserver
             {
                 if ($serviceProvider->user) 
                 {
-                    \Log::info('debug log notify sp:ServiceProviderApprovedNotification');
                     if($serviceProvider->email) {
                         Mail::to($serviceProvider->email)->send(New ServiceProviderApprovedMail($serviceProvider, true)); 
                     }
@@ -47,11 +46,8 @@ class ServiceProviderObserver
                 if ($serviceProvider->user) 
                 {                   
                     $email = $serviceProvider->email;
-                    $serviceProvider_copy = $serviceProvider;
-                    \Log::info('SP MAIL ID: '.$email);
-                    \Log::info('debug log notify sp in deactivate:ServiceProviderApprovedNotification'); 
-                    $serviceProvider->user->notify(new ServiceProviderApprovedNotification($serviceProvider, false));
-                    
+                    $serviceProvider_copy = $serviceProvider;                         
+                    $serviceProvider->user->notify(new ServiceProviderApprovedNotification($serviceProvider, false));                   
                   
                     if($email) {
                          Mail::to($email)->queue(New ServiceProviderApprovedMail($serviceProvider_copy, false)); 

@@ -38,17 +38,7 @@ class ChatMessage extends Model
             return ServiceProvider::find($this->sender_id);
         }
         return null;
-    } 
-
-    //By sreeja
-  /*  public function sender(): MorphTo
-    {
-        return $this->morphTo(
-            __FUNCTION__,
-            'sender_type',
-            'sender_id'
-        );
-    } */
+    }  
 
     public function isFromCustomer(): bool
     {
@@ -69,8 +59,7 @@ class ChatMessage extends Model
                     ->orWhere('sender_id', '!=', $receiverId);
             }); */
 
-        //By sreeja
-        return $query
+         return $query
         ->where('is_read', false)
         ->where(function ($q) use ($receiverType, $receiverId) {
             $q->where('sender_type', '!=', $receiverType)

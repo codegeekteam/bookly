@@ -71,7 +71,7 @@ class RejectUnpaidAppointmentsJob implements ShouldQueue
                 }
             }
         } catch (\Exception $e) {
-            \Log::error('Error while rejecting unpaid appointments: ' . $e->getMessage());
+            Log::error('Error while rejecting unpaid appointments: ' . $e->getMessage());
             // Optionally rethrow the exception if you want to log it and fail the job
             throw $e;
         }

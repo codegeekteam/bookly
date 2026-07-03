@@ -227,7 +227,6 @@ class AppointmentController extends Controller
      */
     public function book(AppointmentService $appointmentService, BookAppointmentRequest $request)
     {     
-        \Log::info('begin');   
         try {
             return $appointmentService->book(
                 customer: auth()->user()->customer,
@@ -331,8 +330,7 @@ class AppointmentController extends Controller
      */
     public function getPayfortFeedback(AppointmentService $appointmentService, Request $request)
     {
-        \Log::info('begin remaining');   
-        \Log::info('Payfort callback raw:', $request->all());    
+        Log::info('Payfort callback raw:', $request->all());    
 
         try {
             $fortId = $request->input('fort_id');
@@ -353,7 +351,7 @@ class AppointmentController extends Controller
                'fort_id' => $request->input('fort_id'),
                'response' => json_encode($request->input())
             ]);
-            \Log::info('Payment log created', ['id' => $paymentLog->id]);
+            Log::info('Payment log created', ['id' => $paymentLog->id]);
             return $appointmentService->getPayfortFeedback(
                 response_code: $request->input('response_code'),
                 id: $request->input('merchant_reference'),

@@ -61,16 +61,13 @@ class RejectExpiredPendingAppointmentsServicesJob implements ShouldQueue
                     $paymentLog = PaymentLog::where('appointment_id', $appointment->id)->first();
                     if($paymentLog && $paymentMethod && strtolower($paymentMethod->name) === 'card') {      
                         $response = $this->initiateRefund($appointment, 'reject');
-                        \Log::info('Refund Initiate in auto reject after appointment start time : '. $response);
-                    }
-                    \Log::info('Refund  skipped — no valid payment method'); 
-                        //return money to user wallet
-                        \Log::info('payment method:'. $paymentMethod->name); 
+                        Log::info('Refund Initiate in auto reject after appointment start time : '. $response);
+                    }               
+                        //return money to user wallet                     
                 if (strtolower($paymentMethod->name) === 'wallet' || strtolower($paymentMethod->name) === 'card and wallet') {
                     
                     $wallet = $appointment->customer->user->wallet;
-                    $total=$appointment->total_payed;
-                     \Log::info('Total:'. $total); 
+                    $total=$appointment->total_payed;                
                     if($total>0){
                         (new CreateWalletTransactionMutation())->handle(
                             $wallet,
@@ -99,8 +96,7 @@ class RejectExpiredPendingAppointmentsServicesJob implements ShouldQueue
                 }
                     
                 }
-                //notification
-                \Log::info('reached notification in after start reject');
+                //notification         
                 try {           
                         $appointment->customer->user->notify(new RejectAppointmentAfterOneHourCustomerNotification($appointment));
                         $appointment->serviceProvider->user->notify(new RejectAppointmentAfterOneHourProviderNotification($appointment));
@@ -111,7 +107,7 @@ class RejectExpiredPendingAppointmentsServicesJob implements ShouldQueue
                 }
             }
         }catch (\Exception $e) {
-            \Log::error('Error while rejecting expired pending appointments: ' . $e->getMessage());
+            Log::error('Error while rejecting expired pending appointments: ' . $e->getMessage());
             // Optionally rethrow the exception if you want to log it and fail the job
             throw $e;
         }
