@@ -46,8 +46,7 @@ Broadcast::channel('chat.conversation.{conversationId}', function ($user, $conve
         }
     } */
 
-      //By sreeja
-    //     $customerId = optional($user->customer)->id;
+       //     $customerId = optional($user->customer)->id;
     // $providerId = optional($user->serviceProvider)->id;
     //   return $conversation->customer_id === $customerId
     //     || $conversation->service_provider_id === $providerId;

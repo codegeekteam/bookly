@@ -58,16 +58,12 @@ class RejectExpiredPendingAppointmentsJob implements ShouldQueue
                     $paymentLog = PaymentLog::where('appointment_id', $appointment->id)->first();
                     if($paymentLog && $paymentMethod && strtolower($paymentMethod->name) === 'card') {      
                         $response = $this->initiateRefund($appointment, 'reject');
-                        \Log::info('Refund Initiate in auto reject after 24 hrs : '. $response);
-                    }
-                    \Log::info('Refund  skipped — no valid payment method'); 
-                       \Log::info('payment method:'. $paymentMethod->name); 
-                      //return money to user wallet
-                      //    if (strtolower($paymentMethod->name) === 'wallet') {
+                        Log::info('Refund Initiate in auto reject after 24 hrs : '. $response);
+                    }                            
+                      //return money to user wallet                  
                         if (strtolower($paymentMethod->name) === 'wallet' || strtolower($paymentMethod->name) === 'card and wallet') {
                             $wallet = $appointment->customer->user->wallet;
-                            $total = $appointment->total_payed;
-                              \Log::info('Total:'. $total); 
+                            $total = $appointment->total_payed;                        
                             if ($total > 0) {
                                 (new CreateWalletTransactionMutation())->handle(
                                     $wallet,
@@ -111,11 +107,8 @@ class RejectExpiredPendingAppointmentsJob implements ShouldQueue
                                 'loyalty_discount_customer_id' => null,
                             ]);
                         }                   
-                }
-               
-             \Log::info('reached notification in before start reject');
-             
-                //notification
+                }              
+                 //notification
                 try {
                     $appointment->customer->user->notify(new RejectAppointmentCustomerNotification($appointment));
                     $appointment->serviceProvider->user->notify(new RejectAppointmentProviderNotification($appointment));
@@ -126,7 +119,7 @@ class RejectExpiredPendingAppointmentsJob implements ShouldQueue
                 }
             }
         } catch (\Exception $e) {
-            \Log::error('Error while rejecting expired pending appointments: ' . $e->getMessage());
+            Log::error('Error while rejecting expired pending appointments: ' . $e->getMessage());
             // Optionally rethrow the exception if you want to log it and fail the job
             throw $e;
         }

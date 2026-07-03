@@ -46,15 +46,13 @@ class ChatService
                 'message' => $message,
             ]);
 
-               DB::commit();  //by Sreeja
+               DB::commit();  
 
             // Broadcast the message via Reverb
             broadcast(new MessageSent($chatMessage))->toOthers();
 
             // Send Firebase notification to the receiver
-            $this->sendNotificationToReceiver($chatMessage, $conversation);
-
-          //  DB::commit(); //by Sreeja
+            $this->sendNotificationToReceiver($chatMessage, $conversation);          
 
             return $chatMessage;
         } catch (\Exception $e) {

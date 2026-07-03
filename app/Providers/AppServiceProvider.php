@@ -53,13 +53,7 @@ class AppServiceProvider extends ServiceProvider
             });
 
             return $this;
-        });
-
-          //by sreeja
-      /*  \Illuminate\Database\Eloquent\Relations\Relation::morphMap([
-            'customer' => \App\Models\Customer::class,
-            'provider' => \App\Models\ServiceProvider::class,
-        ]); */
+        });      
 
         Schema::defaultStringLength(191);
     }

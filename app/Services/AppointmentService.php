@@ -136,7 +136,6 @@ class AppointmentService
                 $query->where('employee_id', $employee_id);
             })
             ->get(['start_time', 'end_time']);  // Fetch only relevant fields
-\Log::info('booked appointments:', ['appointments' => $booked_appointments]);
         
         // 7. Remove slots that overlap with booked appointments
         if ($booked_appointments->isNotEmpty()) {          
@@ -531,13 +530,7 @@ class AppointmentService
             'status_id' => AppointmentStatus::Pending->value,
             'promo_code_id' => $promo_code ? $promo_code->id : null,
             'loyalty_discount_customer_id' => $loyalty_discount ? $loyalty_discount->id : null,
-        ]);
-
-        \Log::info('Appointment create in DB');
-        \Log::info('wallet enabled' . $wallet_enabled);
-        \Log::info('total_payed' . $appointment->total_payed);
-        \Log::info('amount_due' . $appointment->amount_due);
-         \Log::info('payment_method_id' . $appointment->payment_method_id);
+        ]);     
 
          //optimize query - shifted from inside loop to outsede
          $attachedServices = AttachedService::where('service_provider_id', $provider->id)
@@ -562,9 +555,7 @@ class AppointmentService
             //     ->first();
             $attachedService = $attachedServices[$service['service_id']] ?? null;
 
-        \Log::info('attached service', ['attachedService' => $attachedService]);
-            if ($attachedService) {
-       \Log::info('inside if attached service block');         
+            if ($attachedService) {              
                 $price = $attachedService->price;
                 $beneficiaries = $service['number_of_beneficiaries'];
 
@@ -582,7 +573,6 @@ class AppointmentService
                 }
             }
         }
-            \Log::info('AttachedServices to appointment');
         $discount = 0;
         //calculate promo code
         if ($promo_code) {
@@ -602,13 +592,7 @@ class AppointmentService
         $appointment->total = $sum_of_services - $discount;
         $appointment->amount_due = max(0, $amount_due - $discount);
         $appointment->discount = $discount;
-        \Log::info('has any deposit', ['has_any_deposit' => $has_any_deposit]);
-        \Log::info('total deposit amount', ['total_deposit_amount' => $total_deposit_amount]);
-
-          \Log::info('wallet enabled' . $wallet_enabled);
-        \Log::info('total_payed' . $appointment->total_payed);
-        \Log::info('amount_due' . $appointment->amount_due);
-         \Log::info('payment_method_id' . $appointment->payment_method_id);
+       
         // Handle deposit  payment tracking 
         if ($has_any_deposit && $total_deposit_amount > 0) {
             // Apply discount proportionally
@@ -631,7 +615,7 @@ class AppointmentService
             } else {
                 $appointment->payment_status = 'unpaid';
             }
-                    \Log::info('Handle deposit and remaining payment tracking executed');
+                 
         } else {
             // No deposit required - full amount payment
             $appointment->deposit_amount = null;
@@ -643,19 +627,12 @@ class AppointmentService
             $appointment->remaining_payment_method_id = $payment_method_id;
 
             $appointment->payment_status = $appointment->amount_due == 0 ? 'paid' : 'unpaid';
-              \Log::info('No deposit required - full amount payment executed');  
         }
 
-        $appointment->save();
-            \Log::info('Appointment save reached');  
-            
-              \Log::info('wallet enabled' . $wallet_enabled);
-        \Log::info('total_payed' . $appointment->total_payed);
-        \Log::info('amount_due' . $appointment->amount_due);
-         \Log::info('payment_method_id' . $appointment->payment_method_id);
+        $appointment->save();  
             
         if ($deposit_payment_response && isset($deposit_payment_response['fort_id'])) {
-            \Log::info('wallet here in book');
+            Log::info('wallet here in book');
             $data = $deposit_payment_response;
             $fortId = $data['fort_id'];
             if ($fortId) {
@@ -673,14 +650,12 @@ class AppointmentService
                     'fort_id' => $data['fort_id'],
                     'response' => json_encode($data),
                     ]);
-                    \Log::info('Payment log created in book', ['id' => $paymentLog->id]);
+                    Log::info('Payment log created in book', ['id' => $paymentLog->id]);
                 }  
                 //add deposit payment updates here
-                  $paymentMethod = PaymentMethod::find($appointment->payment_method_id); 
-                  \Log::info(strtolower($paymentMethod->name));      
+                  $paymentMethod = PaymentMethod::find($appointment->payment_method_id);           
                     $normalizedAmount = $data['amount'] / 100;
                 if ($appointment->deposit_amount) {
-                    \Log::info('inside deposit amt loop'); 
                     if ($normalizedAmount >= $appointment->deposit_amount) {
                         $appointment->deposit_payment_status = 'paid';
                         $appointment->card_amount = ($appointment->card_amount ?? 0) + $normalizedAmount;
@@ -692,19 +667,10 @@ class AppointmentService
                         } else {
                             $appointment->payment_status = 'partially_paid';
                         }
-                        $appointment->save();
-                        \Log::info('Inside Fort ID - Appointment save reached'); 
-                        \Log::info('normalized amt:'.$normalizedAmount);
-                   // }elseif($appointment->payment_method_id === 3) {  // wallet + card method
-                   // }elseif ($paymentMethod && strtolower($paymentMethod->name) === 'card and wallet') { 
+                        $appointment->save();                     
+               
                     }elseif($wallet_enabled) {
-                        \Log::info('reached wallet card:'. $appointment->payment_method_id);                        
-                         \Log::info('total_payed' . $appointment->total_payed);
-                         \Log::info('amount_due' . $appointment->amount_due);
-                         \Log::info('normalizedAmount' . $normalizedAmount);
-   
-                        $amt_log = ($appointment->total_payed ?? 0) + $normalizedAmount;
-                        \Log::info('amt:'. $amt_log);
+                        $amt_log = ($appointment->total_payed ?? 0) + $normalizedAmount;                     
                         $appointment->deposit_payment_status = 'paid';
                         $appointment->card_amount = ($appointment->card_amount ?? 0) + $normalizedAmount;
                         $appointment->total_payed = ($appointment->total_payed ?? 0) + $normalizedAmount;
@@ -716,12 +682,9 @@ class AppointmentService
                         } else {
                             $appointment->payment_status = 'partially_paid';
                         }                        
-                        $appointment->save();
-                       
-                        \Log::info('total_payed' . $appointment->total_payed);
-                        \Log::info('amount_due' . $appointment->amount_due);
-                    }
-                    \Log::info('Process deposit Payment', ['appintment_payment_status' => $appointment->payment_status]);
+                        $appointment->save();                       
+                    
+                    }          
                 }
 
             }
@@ -729,7 +692,7 @@ class AppointmentService
 
         if ($payment_method_id) {
             $paymentMethod = PaymentMethod::find($payment_method_id);           
-\Log::info('pay_id:'. $payment_method_id);
+
             //  Notify provider to mark booking complete if Cash payment
             if ($paymentMethod && strtolower($paymentMethod->name) === 'cash') { 
                 try {
@@ -750,15 +713,11 @@ class AppointmentService
 
         //customer wallet check
            if ($has_any_deposit && $total_deposit_amount > 0 && $wallet_enabled) 
-            {
-                \Log::info('customerWalletActions in deposit payment reached'); 
-                $this->customerWalletActions($customer, $appointment, 'deposit'); 
-                \Log::info('customerWalletActions executed'); 
+            {                
+                $this->customerWalletActions($customer, $appointment, 'deposit');             
            }elseif(!$has_any_deposit && $wallet_enabled) 
-           {
-                \Log::info('customerWalletActions in other payments reached'); 
-                $this->customerWalletActions($customer, $appointment); 
-                \Log::info('customerWalletActions executed'); 
+           {           
+                $this->customerWalletActions($customer, $appointment);              
            }
         //add total to provider wallet
         // (new CreateWalletTransactionMutation())  //changed to payout creation
@@ -776,8 +735,7 @@ class AppointmentService
         //clear cart
         (new CartService())->clearCart($customer); 
            //send notification if no deposit required
-        if ($appointment->deposit_amount === null) {
-                        \Log::info('Notify NewAppointmentNotification');
+        if ($appointment->deposit_amount === null) {                     
             try { 
                 $appointment->serviceProvider->user->notify(new NewAppointmentNotification($appointment)); 
            } catch (Exception $e) {
@@ -786,8 +744,7 @@ class AppointmentService
         }else{
             $deposit_payment_method_id = $appointment->deposit_payment_method_id ?? 1;
             $depositPaymentMethod = PaymentMethod::find($deposit_payment_method_id);
-            if($depositPaymentMethod && strtolower($depositPaymentMethod->name) === 'card' || $depositPaymentMethod && strtolower($depositPaymentMethod->name) === 'wallet') {  //By Sreeja         
-                \Log::info('reached new notification deposit payment case');
+            if($depositPaymentMethod && strtolower($depositPaymentMethod->name) === 'card' || $depositPaymentMethod && strtolower($depositPaymentMethod->name) === 'wallet') {         
                 try {
                     $appointment->serviceProvider->user->notify(new NewAppointmentNotification($appointment));
                 } catch (\Exception $e) {
@@ -808,63 +765,49 @@ class AppointmentService
                 $payed_amount = 0;
                 //the balance cover the total deposit
               if ($wallet->balance >= $appointment->amount_due) {
-                    if($type == 'deposit') { //deposit case
-                    \Log::info('wallet bal > amt due deposit case');
-                    \Log::info('total_payed before wallet: ' . $appointment->total_payed);
+                    if($type == 'deposit') { //deposit case                  
                         $appointment->wallet_amount = $appointment->amount_due;                  
                         $appointment->total_payed = ($appointment->total_payed ?? 0 ) + $appointment->amount_due;                                 
                         $appointment->deposit_payment_status = 'paid';
                         if ($appointment->remaining_amount == 0 || $appointment->remaining_amount == null) {
-                            $appointment->payment_status = 'paid';
-                            // $appointment->payment_method_id = 2; //wallet
+                            $appointment->payment_status = 'paid';                          
                         } else {
                             $appointment->payment_status = 'partially_paid';
                         }
                         if($appointment->deposit_amount == $appointment->amount_due) {
                             $appointment->deposit_payment_method_id = 2; //wallet
-                            // $appointment->payment_method_id = 2; //wallet
+                         
                         }else{
-                            $appointment->deposit_payment_method_id = 3; //wallet and card
-                            // $appointment->payment_method_id = 3; //wallet
+                            $appointment->deposit_payment_method_id = 3; //wallet and card                     
                         }
                         $appointment->amount_due = $appointment->remaining_amount;
                         $appointment->save();
-                        $payed_amount = $appointment->wallet_amount;
-                         \Log::info('total_payed after wallet: ' . $appointment->total_payed);
-                    }elseif($type == 'remaining') {  // remaining case
-                     \Log::info('wallet bal > amt due remaining case');
-                      \Log::info('total_payed before wallet: ' . $appointment->total_payed);
+                        $payed_amount = $appointment->wallet_amount;                       
+                    }elseif($type == 'remaining') {  // remaining case                  
                         $appointment->wallet_amount = $appointment->amount_due;                  
                         $appointment->total_payed = ($appointment->total_payed ?? 0 ) + $appointment->amount_due;
                         $appointment->remaining_payment_status = 'paid';
                         $appointment->payment_status = 'paid';
-                         if($appointment->remaining_amount == $appointment->amount_due) {
-                            //  $appointment->payment_method_id = 2; //wallet
+                         if($appointment->remaining_amount == $appointment->amount_due) {                        
                             $appointment->remaining_payment_method_id = 2; //wallet
                          }else {
                               $appointment->remaining_payment_method_id = 3; //wallet and card
                          }
                         $appointment->amount_due = 0.00;
                         $appointment->save();
-                        $payed_amount = $appointment->wallet_amount;
-                         \Log::info('total_payed after wallet: ' . $appointment->total_payed);
-                    }else {   //without deposit case
-                     \Log::info('wallet bal > amt due without deposit case');
-                      \Log::info('total_payed before wallet: ' . $appointment->total_payed);
+                        $payed_amount = $appointment->wallet_amount;                        
+                    }else {   //without deposit case             
                         $appointment->wallet_amount = $appointment->amount_due;
                         $appointment->payment_status = 'paid';
                         $appointment->total_payed = ($appointment->total_payed ?? 0 ) + $appointment->amount_due;
                         $appointment->payment_method_id = 2; //wallet
                         $appointment->save();
-                        $payed_amount = $appointment->wallet_amount;
-                         \Log::info('total_payed after wallet: ' . $appointment->total_payed);
+                        $payed_amount = $appointment->wallet_amount;                       
                     }
               }           
                 //total greater than balance
                 else {                 
-                    if($type == 'deposit') {    //deposit case
-                     \Log::info('wallet bal < amt due deposit case');
-                      \Log::info('total_payed before wallet: ' . $appointment->total_payed);
+                    if($type == 'deposit') {    //deposit case                   
                         $appointment->wallet_amount = $wallet->balance;                 
                         $appointment->total_payed = ($appointment->total_payed ?? 0 ) + $wallet->balance;                       
                         $appointment->deposit_payment_status = 'paid';       //'pending';               
@@ -873,12 +816,8 @@ class AppointmentService
                         $appointment->deposit_payment_method_id = 3; //wallet and card
                         $appointment->amount_due = $appointment->amount_due - $wallet->balance;
                         $appointment->save();
-                        $payed_amount = $appointment->wallet_amount;
-                         \Log::info('total_payed after wallet: ' . $appointment->total_payed);
-                    }elseif($type == 'remaining') { // remaining case
-                    \Log::info('begin wallet remaining');
-                       \Log::info('wallet bal < amt due remaining case');
-                        \Log::info('total_payed before wallet: ' . $appointment->total_payed);
+                        $payed_amount = $appointment->wallet_amount;                       
+                    }elseif($type == 'remaining') { // remaining case               
                         $appointment->wallet_amount = $wallet->balance;                       
                         $appointment->total_payed =  ($appointment->total_payed ?? 0 ) + $wallet->balance;
                         $appointment->remaining_payment_status = 'paid';
@@ -887,21 +826,15 @@ class AppointmentService
                         $appointment->remaining_payment_method_id = 3; //wallet and card
                         $appointment->amount_due = $appointment->amount_due - $wallet->balance;
                         $appointment->save();
-                        $payed_amount = $appointment->wallet_amount;
-                         \Log::info('total_payed after wallet: ' . $appointment->total_payed);
-                    }else {  //without deposit case
-                       \Log::info('wallet bal < amt due without deposit case');
-                        \Log::info('total_payed before wallet: ' . $appointment->total_payed);
+                        $payed_amount = $appointment->wallet_amount;                     
+                    }else {  //without deposit case                
                         $appointment->wallet_amount = $wallet->balance;
                         $appointment->payment_status = 'partially_paid';
                         $appointment->total_payed = ($appointment->total_payed ?? 0 ) + $wallet->balance;
                         $appointment->payment_method_id = 3; //wallet and card
                         $appointment->save();
-                        $payed_amount = $appointment->wallet_amount;
-                         \Log::info('total_payed after wallet: ' . $appointment->total_payed);
-                    }
-
-                    ///////////////////////////////////////
+                        $payed_amount = $appointment->wallet_amount;                       
+                    }                
 
                   /*  $appointment->wallet_amount = $wallet->balance;
                     $appointment->payment_status = 'partially_paid';
@@ -1114,10 +1047,7 @@ class AppointmentService
     public function getSDKToken($device_id) {
         $payfort_helper = new PayfortHelper();
 
-        $payment_gateway_response = $payfort_helper->generateSDKToken($device_id);
-
-        \Log::info('response',  ['response' =>$payment_gateway_response]);
-              
+        $payment_gateway_response = $payfort_helper->generateSDKToken($device_id);              
 
         if ($payment_gateway_response['response_code'] !== '22000') {
 
@@ -1173,7 +1103,6 @@ class AppointmentService
     public function getPayfortFeedback($response_code, $id, $amount)
     {
 
-          \Log::info('ID: '. $id);
         // normalize amount (Payfort sends multiplied by 100)
         $normalizedAmount = $amount / 100;
 
@@ -1238,12 +1167,10 @@ class AppointmentService
             return response()->json(['message' => 'Invalid response code'], 200);
         }
 
-\Log::info('Model', ['model' => $model]);
         // Appointment logic with deposit/remaining tracking
         if ($type === 'appointment') {
             $appointment = $model;
-        if ($appointment->payment_status === 'paid' && $appointment->status_id == AppointmentStatus::Completed->value) { 
-            \Log::info('Callback ignored: already completed');
+        if ($appointment->payment_status === 'paid' && $appointment->status_id == AppointmentStatus::Completed->value) {          
             return response()->json(['message' => 'success'], 200);
         }
 
@@ -1263,9 +1190,6 @@ class AppointmentService
                     $isRemainingPayment = true;
                 }
             } */
-\Log::info('paymentType', ['paymentType' => $paymentType]);
-\Log::info('isDepositPayment', ['isDepositPayment' => $isDepositPayment]);
-\Log::info('isRemainingPayment', ['isRemainingPayment' => $isRemainingPayment]);
             // Process deposit payment
             if ($isDepositPayment && $appointment->deposit_amount) {
                 if ($normalizedAmount >= $appointment->deposit_amount) {
@@ -1279,10 +1203,8 @@ class AppointmentService
                     } else {
                         $appointment->payment_status = 'partially_paid';
                     }
-                }else {
-                    \Log::info('reached wallet card:'. $appointment->payment_method_id);
-                           $amt_log = ($appointment->total_payed ?? 0) + $normalizedAmount;
-                        \Log::info('amt:'. $amt_log);
+                }else {              
+                        $amt_log = ($appointment->total_payed ?? 0) + $normalizedAmount;                     
                         $appointment->deposit_payment_status = 'paid';
                         $appointment->card_amount = ($appointment->card_amount ?? 0) + $normalizedAmount;
                         $appointment->total_payed = ($appointment->total_payed ?? 0) + $normalizedAmount;
@@ -1296,7 +1218,7 @@ class AppointmentService
                         }                       
                       
                 }
-                \Log::info('Process deposit Payment', ['appintment_payment_status' => $appointment->payment_status]);
+               
             }
             
             // Process remaining payment or full payment
@@ -1310,7 +1232,7 @@ class AppointmentService
                     }
                     
                 } */
- \Log::info('card_amount before remaining' . $appointment->card_amount);
+
                 $newTotal = $normalizedAmount + ($appointment->total_payed ?? 0);
                 $isPaid = $newTotal >= $appointment->amount_due;
 
@@ -1321,58 +1243,17 @@ class AppointmentService
                 $appointment->payment_status = $isPaid ? 'paid' : 'partially_paid';
                 $appointment->card_amount = ($appointment->card_amount ?? 0) + $normalizedAmount;
                 $appointment->total_payed = $newTotal;
-                $appointment->amount_due = $appointment->amount_due  - $normalizedAmount;
-                \Log::info('Process remaining Payment', ['appintment_payment_remaining_status' => $appointment->remaining_payment_status]);
- \Log::info('card_amount after remaining' . $appointment->card_amount); 
-               /* if($wallet_enabled) {
-                        \Log::info('reached wallet card:'. $appointment->payment_method_id);                        
-                         \Log::info('total_payed' . $appointment->total_payed);
-                         \Log::info('amount_due' . $appointment->amount_due);
-                         \Log::info('normalizedAmount' . $normalizedAmount);
-   
-                        $amt_log = ($appointment->total_payed ?? 0) + $normalizedAmount;
-                        \Log::info('amt:'. $amt_log);
-                        $appointment->remaining_payment_status = 'paid';
-                       // $appointment->card_amount = ($appointment->card_amount ?? 0) + $normalizedAmount;
-                     //   $appointment->total_payed = ($appointment->total_payed ?? 0) + $normalizedAmount;
-                    
-                     //   $appointment->amount_due = $appointment->amount_due  - $normalizedAmount;
-                               // Update overall status
-                        if ($appointment->remaining_amount == 0 || $appointment->remaining_amount == null) {
-                            $appointment->payment_status = 'paid';
-                        } else {
-                            $appointment->payment_status = 'partially_paid';
-                        }                        
-                        $appointment->save();
-                       
-                        \Log::info('total_payed' . $appointment->total_payed);
-                        \Log::info('amount_due' . $appointment->amount_due);
-                        $customer = $appointment->customer;
-                        if ($isRemainingPayment) 
-                        {
-                            \Log::info('customerWalletActions in deposit payment reached'); 
-                            $this->customerWalletActions($customer, $appointment, 'remaining'); 
-                            \Log::info('customerWalletActions executed'); 
-                        }else{
-                             $this->customerWalletActions($customer, $appointment); 
-                        }
-                    }*/
+                $appointment->amount_due = $appointment->amount_due  - $normalizedAmount;       
             }
 
-            $appointment->save();        
-                \Log::info('Status id Value: ' . $appointment->status_id);
-                \Log::info('Status payment status Value: ' . $appointment->payment_status);
-
-            \Log::info('Completed Enum Value: ' . AppointmentStatus::Completed->value);
+            $appointment->save();    
+           
+            $paymentStatus = trim(strtolower($appointment->payment_status)); //appoinment->payment_status is enum , not string, strict comparison may skip it
+            if ((string)$paymentStatus == 'paid' && (int)$appointment->status_id !== AppointmentStatus::Completed->value) {              
+            $str =  $this->markAsComplete($appointment);
+                Log::info('markAsComplete executed in feedback api');
+            } 
       
- $paymentStatus = trim(strtolower($appointment->payment_status)); //appoinment->payment_status is enum , not string, strict comparison may skip it
-            if ((string)$paymentStatus == 'paid' && (int)$appointment->status_id !== AppointmentStatus::Completed->value) {  //By Sreeja             
-                 \Log::info('MarkAsComplete triggered');  
-           $str =  $this->markAsComplete($appointment);
-                \Log::info('executed in feedback api');
-            }
-    
-            //By Sreeja ends here
 
             // Generate invoice if payment is complete
            
@@ -1381,14 +1262,12 @@ class AppointmentService
                     $invoiceService = new InvoiceService();
                     $invoiceService->generateInvoice($appointment);
                 } catch (\Exception $e) {
-                    \Log::error('Failed to generate invoice for appointment ' . $appointment->id . ': ' . $e->getMessage());
+                    Log::error('Failed to generate invoice for appointment ' . $appointment->id . ': ' . $e->getMessage());
                 }
-            }
-            \Log::info('isDepositPayment: ', [ '0' => $isDepositPayment]);
-            \Log::info('deposit_payment_status: ', ['deposit_status' => $appointment->deposit_payment_status]);
+            }      
 
             // Send notification to provider when deposit is paid
-          /*  if ($isDepositPayment && $appointment->deposit_payment_status === 'paid') {  //By Sreeja
+          /*  if ($isDepositPayment && $appointment->deposit_payment_status === 'paid') {  
             \Log::info('reached new aotification deposit payment case - feedback api');
                 try {
                     $appointment->serviceProvider->user->notify(new NewAppointmentNotification($appointment));
@@ -1410,8 +1289,7 @@ class AppointmentService
             $model->update([
                 'payment_status' => 'paid',
             ]);
-        }
-    \Log::info('success');
+        }      
         return response()->json(['message' => 'success'], 200);
     }
 
@@ -1535,7 +1413,6 @@ class AppointmentService
                 }
             }
         }
-\Log::info('executed checks');
         return [
             'available_dates' => $available_dates,
         ];
@@ -1587,21 +1464,17 @@ class AppointmentService
             ->first();
 
         $last_service_end_datetime = Carbon::parse($last_appointment_service->date)->setTimeFromTimeString($last_appointment_service->end_time);
-        \Log::info('last_appointment_service : ' . Carbon::parse($last_appointment_service->date)->toDateString());
-       // if (Carbon::parse($last_appointment_service->date)->isAfter(today())) {
-        if (Carbon::parse($last_appointment_service->date)->toDateString() > today()->toDateString()) {
-            \Log::info('Appointment is not yet completed');
+          
+        if (Carbon::parse($last_appointment_service->date)->toDateString() > today()->toDateString()) {  
             throw new Exception(__('Appointment is not yet completed'));
         }
 
 
         if ($last_service_end_datetime->greaterThan(Carbon::now())) {
-             \Log::info('Appointment is not yet completed');
             throw new Exception(__('Appointment is not yet completed'));
         }
 
-            $appointment->state()->complete();
-            \Log::info('After update continue');
+            $appointment->state()->complete();        
 
          // Check for the referral code if this is the customer's first appointment
         if ($appointment->customer && $appointment->customer->appointments()->where('status_id', AppointmentStatus::Completed->value)->count() === 1) {
@@ -1638,7 +1511,6 @@ class AppointmentService
                 ]);
             }
         }
-     \Log::info('Appointment marked as complete reached');
         return response()->json([
             'message' => __('Appointment marked as complete'),
         ], 200);
@@ -1852,8 +1724,7 @@ class AppointmentService
         $appointment = Appointment::find($appointment_id);
         if (!$appointment) {
             throw new Exception(__('Appointment not found'));
-        }
-        Log::critical('customer_id ' . $customer->id);
+        }      
         if ($appointment->customer_id != $customer->id) {
             throw new Exception(__('Appointment not found'));
         }
@@ -1884,24 +1755,14 @@ class AppointmentService
         }
         if ($flag === true) {
             throw new Exception(__('The rescheduled time cannot be in the past.'));
-        }
-         \Log::info('rescheduleDate : '. $rescheduleDate->format('l'));
-
-                \Log::info('booked_services : ', ['booked_services' => $booked_services]);
-         $serviceIds =  $booked_services->pluck('id')->map(fn($id) => (int)$id)->toArray(); 
-           \Log::info('serviceIds : ', ['serviceIds' => $serviceIds]);
-
-             \Log::info('service_ids : ', ['service_ids' => $service_ids]);
-
-           \Log::info('booked_services', [
-                'ids' => $booked_services->pluck('id')
-            ]);
-        $operationalHours = OperationalHour::where('service_provider_id', $appointment->service_provider_id)
+        }    
+           
+         $serviceIds =  $booked_services->pluck('id')->map(fn($id) => (int)$id)->toArray();        
+         $operationalHours = OperationalHour::where('service_provider_id', $appointment->service_provider_id)
             ->where('day_of_week', $rescheduleDate->format('l'))
             ->whereIn('service_id', $serviceIds)
             ->get()    
-            ->keyBy(fn($item) => (int)$item->service_id);
-            \Log::info('operationalHours : ', ['operationalHours' => $operationalHours]);
+            ->keyBy(fn($item) => (int)$item->service_id);    
         foreach ($booked_services as $booked_service) {
              $booked_service_id = (int)$booked_service->id;
             if (!$operationalHours->has($booked_service_id)) {
@@ -1999,19 +1860,14 @@ class AppointmentService
 
     public function remainingPaymentWallet(Appointment $appointment)
     {
-        $customer = $appointment->customer;    
-        \Log::info('customerWalletActions in remaining payment reached'); 
+        $customer = $appointment->customer; 
         $this->customerWalletActions($customer, $appointment, 'remaining'); 
-        \Log::info('customerWalletActions in remaining payment executed'); 
     }
 
     public function fullPaymentWallet(Appointment $appointment)
     {
-        $customer = $appointment->customer;    
-        \Log::info('customerWalletActions in full payment wallet reached'); 
+        $customer = $appointment->customer;   
         $this->customerWalletActions($customer, $appointment); 
-        \Log::info('customerWalletActions in  full payment wallet  executed'); 
-      
     }
 
 }

@@ -523,12 +523,9 @@ class AppointmentResource extends Resource
                         if(($refundOption == 'bank') && ($record->payment_status !== 'unpaid')){
                             $paymentMethod = $record->paymentMethod;
                             $paymentLog = PaymentLog::where('appointment_id',$record->id)->first();
-                            if($paymentLog && $paymentMethod && strtolower($paymentMethod->name) === 'card') {      
-                              //  $response = $this->initiateRefund($record, 'admin_cancel');
-                                $response = app(RefundService::class)->initiateRefund($record, 'admin_cancel');
-                                \Log::info('Refund Initiate : '. $response);
-                            }
-                            \Log::info('Refund  skipped — no valid payment method');                    
+                            if($paymentLog && $paymentMethod && strtolower($paymentMethod->name) === 'card') {   
+                                $response = app(RefundService::class)->initiateRefund($record, 'admin_cancel');                            
+                            }                                             
                         }elseif(($refundOption == 'wallet') && ($record->payment_status !== 'unpaid')) {
                             DB::beginTransaction();
                             try {
@@ -554,8 +551,7 @@ class AppointmentResource extends Resource
                                             $refundReasonAr
                                         );
 
-                                        if($data['goodwill_amount'] > 0) {   
-                                            \Log::info('reached good will amt store in refund');
+                                        if($data['goodwill_amount'] > 0) {  
                                             $refundReason = $record->id .' - Valued Customer Bonus';
                                             $refundReasonAr = $record->id .' - مكافأة العميل المميز';                                                       
                                             (new CreateWalletTransactionMutation())->handle(
@@ -622,8 +618,7 @@ class AppointmentResource extends Resource
                         } 
                         
                         $good_will  = false;                        
-                        if($data['goodwill_amount'] > 0) { 
-                            \Log::info('reached good will amt store only');
+                        if($data['goodwill_amount'] > 0) {                
                             $good_will  = true;                 
                             $customerWallet = $record->customer->user->wallet;
                             $refundReason = $record->id .' - Valued Customer Bonus';

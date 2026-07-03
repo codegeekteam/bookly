@@ -29,24 +29,12 @@ class AuthService extends Service
         $data = $this->findOrCreateUser($phone_number, $access_type);  
         $account = $data['account'];
         $create_flag = $data['create_flag'];       
-        if($access_type == 'provider' && $account->is_active == 0 && $create_flag == true) {     //SP register  
-           // $admin = User::find(1);
-             $admin_email = config('admin.mail'); 
-             \Log::info('admin mail:' . $admin_email);
-         //  $email = cache()->remember('admin_email', 3600, fn () => optional(User::find(1))->email ?? 'admin@admin.com');
+        if($access_type == 'provider' && $account->is_active == 0 && $create_flag == true) {     //SP register         
+             $admin_email = config('admin.mail');        
             Mail::to($admin_email)->send(New RegisterServiceProviderMail($account)); 
-            // dispatch(function () use ($email, $account) {
-            //     Mail::to($email)->send(new RegisterServiceProviderMail($account));
-            // });   
-           // return __('Your signup request has been received. Our team will review your details and contact you soon to activate your account');
-        }
-        // elseif($access_type == 'provider' && $account->is_active == 0 && $create_flag == false) {  //SP login attempt
-        //       return __('Account Pending Approval');
-        // }
-      //  else{
-            $this->SendOTP($account);
-            return 'OTP sent';
-      //  }        
+        }   
+        $this->SendOTP($account);
+        return 'OTP sent';           
     }
 
     private function SendOTP($account): void

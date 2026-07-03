@@ -19,20 +19,12 @@ class PayfortHelper
             'device_id' => $device_id,
         ];      
 
-        $data['signature'] = self::generateSignature($data);
-
-        //  \Log::info('request data',  ['data' =>$data]);
+        $data['signature'] = self::generateSignature($data);   
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
-        ])->post($url, $data);  
-
-   
-        \Log::info('PAYFORT SDK TOKEN RESPONSE STATUS', [
-            'status' => $response->status(),
-           // 'body'   => $response->body(),
-        ]);
-
+        ])->post($url, $data);   
+       
         return $response->json();
 
     }
