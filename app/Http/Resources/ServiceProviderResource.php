@@ -20,7 +20,7 @@ class ServiceProviderResource extends JsonResource
             'email' => $this->email,
             'phone_number' => $this->phone_number,
             'biography' => $this->biography,
-            'address' => AddressResource::make($this->addresses->first()) ?? null,            
+            'address' =>  AddressResource::make($this->address) ?? null,  //AddressResource::make($this->addresses->first()) ?? null,            
             'commercial_register' => $this->commercial_register,
             'twitter' => $this->social['twitter'] ?? null,
             'snapchat' => $this->social['snapchat'] ?? null,
