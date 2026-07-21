@@ -39,14 +39,21 @@ class AuthService extends Service
 
     private function SendOTP($account): void
     {
-        $otp = $this->generateOTP();
-        if($account->phone_number == '556222222' || $account->phone_number == '507777776')
+        // $otp = $this->generateOTP();
+        if($account->phone_number == '054441775' || $account->phone_number == '536132530') //playstore verification otps       
         {
-            $otp=123456;
+            $otp=750319;
+        }elseif(in_array($account->phone_number, config('testotp.phone')))  //test otps
+        {
+           $otp=123456; 
+        }else {
+            $otp = $this->generateOTP();
         }
-        $otpState=$this->sendSms($account, $otp);
-        if(!$otpState){
-            throw new Exception(__('error while sending otp try again', [], request()->header('lang') ?? 'en'));
+        if(!in_array($account->phone_number, config('testotp.phone'))) {          
+            $otpState=$this->sendSms($account, $otp);
+            if(!$otpState){
+                throw new Exception(__('error while sending otp try again', [], request()->header('lang') ?? 'en'));
+            }
         }
         $account->user->update([
             'otp' => \Hash::make($otp),
@@ -58,12 +65,12 @@ class AuthService extends Service
 
     private function generateOTP(): int
     {
-        $otp= 123456;
+       // $otp= 123456;
         // send sms code
-        if(App::environment('production'))
-        {
+        // if(App::environment('production'))
+        // {
             $otp=mt_rand(100000, 999999);
-        }
+        //}
         return $otp;
     }
 
@@ -75,7 +82,7 @@ class AuthService extends Service
         // send sms code
         if(App::environment('production'))
         {
-            if($phoneNumber == '556222222' || $phoneNumber == '507777776') {
+            if($phoneNumber == '054441775' || $phoneNumber == '536132530') {
                 $otpState = true;
             } else {
                 $message_ar = ' رمز التحقق: ' . $otp;
