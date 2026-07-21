@@ -37,7 +37,7 @@ class DisableCustomerSpSeeder extends Seeder
         foreach($sps as $sp) {
             $sp->update([
                             'is_blocked' => 1, //disabled
-                            'is_active' => 0   //approval pending
+                           // 'is_active' => 0   //approval pending
                         ]);
         }
     }
