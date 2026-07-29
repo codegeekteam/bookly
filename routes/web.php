@@ -23,3 +23,16 @@ Route::get('privacy-policy', [\App\Http\Controllers\SettingController::class, 'p
 Route::get('terms-conditions', [\App\Http\Controllers\SettingController::class, 'termsConditions'])->name('termsConditions');
 Route::get('/contact', [\App\Http\Controllers\SettingController::class, 'contact'])->name('contactus');
 Route::get('/share/provider/{id}', [\App\Http\Controllers\AppDownloadController::class, 'showProvider'])->name('app.download.provider');
+
+
+use Illuminate\Support\Facades\Mail;
+
+Route::get('/test', function () {
+
+    Mail::raw('This is a test email from Bookly App.', function ($message) {
+        $message->to('sreeja.bs@gmail.com')
+                ->subject('Test Email');
+    });
+
+    return 'Test email sent successfully this time!';
+});
