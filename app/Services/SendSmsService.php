@@ -18,9 +18,12 @@
             {
                 if(App::environment('production'))
                 {
+                   // $countryCode = '971'; // Example: UAE
+                    $phone = ltrim($number, '0');
+                   // $fullPhone = $countryCode . $phone;
                     $fields = array(
                         "userName" => config('sms.msegat.userName'),
-                        "numbers" => $number,
+                        "numbers" => $phone,
                         "userSender" => config('sms.msegat.userName'),
                         "apiKey" => config('sms.msegat.key'),
                         "msg" => $msg,
