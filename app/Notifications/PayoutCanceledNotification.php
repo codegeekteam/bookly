@@ -82,7 +82,7 @@ class PayoutCanceledNotification extends Notification implements ShouldQueue
     \Log::error('FCM send aborted: empty token');
     return;
 }
-        \Log::info('FCM Token: ' . $notifiable->firebase_token);
+        \Log::info('FCM Token: ' . $fcm_token);
         return (new FirebaseNotification)
             ->withTitle($this->getTitle())
             ->withBody($this->getBody())
