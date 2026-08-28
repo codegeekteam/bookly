@@ -15,18 +15,19 @@ class DisableCustomerSpSeeder extends Seeder
     public function run(): void
     {
         $phoneCustomers =  [   
-                                '536132530',
-                                '949781880', 
-                                '532335103'
+                                 '536132530',//playstore otp
+                                // '949781880', 
+                                '532335103' //test otp
                             ];
          $phoneSps =  [   
-                            '054441775',
-                            '555211552',
-                            '984622039',
-                            '963963963',
-                            '953991821',
-                            '940094773',
-                            '580580580'                  
+                            '054441775',//playstore otp
+                            // '555211552',
+                            // '984622039',
+                            // '963963963',
+                            // '953991821',
+                            // '940094773',
+                            // '580580580',
+                            '544417758'   //test otp             
                         ];
         $customers = Customer::whereNotIn('phone_number', $phoneCustomers)->get();       
         foreach($customers as $customer) {
